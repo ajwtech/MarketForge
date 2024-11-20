@@ -1,0 +1,94 @@
+x-mautic-volumes:
+  &mautic-volumes
+  - ./datastore/config:/var/www/html/config:z
+  - ./datastore/var/logs:/var/www/html/logs:z
+  - ./datastore/media/files:/var/www/html/media/files:z
+  - ./datastore/media/images:/var/www/html/media/images:z
+  - ./datastore/cron:/opt/mautic/cron:z
+
+
+services: 
+  mautic_init:
+    build:
+      context: .
+      dockerfile: alpine.dockerfile
+    volumes: 
+      - ./datastore:/datastore:z
+    environment:
+      MAUTIC_ROLE: mautic_init
+    env_file:
+      - .env
+    networks:
+      - default
+
+  mautic_web:
+    build:
+      context: .
+      dockerfile: alpine.dockerfile
+    volumes:
+      *mautic-volumes
+    container_name: mautic_web
+    environment:
+      MAUTIC_ROLE: mautic_web
+    env_file:
+      - .env
+    depends_on:
+      mautic_init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: cgi-fcgi -bind -connect mautic_web:9000
+      start_period: 5s
+      interval: 20s
+      timeout: 5s
+      retries: 10
+    networks:
+      - default
+
+  mautic_cron:
+    build:
+      context: .
+      dockerfile: alpine.dockerfile
+    volumes: *mautic-volumes
+    environment:
+      MAUTIC_ROLE: mautic_cron
+    env_file:
+      - .env
+    depends_on:
+      mautic_web:
+        condition: service_healthy
+    networks:
+      - default
+
+  mautic_worker:
+    build:
+      context: .
+      dockerfile: alpine.dockerfile
+    volumes: *mautic-volumes
+    environment:
+      MAUTIC_ROLE: mautic_worker
+    env_file:
+      - .env
+    depends_on:
+      mautic_web:
+        condition: service_healthy
+    networks:
+      - default
+    command: ["php", "bin/console", "mautic:messages:consume"]
+  
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx.dockerfile
+    container_name: nginx
+    volumes:
+      - ./datastore:/var/www/html:z
+    env_file:
+      - .env
+    depends_on:
+      mautic_web:
+        condition: service_healthy
+    ports:
+      - 80:80
+    networks:
+      - default
+

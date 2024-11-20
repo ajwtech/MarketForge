@@ -1,0 +1,34 @@
+# Use the latest LTS version of Node.js for compatibility with Strapi 5
+FROM node:18-alpine
+
+# Install necessary dependencies for building Strapi (sharp compatibility, etc.)
+RUN apk update && apk add --no-cache build-base gcc autoconf automake zlib-dev libpng-dev nasm bash vips-dev git
+
+# Set the Node environment; can be overridden during deployment
+ARG NODE_ENV=production
+ENV NODE_ENV=${NODE_ENV}
+
+# Set working directory inside the container
+WORKDIR /opt/
+
+# Copy package files and install dependencies
+COPY package.json package-lock.json ./
+RUN npm install -g node-gyp
+RUN npm install --only=production
+
+# Set the working directory for Strapi
+WORKDIR /opt/app
+COPY . .
+
+# Build Strapi project
+RUN npm run build
+
+# Set permissions for the working directory
+RUN chown -R node:node /opt/app
+USER node
+
+# Expose Strapi's default port
+EXPOSE 1337
+
+# Start Strapi
+CMD ["npm", "run", "start"]
