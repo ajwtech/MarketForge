@@ -1,2 +1,9 @@
 config:
   azure-native:location: EastUS
+  infra:location: eastus
+  infra:resourceGroupName: marketing-stack-eus2-rg
+  infra:logAnalyticsCustomerId: 6e36cce4-73df-477c-b973-957902533579
+  infra:logAnalyticsSharedKey:
+    secure: AAABAKfRIxN6MqjQ4xBmL6Ru0+UxlxS8Ezhbg41V7avukiXzE77pSmMsxsab9agAAVhzyUm5ZU84yLBuFA==
+  infra:storageAccountKey:
+    secure: AAABAII3CYWi97TUmrmwZVoZTWVhTrhecMECSwQadILxwPOpKb/X20/aZBcEVI11cLKKqbrUhfDbdCZwoHkG5VkX7u0njFXNqFPfNv2iD3e5D1DbntLGaOaA9ZCicGOtiq1G2Pk1kRVX4gylsBPm1uvhJMUck/3h

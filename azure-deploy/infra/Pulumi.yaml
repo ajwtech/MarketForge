@@ -4,7 +4,7 @@ runtime:
   name: nodejs
   options:
     packagemanager: npm
-    nodeargs: --max-old-space-size=2048
+    nodeargs: --max-old-space-size=4096
 config:
   pulumi:tags:
     value:
