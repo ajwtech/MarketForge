@@ -5,7 +5,7 @@ const marketing_stack_eus2_rg = new azure_native.resources.ResourceGroup("market
     location: "eastus",
     resourceGroupName: "marketing-stack-eus2-rg",
 }, {
-    protect: true,
+    protect: false,
 });
 
 const vnet = new azure_native.network.VirtualNetwork("marketing-vnet", {
@@ -71,7 +71,7 @@ const marketingstackstorage = new azure_native.storage.StorageAccount("marketing
         environment: "marketing-stack-rg",
     },
 }, {
-    protect: true,
+    protect: false,
 });
 
 const marketing_test = new azure_native.app.ManagedEnvironment("marketing-test", {
@@ -90,7 +90,7 @@ const marketing_test = new azure_native.app.ManagedEnvironment("marketing-test",
     },
     zoneRedundant: false,
 }, {
-    protect: true,
+    protect: false,
 });
 
 const mautic_test_web = new azure_native.app.ContainerApp("mautic-test-web", {
@@ -293,7 +293,7 @@ const mautic_test_web = new azure_native.app.ContainerApp("mautic-test-web", {
         ],
     },
 }, {
-    protect: true,
+    protect: false,
 });
 
 const mautic_test = new azure_native.app.ContainerApp("mautic-test", {
@@ -423,7 +423,7 @@ const mautic_test = new azure_native.app.ContainerApp("mautic-test", {
         ],
     },
 }, {
-    protect: true,
+    protect: false,
 });
 
 const mautic_cron = new azure_native.app.ContainerApp("mautic-cron", {
@@ -523,7 +523,7 @@ const mautic_cron = new azure_native.app.ContainerApp("mautic-cron", {
         ],
     },
 }, {
-    protect: true,
+    protect: false,
 });
 
 const mautic_worker = new azure_native.app.ContainerApp("mautic-worker", {
@@ -672,7 +672,7 @@ const mautic_worker = new azure_native.app.ContainerApp("mautic-worker", {
         ],
     },
 }, {
-    protect: true,
+    protect: false,
 });
 
 const marketingcr = new azure_native.containerregistry.Registry("marketingcr", {
@@ -710,7 +710,7 @@ const marketingcr = new azure_native.containerregistry.Registry("marketingcr", {
     },
     zoneRedundancy: azure_native.containerregistry.ZoneRedundancy.Disabled,
 }, {
-    protect: true,
+    protect: false,
 });
 
 const marketing_mysql = new azure_native.dbformysql.Server("marketing-mysql", {
@@ -747,5 +747,5 @@ const marketing_mysql = new azure_native.dbformysql.Server("marketing-mysql", {
     },
     version: azure_native.dbformysql.ServerVersion.ServerVersion_8_0_21,
 }, {
-    protect: true,
+    protect: false,
 });
