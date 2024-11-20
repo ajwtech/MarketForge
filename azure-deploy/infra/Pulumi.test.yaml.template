@@ -1,0 +1,10 @@
+
+config:
+  azure-native:location: <Azure Location>
+  infra:location: <Infra Location>
+  infra:resourceGroupName: <Resource Group Name>
+  infra:logAnalyticsCustomerId: <Log Analytics Customer ID>
+  infra:logAnalyticsSharedKey:
+    secure: <Log Analytics Shared Key>
+  infra:storageAccountKey:
+    secure: <Storage Account Key>
