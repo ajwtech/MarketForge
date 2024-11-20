@@ -1,9 +1,16 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as azure_native from "@pulumi/azure-native";
 
+const config = new pulumi.Config();
+const location = config.require("location");
+const resourceGroupName = config.require("resourceGroupName");
+const logAnalyticsCustomerId = config.require("logAnalyticsCustomerId");
+const logAnalyticsSharedKey = config.require("logAnalyticsSharedKey");
+const storageAccountKey = config.require("storageAccountKey");
+
 const marketing_stack_eus2_rg = new azure_native.resources.ResourceGroup("marketing-stack-eus2-rg", {
-    location: "eastus",
-    resourceGroupName: "marketing-stack-eus2-rg",
+    location: location,
+    resourceGroupName: resourceGroupName,
 }, {
     protect: false,
 });
@@ -47,7 +54,7 @@ const marketingstackstorage = new azure_native.storage.StorageAccount("marketing
     },
     kind: azure_native.storage.Kind.StorageV2,
     largeFileSharesState: azure_native.storage.LargeFileSharesState.Enabled,
-    location: "eastus2",
+    location: location,
     minimumTlsVersion: azure_native.storage.MinimumTlsVersion.TLS1_2,
     networkRuleSet: {
         bypass: azure_native.storage.Bypass.AzureServices,
@@ -58,7 +65,7 @@ const marketingstackstorage = new azure_native.storage.StorageAccount("marketing
         }],
     },
     publicNetworkAccess: azure_native.storage.PublicNetworkAccess.Enabled,
-    resourceGroupName: "marketing-stack-eus2-rg",
+    resourceGroupName: resourceGroupName,
     routingPreference: {
         publishInternetEndpoints: false,
         publishMicrosoftEndpoints: true,
@@ -78,12 +85,13 @@ const marketing_test = new azure_native.app.ManagedEnvironment("marketing-test",
     appLogsConfiguration: {
         destination: "log-analytics",
         logAnalyticsConfiguration: {
-            customerId: "6e36cce4-73df-477c-b973-957902533579",
+            customerId: logAnalyticsCustomerId,
+            sharedKey: logAnalyticsSharedKey
         },
     },
     environmentName: "marketing-test",
-    location: "East US",
-    resourceGroupName: "marketing-stack-eus2-rg",
+    location: location,
+    resourceGroupName: resourceGroupName,
     vnetConfiguration: {
         infrastructureSubnetId: subnet.id,
         internal: false,
@@ -123,9 +131,9 @@ const mautic_test_web = new azure_native.app.ContainerApp("mautic-test-web", {
     identity: {
         type: azure_native.app.ManagedServiceIdentityType.None,
     },
-    location: "East US",
+    location: location,
     managedEnvironmentId: marketing_test.id,
-    resourceGroupName: "marketing-stack-eus2-rg",
+    resourceGroupName: resourceGroupName,
     template: {
         containers: [{
             env: [
@@ -172,6 +180,10 @@ const mautic_test_web = new azure_native.app.ContainerApp("mautic-test-web", {
                 {
                     name: "SITE_URL",
                     value: "https://mautic-test.delightfulocean-116a429f.eastus.azurecontainerapps.io",
+                },
+                {
+                    name: "STORAGE_ACCOUNT_KEY",
+                    value: storageAccountKey,
                 },
             ],
             image: "marketingcr.azurecr.io/marketing-mautic_web:latest",
