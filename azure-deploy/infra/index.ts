@@ -2,7 +2,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as azure_native from "@pulumi/azure-native";
 
 const marketing_stack_eus2_rg = new azure_native.resources.ResourceGroup("marketing-stack-eus2-rg", {
-    location: "eastus2",
+    location: "eastus",
     resourceGroupName: "marketing-stack-eus2-rg",
 }, {
     protect: true,
