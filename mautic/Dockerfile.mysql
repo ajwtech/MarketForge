@@ -1,0 +1,38 @@
+# Dockerfile.mysql
+
+FROM mysql:8.0.21
+
+# Define build arguments with default values
+ARG MYSQL_ROOT_PASSWORD=password
+ARG MYSQL_ROOT_HOST='%'
+ARG DB_NAME=mauticdb
+ARG DB_USER=mauticuser
+ARG DB_PASSWORD=Mautic-password
+
+# ARG MAUTIC_DB_NAME=${DB_NAME}
+# ARG MAUTIC_DB_USER=${DB_USER}
+# ARG MAUTIC_DB_PASSWORD=${DB_PASSWORD}
+
+# ARG MAUTIC_MESSENGER_DSN_EMAIL="doctrine://default"
+# ARG MAUTIC_MESSENGER_DSN_HIT="doctrine://default"
+
+# Set environment variables
+ENV MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+ENV MYSQL_ROOT_HOST=${MYSQL_ROOT_HOST}
+
+ENV MYSQL_DATABASE=${DB_NAME}
+ENV MYSQL_USER=${DB_USER}
+ENV MYSQL_PASSWORD=${DB_PASSWORD}
+
+# Expose MySQL port
+EXPOSE 3306
+
+
+
+# Create a database user and grant privileges
+
+# Optional: Add custom MySQL configuration
+# COPY my.cnf /etc/mysql/my.cnf
+
+# Optional: Add initialization scripts
+# COPY ./init.sql /docker-entrypoint-initdb.d/
