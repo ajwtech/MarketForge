@@ -1,12 +1,11 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as azure_native from "@pulumi/azure-native";
+import * as azure from "@pulumi/azure-native";
+import * as docker from "@pulumi/docker";
 
 const config = new pulumi.Config();
 const location = config.require("location");
 const resourceGroupName = config.require("resourceGroupName");
-const logAnalyticsCustomerId = config.require("logAnalyticsCustomerId");
-const logAnalyticsSharedKey = config.require("logAnalyticsSharedKey");
-const storageAccountKey = config.require("storageAccountKey");
 
 const marketing_stack_eus2_rg = new azure_native.resources.ResourceGroup("marketing-stack-eus2-rg", {
     location: location,
@@ -26,7 +25,7 @@ const vnet = new azure_native.network.VirtualNetwork("marketing-vnet", {
 const subnet = new azure_native.network.Subnet("marketing-subnet", {
     resourceGroupName: marketing_stack_eus2_rg.name,
     virtualNetworkName: vnet.name,
-    addressPrefix: "10.0.1.0/24",
+    addressPrefix: "10.0.0.0/23", // Updated to /23
 });
 
 const marketingstackstorage = new azure_native.storage.StorageAccount("marketingstackstorage", {
@@ -81,12 +80,52 @@ const marketingstackstorage = new azure_native.storage.StorageAccount("marketing
     protect: false,
 });
 
+// Retrieve the storage account key
+const storageAccountKeys = marketingstackstorage.name.apply(accountName =>
+    azure_native.storage.listStorageAccountKeys({
+        accountName: accountName,
+        resourceGroupName: resourceGroupName,
+    })
+);
+
+const storageAccountKey = storageAccountKeys.apply(keys => keys.keys[0].value);
+
+const mauticAppFilesStorage = new azure_native.storage.FileShare("mautic-app-files", {
+    accountName: marketingstackstorage.name,
+    resourceGroupName: resourceGroupName,
+    shareName: "mautic-app-files",
+});
+
+// Create a Log Analytics workspace
+const logAnalyticsWorkspace = new azure.operationalinsights.Workspace("logAnalyticsWorkspace", {
+    resourceGroupName: resourceGroupName,
+    location: location,
+    sku: {
+        name: "PerGB2018",
+    },
+    retentionInDays: 30,
+    workspaceCapping: {
+        dailyQuotaGb: -1,
+    },
+});
+
+// Retrieve the Log Analytics shared key
+const logAnalyticsSharedKey = pulumi.all([resourceGroupName, logAnalyticsWorkspace.name]).apply(([rgName, workspaceName]) =>
+    azure.operationalinsights.getSharedKeys({
+        resourceGroupName: rgName,
+        workspaceName: workspaceName,
+    }).then(keys => keys.primarySharedKey)
+);
+
+// Export the Log Analytics workspace ID
+export const logAnalyticsWorkspaceId = logAnalyticsWorkspace.id;
+
 const marketing_test = new azure_native.app.ManagedEnvironment("marketing-test", {
     appLogsConfiguration: {
         destination: "log-analytics",
         logAnalyticsConfiguration: {
-            customerId: logAnalyticsCustomerId,
-            sharedKey: logAnalyticsSharedKey
+            customerId: logAnalyticsWorkspace.customerId.apply(id => id || ""),
+            sharedKey: logAnalyticsSharedKey.apply(key => key || ""),
         },
     },
     environmentName: "marketing-test",
@@ -100,6 +139,94 @@ const marketing_test = new azure_native.app.ManagedEnvironment("marketing-test",
 }, {
     protect: false,
 });
+
+// Create storage configuration in the managed environment
+const storage = new azure_native.app.ManagedEnvironmentsStorage("mautic-app-files-storage", {
+    environmentName: marketing_test.name,
+    resourceGroupName: resourceGroupName,
+    storageName: "mautic-app-files",
+    properties: {
+        azureFile: {
+            accountName: marketingstackstorage.name,
+            shareName: mauticAppFilesStorage.name,
+            accessMode: "ReadWrite",
+            accountKey: storageAccountKey,
+        },
+    },
+});
+
+const marketingcr = new azure_native.containerregistry.Registry("marketingcr", {
+    adminUserEnabled: true,
+    dataEndpointEnabled: false,
+    encryption: {
+        status: azure_native.containerregistry.EncryptionStatus.Disabled,
+    },
+    location: location,
+    networkRuleBypassOptions: azure_native.containerregistry.NetworkRuleBypassOptions.AzureServices,
+    policies: {
+        exportPolicy: {
+            status: azure_native.containerregistry.ExportPolicyStatus.Enabled,
+        },
+        quarantinePolicy: {
+            status: azure_native.containerregistry.PolicyStatus.Disabled,
+        },
+        retentionPolicy: {
+            days: 7,
+            status: azure_native.containerregistry.PolicyStatus.Disabled,
+        },
+        trustPolicy: {
+            status: azure_native.containerregistry.PolicyStatus.Disabled,
+            type: azure_native.containerregistry.TrustPolicyType.Notary,
+        },
+    },
+    publicNetworkAccess: azure_native.containerregistry.PublicNetworkAccess.Enabled,
+    registryName: "marketingcr",
+    resourceGroupName: resourceGroupName,
+    sku: {
+        name: azure_native.containerregistry.SkuName.Standard,
+    },
+    tags: {
+        environment: "marketing-stack-rg",
+    },
+    zoneRedundancy: azure_native.containerregistry.ZoneRedundancy.Disabled,
+}, {
+    protect: false,
+});
+
+// Ensure the ACR is created before building images
+const acrCredentials = marketingcr.name.apply(registryName => 
+    azure_native.containerregistry.listRegistryCredentials({
+        registryName: registryName,
+        resourceGroupName: resourceGroupName,
+    })
+);
+
+const acrUsername = acrCredentials.apply(creds => creds.username || "");
+const acrPassword = acrCredentials.apply(creds => (creds.passwords && creds.passwords[0].value) || "");
+const registryUrl = marketingcr.loginServer;
+
+// Build and push placeholder images to ACR
+const placeholderImages = ["marketing-mautic_web", "marketing-nginx", "marketing-mautic_init", "marketing-mautic_cron", "marketing-mautic_worker"];
+
+const imageTag = "0.0.0"; // Define your versioning strategy
+
+// Replace forEach with map to collect Image resources
+const imageBuilds = placeholderImages.map(imageName => 
+    new docker.Image(imageName, {
+        imageName: pulumi.interpolate`${registryUrl}/${imageName}:${imageTag}`,
+        build: {
+            context: ".", 
+            dockerfile: `Dockerfile`, // Updated to reference Dockerfile path
+        },
+        registry: {
+            server: registryUrl,
+            username: acrUsername,
+            password: acrPassword,
+        },
+    }, { dependsOn: [marketingcr] })
+);
+
+// Define a dependency for ContainerApps to wait for Docker images
 
 const mautic_test_web = new azure_native.app.ContainerApp("mautic-test-web", {
     configuration: {
@@ -118,16 +245,21 @@ const mautic_test_web = new azure_native.app.ContainerApp("mautic-test-web", {
         maxInactiveRevisions: 100,
         registries: [{
             identity: "",
-            passwordSecretRef: "reg-pswd-bc616009-8160",
-            server: "marketingcr.azurecr.io",
-            username: "marketingcr",
+            passwordSecretRef: "registry-password",
+            server: marketingcr.loginServer.apply(server => server || ""),
+            username: acrUsername,
         }],
         secrets: [{
-            name: "reg-pswd-bc616009-8160",
+            name: "acr-password",
+            value: acrPassword,
+        },
+        {
+            name: "registry-password",
+            value: acrPassword, // Use the retrieved registry password
         }],
     },
     containerAppName: "mautic-test-web",
-    environmentId: "/subscriptions/b20cccb5-66d3-485a-a768-496711f76646/resourceGroups/marketing-stack-eus2-rg/providers/Microsoft.App/managedEnvironments/marketing-test",
+    environmentId: marketing_test.id,
     identity: {
         type: azure_native.app.ManagedServiceIdentityType.None,
     },
@@ -186,7 +318,7 @@ const mautic_test_web = new azure_native.app.ContainerApp("mautic-test-web", {
                     value: storageAccountKey,
                 },
             ],
-            image: "marketingcr.azurecr.io/marketing-mautic_web:latest",
+            image: imageBuilds[0].imageName, // Use the built image
             name: "mautic-test-web",
             resources: {
                 cpu: 1,
@@ -242,7 +374,7 @@ const mautic_test_web = new azure_native.app.ContainerApp("mautic-test-web", {
                     value: "mautic-app-files",
                 },
             ],
-            image: "marketingcr.azurecr.io/marketing-mautic_init:latest",
+            image: pulumi.interpolate`${registryUrl}/marketing-mautic_init:${imageTag}`,
             name: "init-rsync",
             resources: {
                 cpu: 0.25,
@@ -269,43 +401,44 @@ const mautic_test_web = new azure_native.app.ContainerApp("mautic-test-web", {
         volumes: [
             {
                 name: "cron",
-                storageName: "mautic-app-files",
+                storageName: mauticAppFilesStorage.name,
                 storageType: azure_native.app.StorageType.AzureFile,
             },
             {
                 name: "config",
-                storageName: "mautic-app-files",
+                storageName: mauticAppFilesStorage.name,
                 storageType: azure_native.app.StorageType.AzureFile,
             },
             {
                 name: "logs",
-                storageName: "mautic-app-files",
+                storageName: mauticAppFilesStorage.name,
                 storageType: azure_native.app.StorageType.AzureFile,
             },
             {
                 name: "files",
-                storageName: "mautic-app-files",
+                storageName: mauticAppFilesStorage.name,
                 storageType: azure_native.app.StorageType.AzureFile,
             },
             {
                 name: "images",
-                storageName: "mautic-app-files",
+                storageName: mauticAppFilesStorage.name,
                 storageType: azure_native.app.StorageType.AzureFile,
             },
             {
                 name: "docroot",
-                storageName: "mautic-app-files",
+                storageName: mauticAppFilesStorage.name,
                 storageType: azure_native.app.StorageType.AzureFile,
             },
             {
                 name: "datastore",
-                storageName: "mautic-app-files",
+                storageName: mauticAppFilesStorage.name,
                 storageType: azure_native.app.StorageType.AzureFile,
             },
         ],
     },
 }, {
     protect: false,
+    dependsOn: [storage, ...imageBuilds],
 });
 
 const mautic_test = new azure_native.app.ContainerApp("mautic-test", {
@@ -326,12 +459,17 @@ const mautic_test = new azure_native.app.ContainerApp("mautic-test", {
         maxInactiveRevisions: 100,
         registries: [{
             identity: "",
-            passwordSecretRef: "reg-pswd-9fc8895e-9bdc",
-            server: "marketingcr.azurecr.io",
-            username: "marketingcr",
+            passwordSecretRef: "registry-password",
+            server: marketingcr.loginServer.apply(server => server || ""),
+            username: acrUsername,
         }],
         secrets: [{
-            name: "reg-pswd-9fc8895e-9bdc",
+            name: "acr-password",
+            value: acrPassword,
+        },
+        {
+            name: "registry-password",
+            value: acrPassword, // Use the retrieved registry password
         }],
     },
     containerAppName: "mautic-test",
@@ -339,9 +477,9 @@ const mautic_test = new azure_native.app.ContainerApp("mautic-test", {
     identity: {
         type: azure_native.app.ManagedServiceIdentityType.None,
     },
-    location: "East US",
+    location: location,
     managedEnvironmentId: marketing_test.id,
-    resourceGroupName: "marketing-stack-eus2-rg",
+    resourceGroupName: resourceGroupName,
     template: {
         containers: [{
             env: [
@@ -354,7 +492,7 @@ const mautic_test = new azure_native.app.ContainerApp("mautic-test", {
                     value: "mautic-test",
                 },
             ],
-            image: "marketingcr.azurecr.io/marketing-nginx:latest",
+            image: imageBuilds[1].imageName, // Use the built image
             name: "mautic-test",
             resources: {
                 cpu: 0.75,
@@ -399,43 +537,44 @@ const mautic_test = new azure_native.app.ContainerApp("mautic-test", {
         volumes: [
             {
                 name: "cron",
-                storageName: "mautic-app-files",
+                storageName: mauticAppFilesStorage.name,
                 storageType: azure_native.app.StorageType.AzureFile,
             },
             {
                 name: "config",
-                storageName: "mautic-app-files",
+                storageName: mauticAppFilesStorage.name,
                 storageType: azure_native.app.StorageType.AzureFile,
             },
             {
                 name: "logs",
-                storageName: "mautic-app-files",
+                storageName: mauticAppFilesStorage.name,
                 storageType: azure_native.app.StorageType.AzureFile,
             },
             {
                 name: "files",
-                storageName: "mautic-app-files",
+                storageName: mauticAppFilesStorage.name,
                 storageType: azure_native.app.StorageType.AzureFile,
             },
             {
                 name: "images",
-                storageName: "mautic-app-files",
+                storageName: mauticAppFilesStorage.name,
                 storageType: azure_native.app.StorageType.AzureFile,
             },
             {
                 name: "docroot",
-                storageName: "mautic-app-files",
+                storageName: mauticAppFilesStorage.name,
                 storageType: azure_native.app.StorageType.AzureFile,
             },
             {
                 name: "www",
-                storageName: "mautic-app-files",
+                storageName: mauticAppFilesStorage.name,
                 storageType: azure_native.app.StorageType.AzureFile,
             },
         ],
     },
 }, {
     protect: false,
+    dependsOn: [storage, ...imageBuilds],
 });
 
 const mautic_cron = new azure_native.app.ContainerApp("mautic-cron", {
@@ -444,22 +583,23 @@ const mautic_cron = new azure_native.app.ContainerApp("mautic-cron", {
         maxInactiveRevisions: 100,
         registries: [{
             identity: "",
-            passwordSecretRef: "reg-pswd-ef91ee99-b211",
+            passwordSecretRef: "registry-password",
             server: "marketingcr.azurecr.io",
             username: "marketingcr",
         }],
         secrets: [{
-            name: "reg-pswd-ef91ee99-b211",
+            name: "registry-password",
+            value: acrPassword, // Use the retrieved registry password
         }],
     },
     containerAppName: "mautic-cron",
-    environmentId: "/subscriptions/b20cccb5-66d3-485a-a768-496711f76646/resourceGroups/marketing-stack-eus2-rg/providers/Microsoft.App/managedEnvironments/marketing-test",
+    environmentId: marketing_test.id,
     identity: {
         type: azure_native.app.ManagedServiceIdentityType.None,
     },
-    location: "East US",
+    location: location,
     managedEnvironmentId: marketing_test.id,
-    resourceGroupName: "marketing-stack-eus2-rg",
+    resourceGroupName: resourceGroupName,
     template: {
         containers: [{
             env: [
@@ -472,7 +612,7 @@ const mautic_cron = new azure_native.app.ContainerApp("mautic-cron", {
                     value: "prod",
                 },
             ],
-            image: "marketingcr.azurecr.io/marketing-mautic_cron:latest",
+            image: imageBuilds[2].imageName, // Use the built image
             name: "mautic-cron",
             resources: {
                 cpu: 0.5,
@@ -509,33 +649,34 @@ const mautic_cron = new azure_native.app.ContainerApp("mautic-cron", {
         volumes: [
             {
                 name: "cron",
-                storageName: "mautic-app-files",
+                storageName: mauticAppFilesStorage.name,
                 storageType: azure_native.app.StorageType.AzureFile,
             },
             {
                 name: "config",
-                storageName: "mautic-app-files",
+                storageName: mauticAppFilesStorage.name,
                 storageType: azure_native.app.StorageType.AzureFile,
             },
             {
                 name: "logs",
-                storageName: "mautic-app-files",
+                storageName: mauticAppFilesStorage.name,
                 storageType: azure_native.app.StorageType.AzureFile,
             },
             {
                 name: "files",
-                storageName: "mautic-app-files",
+                storageName: mauticAppFilesStorage.name,
                 storageType: azure_native.app.StorageType.AzureFile,
             },
             {
                 name: "images",
-                storageName: "mautic-app-files",
+                storageName: mauticAppFilesStorage.name,
                 storageType: azure_native.app.StorageType.AzureFile,
             },
         ],
     },
 }, {
     protect: false,
+    dependsOn: [storage, ...imageBuilds],
 });
 
 const mautic_worker = new azure_native.app.ContainerApp("mautic-worker", {
@@ -544,22 +685,23 @@ const mautic_worker = new azure_native.app.ContainerApp("mautic-worker", {
         maxInactiveRevisions: 100,
         registries: [{
             identity: "",
-            passwordSecretRef: "reg-pswd-3f7155a1-9440",
+            passwordSecretRef: "registry-password",
             server: "marketingcr.azurecr.io",
             username: "marketingcr",
         }],
         secrets: [{
-            name: "reg-pswd-3f7155a1-9440",
+            name: "registry-password",
+            value: acrPassword, // Use the retrieved registry password
         }],
     },
     containerAppName: "mautic-worker",
-    environmentId: "/subscriptions/b20cccb5-66d3-485a-a768-496711f76646/resourceGroups/marketing-stack-eus2-rg/providers/Microsoft.App/managedEnvironments/marketing-test",
+    environmentId: marketing_test.id,
     identity: {
         type: azure_native.app.ManagedServiceIdentityType.None,
     },
-    location: "East US",
+    location: location,
     managedEnvironmentId: marketing_test.id,
-    resourceGroupName: "marketing-stack-eus2-rg",
+    resourceGroupName: resourceGroupName,
     template: {
         containers: [{
             env: [
@@ -612,7 +754,7 @@ const mautic_worker = new azure_native.app.ContainerApp("mautic-worker", {
                     value: "doctrine://default",
                 },
             ],
-            image: "marketingcr.azurecr.io/marketing-mautic_worker:latest",
+            image: imageBuilds[3].imageName, // Use the built image
             name: "mautic-worker",
             resources: {
                 cpu: 0.5,
@@ -653,80 +795,47 @@ const mautic_worker = new azure_native.app.ContainerApp("mautic-worker", {
         volumes: [
             {
                 name: "cron",
-                storageName: "mautic-app-files",
+                storageName: mauticAppFilesStorage.name,
                 storageType: azure_native.app.StorageType.AzureFile,
             },
             {
                 name: "config",
-                storageName: "mautic-app-files",
+                storageName: mauticAppFilesStorage.name,
                 storageType: azure_native.app.StorageType.AzureFile,
             },
             {
                 name: "logs",
-                storageName: "mautic-app-files",
+                storageName: mauticAppFilesStorage.name,
                 storageType: azure_native.app.StorageType.AzureFile,
             },
             {
                 name: "files",
-                storageName: "mautic-app-files",
+                storageName: mauticAppFilesStorage.name,
                 storageType: azure_native.app.StorageType.AzureFile,
             },
             {
                 name: "images",
-                storageName: "mautic-app-files",
+                storageName: mauticAppFilesStorage.name,
                 storageType: azure_native.app.StorageType.AzureFile,
             },
             {
                 name: "docroot",
-                storageName: "mautic-app-files",
+                storageName: mauticAppFilesStorage.name,
                 storageType: azure_native.app.StorageType.AzureFile,
             },
         ],
     },
 }, {
     protect: false,
+    dependsOn: [storage, ...imageBuilds],
 });
 
-const marketingcr = new azure_native.containerregistry.Registry("marketingcr", {
-    adminUserEnabled: true,
-    dataEndpointEnabled: false,
-    encryption: {
-        status: azure_native.containerregistry.EncryptionStatus.Disabled,
-    },
-    location: "eastus2",
-    networkRuleBypassOptions: azure_native.containerregistry.NetworkRuleBypassOptions.AzureServices,
-    policies: {
-        exportPolicy: {
-            status: azure_native.containerregistry.ExportPolicyStatus.Enabled,
-        },
-        quarantinePolicy: {
-            status: azure_native.containerregistry.PolicyStatus.Disabled,
-        },
-        retentionPolicy: {
-            days: 7,
-            status: azure_native.containerregistry.PolicyStatus.Disabled,
-        },
-        trustPolicy: {
-            status: azure_native.containerregistry.PolicyStatus.Disabled,
-            type: azure_native.containerregistry.TrustPolicyType.Notary,
-        },
-    },
-    publicNetworkAccess: azure_native.containerregistry.PublicNetworkAccess.Enabled,
-    registryName: "marketingcr",
-    resourceGroupName: "marketing-stack-eus2-rg",
-    sku: {
-        name: azure_native.containerregistry.SkuName.Standard,
-    },
-    tags: {
-        environment: "marketing-stack-rg",
-    },
-    zoneRedundancy: azure_native.containerregistry.ZoneRedundancy.Disabled,
-}, {
-    protect: false,
-});
+// Retrieve MySQL administrator password from config
+const mysqlPassword = config.requireSecret("mysqlAdminPassword");
 
 const marketing_mysql = new azure_native.dbformysql.Server("marketing-mysql", {
     administratorLogin: "adminuser",
+    administratorLoginPassword: mysqlPassword,
     availabilityZone: "2",
     backup: {
         backupRetentionDays: 7,
@@ -736,7 +845,7 @@ const marketing_mysql = new azure_native.dbformysql.Server("marketing-mysql", {
         mode: azure_native.dbformysql.HighAvailabilityMode.Disabled,
         standbyAvailabilityZone: "",
     },
-    location: "East US 2",
+    location: "eastus2", // Change to a permitted region
     maintenanceWindow: {
         customWindow: "Disabled",
         dayOfWeek: 0,
@@ -744,7 +853,7 @@ const marketing_mysql = new azure_native.dbformysql.Server("marketing-mysql", {
         startMinute: 0,
     },
     replicationRole: azure_native.dbformysql.ReplicationRole.None,
-    resourceGroupName: "marketing-stack-eus2-rg",
+    resourceGroupName: resourceGroupName,
     serverName: "marketing-mysql",
     sku: {
         name: "Standard_B1ms",
