@@ -208,7 +208,7 @@ const registryUrl = marketingcr.loginServer;
 // Build and push placeholder images to ACR
 const placeholderImages = ["marketing-mautic_web", "marketing-nginx", "marketing-mautic_init", "marketing-mautic_cron", "marketing-mautic_worker"];
 
-const imageTag = "0.0.0"; // Define your versioning strategy
+const imageTag = "latest"; // Define your versioning strategy
 
 // Replace forEach with map to collect Image resources
 const imageBuilds = placeholderImages.map(imageName => 
