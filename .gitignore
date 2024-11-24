@@ -1,1 +1,4 @@
+azure-deploy/infra/Pulumi.test.yaml
+**/node_modules/
+
 
