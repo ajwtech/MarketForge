@@ -1,5 +1,13 @@
 config:
-  azure-native:location: <Azure Location>
-  infra:location: <Infra Location>
-  infra:resourceGroupName: <Resource Group Name>
-  infra:logAnalyticsCustomerId: <Log Analytics Customer ID>
+  location: EastUS2 
+  resourceGroupName: marketing-stack
+  logAnalyticsCustomerId: 
+  storageAccountName: marketingstackstorage 
+  registryPassword:
+    secure: 
+  mysqlAdminPassword:
+    secure: 
+  acrSkuTier: basic
+
+  # for dev remote access
+  ipAddressOrRange: 

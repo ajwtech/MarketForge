@@ -1,26 +1,15 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as azure_native from "@pulumi/azure-native";
-import * as azure from "@pulumi/azure-native";
 import * as docker from "@pulumi/docker";
+import { ResourceGroup } from "./infrastructure/resourceGroup";
 
 const config = new pulumi.Config();
 const location = config.require("location");
 
-
 const resourceGroupName = config.require("resourceGroupName");
-const ResourceGroup = new azure_native.resources.ResourceGroup(resourceGroupName, {
-    location: location,
-    resourceGroupName: config.require("resourceGroupName"), // Ensure this is set in config
-}, {
-    protect: false,
-});
-
-
-
 
 type ACRSkuTier = keyof typeof azure_native.containerregistry.SkuName;
-const acrSkuTier = (config.get("acrSkuTier") as  ACRSkuTier) || "Basic";
-
+const acrSkuTier = (config.get("acrSkuTier") as ACRSkuTier) || "Basic";
 
 const vnet = new azure_native.network.VirtualNetwork("marketing-vnet", {
     resourceGroupName: ResourceGroup.name, // Updated reference
