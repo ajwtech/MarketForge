@@ -1,13 +1,11 @@
 config:
-  azure-native:location: EastUS
-  infra:location: eastus
-  infra:resourceGroupName: marketing-stack-eus2-rg
-  infra:logAnalyticsCustomerId: 6e36cce4-73df-477c-b973-957902533579
-  infra:storageAccountKey:
-    secure: AAABAII3CYWi97TUmrmwZVoZTWVhTrhecMECSwQadILxwPOpKb/X20/aZBcEVI11cLKKqbrUhfDbdCZwoHkG5VkX7u0njFXNqFPfNv2iD3e5D1DbntLGaOaA9ZCicGOtiq1G2Pk1kRVX4gylsBPm1uvhJMUck/3h
-  infra:regPswdBc6160098160:
-    secure: AAABAMag1x/HWrTakYukdU7wUUE1m34g9i2CeSq6+cTPrtTAA7HtR5qS34sGzOrqEGDYTu6/zouWR6Xb
-  infra:registryPassword:
+  location: EastUS2 # Updated from 'location' to a valid region
+  resourceGroupName: marketing-stack
+  logAnalyticsCustomerId: 6e36cce4-73df-477c-b973-957902533579
+  storageAccountName: marketingstackstorage # Ensure this can be set as needed
+  registryPassword:
     secure: AAABANJOzXCaWrCm6jZXl7lEOABbnV+7XY7Dre8/Suh09nf+yTiqg1MUKKsR5TFt
-  infra:mysqlAdminPassword:
+  mysqlAdminPassword:
     secure: AAABAHCdJ7KQD/toWXvPbpDuRqqV6/hJTux33EZRmv0zi/WdJUbc/p77GK4ZfP0=
+  acrSkuTier: Basic
+  ipAddressOrRange: "68.107.145.160" # Optional: Set IP address or range
