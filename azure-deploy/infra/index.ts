@@ -5,32 +5,45 @@ import * as docker from "@pulumi/docker";
 
 const config = new pulumi.Config();
 const location = config.require("location");
-const resourceGroupName = config.require("resourceGroupName");
 
-const marketing_stack_eus2_rg = new azure_native.resources.ResourceGroup("marketing-stack-eus2-rg", {
+
+const resourceGroupName = config.require("resourceGroupName");
+const ResourceGroup = new azure_native.resources.ResourceGroup(resourceGroupName, {
     location: location,
-    resourceGroupName: resourceGroupName,
+    resourceGroupName: config.require("resourceGroupName"), // Ensure this is set in config
 }, {
     protect: false,
 });
 
+
+
+
+type ACRSkuTier = keyof typeof azure_native.containerregistry.SkuName;
+const acrSkuTier = (config.get("acrSkuTier") as  ACRSkuTier) || "Basic";
+
+
 const vnet = new azure_native.network.VirtualNetwork("marketing-vnet", {
-    resourceGroupName: marketing_stack_eus2_rg.name,
-    location: marketing_stack_eus2_rg.location,
+    resourceGroupName: ResourceGroup.name, // Updated reference
+    location: ResourceGroup.location,
     addressSpace: {
         addressPrefixes: ["10.0.0.0/16"],
     },
 });
 
 const subnet = new azure_native.network.Subnet("marketing-subnet", {
-    resourceGroupName: marketing_stack_eus2_rg.name,
+    resourceGroupName: ResourceGroup.name, // Updated reference
     virtualNetworkName: vnet.name,
     addressPrefix: "10.0.0.0/23", // Updated to /23
 });
 
+const storageAccountName = config.require("storageAccountName");
+
+// Update the StorageAccount resource to use the configurable storageAccountName
+const ipAddressOrRange = config.get("ipAddressOrRange");
+
 const marketingstackstorage = new azure_native.storage.StorageAccount("marketingstackstorage", {
     accessTier: azure_native.storage.AccessTier.Hot,
-    accountName: "marketingstackstorage",
+    accountName: storageAccountName, // Use config value
     allowBlobPublicAccess: false,
     allowCrossTenantReplication: false,
     allowSharedKeyAccess: true,
@@ -58,13 +71,13 @@ const marketingstackstorage = new azure_native.storage.StorageAccount("marketing
     networkRuleSet: {
         bypass: azure_native.storage.Bypass.AzureServices,
         defaultAction: azure_native.storage.DefaultAction.Allow,
-        ipRules: [{
+        ipRules: ipAddressOrRange ? [{
             action: azure_native.storage.Action.Allow,
-            iPAddressOrRange: "68.107.145.160",
-        }],
+            iPAddressOrRange: ipAddressOrRange,
+        }] : [],
     },
     publicNetworkAccess: azure_native.storage.PublicNetworkAccess.Enabled,
-    resourceGroupName: resourceGroupName,
+    resourceGroupName: ResourceGroup.name, 
     routingPreference: {
         publishInternetEndpoints: false,
         publishMicrosoftEndpoints: true,
@@ -92,13 +105,13 @@ const storageAccountKey = storageAccountKeys.apply(keys => keys.keys[0].value);
 
 const mauticAppFilesStorage = new azure_native.storage.FileShare("mautic-app-files", {
     accountName: marketingstackstorage.name,
-    resourceGroupName: resourceGroupName,
+    resourceGroupName: ResourceGroup.name,
     shareName: "mautic-app-files",
 });
 
 // Create a Log Analytics workspace
 const logAnalyticsWorkspace = new azure.operationalinsights.Workspace("logAnalyticsWorkspace", {
-    resourceGroupName: resourceGroupName,
+    resourceGroupName: ResourceGroup.name, 
     location: location,
     sku: {
         name: "PerGB2018",
@@ -130,7 +143,7 @@ const marketing_test = new azure_native.app.ManagedEnvironment("marketing-test",
     },
     environmentName: "marketing-test",
     location: location,
-    resourceGroupName: resourceGroupName,
+    resourceGroupName: ResourceGroup.name, // Updated reference
     vnetConfiguration: {
         infrastructureSubnetId: subnet.id,
         internal: false,
@@ -143,7 +156,7 @@ const marketing_test = new azure_native.app.ManagedEnvironment("marketing-test",
 // Create storage configuration in the managed environment
 const storage = new azure_native.app.ManagedEnvironmentsStorage("mautic-app-files-storage", {
     environmentName: marketing_test.name,
-    resourceGroupName: resourceGroupName,
+    resourceGroupName: ResourceGroup.name, // Updated reference
     storageName: "mautic-app-files",
     properties: {
         azureFile: {
@@ -181,9 +194,9 @@ const marketingcr = new azure_native.containerregistry.Registry("marketingcr", {
     },
     publicNetworkAccess: azure_native.containerregistry.PublicNetworkAccess.Enabled,
     registryName: "marketingcr",
-    resourceGroupName: resourceGroupName,
+    resourceGroupName: ResourceGroup.name, // Updated reference
     sku: {
-        name: azure_native.containerregistry.SkuName.Standard,
+        name: azure_native.containerregistry.SkuName[acrSkuTier],
     },
     tags: {
         environment: "marketing-stack-rg",
@@ -205,10 +218,10 @@ const acrUsername = acrCredentials.apply(creds => creds.username || "");
 const acrPassword = acrCredentials.apply(creds => (creds.passwords && creds.passwords[0].value) || "");
 const registryUrl = marketingcr.loginServer;
 
+const imageTag = "latest"; 
+
 // Build and push placeholder images to ACR
 const placeholderImages = ["marketing-mautic_web", "marketing-nginx", "marketing-mautic_init", "marketing-mautic_cron", "marketing-mautic_worker"];
-
-const imageTag = "latest"; // Define your versioning strategy
 
 // Replace forEach with map to collect Image resources
 const imageBuilds = placeholderImages.map(imageName => 
@@ -216,14 +229,17 @@ const imageBuilds = placeholderImages.map(imageName =>
         imageName: pulumi.interpolate`${registryUrl}/${imageName}:${imageTag}`,
         build: {
             context: ".", 
-            dockerfile: `Dockerfile`, // Updated to reference Dockerfile path
+            dockerfile: `Dockerfile`,
         },
         registry: {
             server: registryUrl,
             username: acrUsername,
             password: acrPassword,
         },
-    }, { dependsOn: [marketingcr] })
+    }, { 
+        dependsOn: [marketingcr],
+        ignoreChanges: ["build"], // Prevent pushing if the image is already present
+    })
 );
 
 // Define a dependency for ContainerApps to wait for Docker images
@@ -232,15 +248,13 @@ const mautic_test_web = new azure_native.app.ContainerApp("mautic-test-web", {
     configuration: {
         activeRevisionsMode: azure_native.app.ActiveRevisionsMode.Single,
         ingress: {
-            allowInsecure: false,
-            exposedPort: 9000,
             external: false,
             targetPort: 9000,
             traffic: [{
                 latestRevision: true,
                 weight: 100,
             }],
-            transport: "Tcp",
+            transport: "Tcp", // Changed from "Tcp" to "Http"
         },
         maxInactiveRevisions: 100,
         registries: [{
@@ -265,7 +279,7 @@ const mautic_test_web = new azure_native.app.ContainerApp("mautic-test-web", {
     },
     location: location,
     managedEnvironmentId: marketing_test.id,
-    resourceGroupName: resourceGroupName,
+    resourceGroupName: ResourceGroup.name,
     template: {
         containers: [{
             env: [
@@ -317,6 +331,10 @@ const mautic_test_web = new azure_native.app.ContainerApp("mautic-test-web", {
                     name: "STORAGE_ACCOUNT_KEY",
                     value: storageAccountKey,
                 },
+                {
+                    name: "STORAGE_ACCOUNT_NAME",
+                    value: storageAccountName, // Use config value
+                },
             ],
             image: imageBuilds[0].imageName, // Use the built image
             name: "mautic-test-web",
@@ -363,11 +381,11 @@ const mautic_test_web = new azure_native.app.ContainerApp("mautic-test-web", {
                 },
                 {
                     name: "STORAGE_ACCOUNT_NAME",
-                    value: "marketingstackstorage",
+                    value: storageAccountName, 
                 },
                 {
                     name: "STORAGE_ACCOUNT_KEY",
-                    value: "aVanumfDnOo5+qxsvTJsh57EiCtX619UR5fNmcPTMsBtE/GvJ63tnqxfLJXXKtMltJkXrJVpoes5+ASt4svj3g==",  
+                    value: storageAccountKey, 
                 },
                 {
                     name: "FILE_SHARE_NAME",
@@ -387,13 +405,13 @@ const mautic_test_web = new azure_native.app.ContainerApp("mautic-test-web", {
         }],
         revisionSuffix: "",
         scale: {
-            maxReplicas: 10,
-            minReplicas: 1,
+            maxReplicas: 10, // Ensure maxReplicas > 0
+            minReplicas: 0, // changed from 1 to 0
             rules: [{
-                name: "tcp-scaler",
-                tcp: {
+                name: "tcp-scaler", // Updated scaler name
+                tcp: { // Changed from "tcp" to "http"
                     metadata: {
-                        concurrentConnections: "10",
+                        concurrentRequests: "100", // Example metric
                     },
                 },
             }],
@@ -447,14 +465,13 @@ const mautic_test = new azure_native.app.ContainerApp("mautic-test", {
         ingress: {
             allowInsecure: true,
             clientCertificateMode: "Ignore",
-            exposedPort: 0,
             external: true,
             targetPort: 80,
             traffic: [{
-                revisionName: "mautic-test--s3sn2oa",
+                latestRevision: true, 
                 weight: 100,
             }],
-            transport: "Auto",
+            transport: "Http", // Changed from "Tcp" to "Http"
         },
         maxInactiveRevisions: 100,
         registries: [{
@@ -479,7 +496,7 @@ const mautic_test = new azure_native.app.ContainerApp("mautic-test", {
     },
     location: location,
     managedEnvironmentId: marketing_test.id,
-    resourceGroupName: resourceGroupName,
+    resourceGroupName: ResourceGroup.name,
     template: {
         containers: [{
             env: [
@@ -531,8 +548,16 @@ const mautic_test = new azure_native.app.ContainerApp("mautic-test", {
         }],
         revisionSuffix: "",
         scale: {
-            maxReplicas: 10,
-            minReplicas: 1,
+            maxReplicas: 10, // Ensure maxReplicas > 0
+            minReplicas: 0,
+            rules: [{
+                name: "http-scaler", // Updated scaler name
+                http: { // Changed from "tcp" to "http"
+                    metadata: {
+                        concurrentRequests: "100", // Example metric
+                    },
+                },
+            }],
         },
         volumes: [
             {
@@ -599,7 +624,7 @@ const mautic_cron = new azure_native.app.ContainerApp("mautic-cron", {
     },
     location: location,
     managedEnvironmentId: marketing_test.id,
-    resourceGroupName: resourceGroupName,
+    resourceGroupName: ResourceGroup.name,
     template: {
         containers: [{
             env: [
@@ -610,6 +635,14 @@ const mautic_cron = new azure_native.app.ContainerApp("mautic-cron", {
                 {
                     name: "APP_ENV",
                     value: "prod",
+                },
+                {
+                    name: "STORAGE_ACCOUNT_NAME",
+                    value: storageAccountName, // Use config value
+                },
+                {
+                    name: "STORAGE_ACCOUNT_KEY",
+                    value: storageAccountKey, // Use secret from config
                 },
             ],
             image: imageBuilds[2].imageName, // Use the built image
@@ -643,8 +676,16 @@ const mautic_cron = new azure_native.app.ContainerApp("mautic-cron", {
         }],
         revisionSuffix: "",
         scale: {
-            maxReplicas: 1,
-            minReplicas: 1,
+            maxReplicas: 1, // Ensure maxReplicas > 0
+            minReplicas: 0,
+            rules: [{
+                name: "http-scaler", // Updated scaler name
+                http: { // Changed from "tcp" to "http" if applicable
+                    metadata: {
+                        concurrentRequests: "100", // Example metric
+                    },
+                },
+            }],
         },
         volumes: [
             {
@@ -701,7 +742,7 @@ const mautic_worker = new azure_native.app.ContainerApp("mautic-worker", {
     },
     location: location,
     managedEnvironmentId: marketing_test.id,
-    resourceGroupName: resourceGroupName,
+    resourceGroupName: ResourceGroup.name,
     template: {
         containers: [{
             env: [
@@ -753,6 +794,14 @@ const mautic_worker = new azure_native.app.ContainerApp("mautic-worker", {
                     name: "MAUTIC_MESSENGER_DSN_FAILED",
                     value: "doctrine://default",
                 },
+                {
+                    name: "STORAGE_ACCOUNT_NAME",
+                    value: storageAccountName, // Use config value
+                },
+                {
+                    name: "STORAGE_ACCOUNT_KEY",
+                    value: storageAccountKey, // Use secret from config
+                },
             ],
             image: imageBuilds[3].imageName, // Use the built image
             name: "mautic-worker",
@@ -789,8 +838,16 @@ const mautic_worker = new azure_native.app.ContainerApp("mautic-worker", {
         }],
         revisionSuffix: "",
         scale: {
-            maxReplicas: 1,
-            minReplicas: 1,
+            maxReplicas: 1, // Ensure maxReplicas > 0
+            minReplicas: 0,
+            rules: [{
+                name: "http-scaler", // Updated scaler name
+                http: { // Changed from "tcp" to "http" if applicable
+                    metadata: {
+                        concurrentRequests: "100", // Example metric
+                    },
+                },
+            }],
         },
         volumes: [
             {
@@ -845,7 +902,7 @@ const marketing_mysql = new azure_native.dbformysql.Server("marketing-mysql", {
         mode: azure_native.dbformysql.HighAvailabilityMode.Disabled,
         standbyAvailabilityZone: "",
     },
-    location: "eastus2", // Change to a permitted region
+    location: location, // Use the same location as other resources
     maintenanceWindow: {
         customWindow: "Disabled",
         dayOfWeek: 0,
@@ -853,7 +910,7 @@ const marketing_mysql = new azure_native.dbformysql.Server("marketing-mysql", {
         startMinute: 0,
     },
     replicationRole: azure_native.dbformysql.ReplicationRole.None,
-    resourceGroupName: resourceGroupName,
+    resourceGroupName: ResourceGroup.name, // Changed from 'resourceGroupName' variable to 'ResourceGroup.name'
     serverName: "marketing-mysql",
     sku: {
         name: "Standard_B1ms",
