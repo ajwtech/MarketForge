@@ -2,3 +2,6 @@ azure-deploy/infra/Pulumi.test.yaml
 **/node_modules/
 
 azure-deploy/infra/Pulumi.test.yaml
+mautic/datastore/
+__azurite_db_table__.json
+azure-deploy/config/pulumi.marketing.yaml
