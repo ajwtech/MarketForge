@@ -1,4 +1,3 @@
-
 import * as pulumi from "@pulumi/pulumi";
 import * as azure_native from "@pulumi/azure-native";
 
@@ -7,8 +6,6 @@ const location = config.require("location");
 const resourceGroupName = config.require("resourceGroupName");
 
 export const ResourceGroup = new azure_native.resources.ResourceGroup(resourceGroupName, {
-    location: location,
-    resourceGroupName: resourceGroupName, // Ensure this is set in config
-}, {
-    protect: false,
+    location: config.require("location"),
+    resourceGroupName: config.require("resourceGroupName"),
 });

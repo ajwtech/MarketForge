@@ -8,18 +8,18 @@ x-mautic-volumes:
 
 
 services: 
-  mautic_init:
-    build:
-      context: .
-      dockerfile: alpine.dockerfile
-    volumes: 
-      - ./datastore:/datastore:z
-    environment:
-      MAUTIC_ROLE: mautic_init
-    env_file:
-      - .env
-    networks:
-      - default
+  # mautic_init:
+  #   build:
+  #     context: .
+  #     dockerfile: alpine.dockerfile
+  #   volumes: 
+  #     - ./datastore:/datastore:z
+  #   environment:
+  #     MAUTIC_ROLE: mautic_init
+  #   env_file:
+  #     - .env
+  #   networks:
+  #     - default
 
   mautic_web:
     build:
@@ -32,9 +32,9 @@ services:
       MAUTIC_ROLE: mautic_web
     env_file:
       - .env
-    depends_on:
-      mautic_init:
-        condition: service_completed_successfully
+    # depends_on:
+    #   mautic_init:
+    #     condition: service_completed_successfully
     healthcheck:
       test: cgi-fcgi -bind -connect mautic_web:9000
       start_period: 5s
