@@ -17,19 +17,6 @@ export const storageAccount = new azure_native.storage.StorageAccount("marketing
     defaultToOAuthAuthentication: false,
     dnsEndpointType: azure_native.storage.DnsEndpointType.Standard,
     enableHttpsTrafficOnly: true, // Enable HTTPS traffic only for security
-    encryption: {
-        keySource: azure_native.storage.KeySource.Microsoft_Storage,
-        requireInfrastructureEncryption: false,
-        services: {
-            blob: {
-                enabled: true,
-                keyType: azure_native.storage.KeyType.Account,
-            },
-            file: {
-                enabled: false, // Disable file service
-            },
-        },
-    },
     kind: azure_native.storage.Kind.StorageV2,
     largeFileSharesState: azure_native.storage.LargeFileSharesState.Disabled, // Disable large file shares
     location: location,
@@ -69,11 +56,11 @@ export const storageAccountKey = pulumi.all([storageAccount.name, ResourceGroup.
     }).then(keys => keys.keys[0].value)
 );
 
-// Define the Blob Container for static web content
-export const mauticAppFilesStorage = new azure_native.storage.BlobContainer("mautic-app-files", {
+// Define the File Share for static web content
+export const mauticAppFilesStorage = new azure_native.storage.FileShare("mautic-app-files", {
     accountName: storageAccount.name,
     resourceGroupName: ResourceGroup.name,
-    publicAccess: azure_native.storage.PublicAccess.Container, // Allow public access to the container
+    
 });
 
 export const storageAccountName = storageAccount.name;

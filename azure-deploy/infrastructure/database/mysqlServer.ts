@@ -16,7 +16,7 @@ const mysqlServerName = config.require("mysqlServerName"); // Use config value
 const mysqlSkuName = config.require("mysqlSkuName")
 const mysqlSkuTier = config.require("mysqlSkuTier") as keyof typeof azure_native.dbformysql.SkuTier;
 
-export const marketing_mysql = new azure_native.dbformysql.Server("marketing-mysql", {
+export const marketing_mysql = new azure_native.dbformysql.Server(mysqlServerName, {
     administratorLogin: mysqlAdminUser, 
     administratorLoginPassword: mysqlPassword,
     availabilityZone: "1",
@@ -52,4 +52,12 @@ export const marketing_mysql = new azure_native.dbformysql.Server("marketing-mys
     version: azure_native.dbformysql.ServerVersion.ServerVersion_8_0_21,
 }, {
     protect: false,
+});
+
+// Allow the MysqlAdmin user to login from anywhere
+export const mysqlFirewallRule = new azure_native.dbformysql.FirewallRule("AllowAllIps", {
+    endIpAddress: "0.0.0.0",
+    resourceGroupName: ResourceGroup.name,
+    serverName: mysqlServerName,
+    startIpAddress: "0.0.0.0",
 });

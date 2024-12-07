@@ -1,6 +1,5 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as azure_native from "@pulumi/azure-native";
-import * as docker from "@pulumi/docker"; // Import the Docker module
 import { ResourceGroup } from "../resourceGroup";
 
 const config = new pulumi.Config();
@@ -53,11 +52,3 @@ const acrCredentials = pulumi.all([marketingcr.name, ResourceGroup.name]).apply(
 export const acrUsername = acrCredentials.apply(creds => creds.username || "");
 export const acrPassword = acrCredentials.apply(creds => (creds.passwords && creds.passwords[0].value) || "");
 export const registryUrl = marketingcr.loginServer;
-
-// Make imageTag configurable
-const imageTag = config.get("imageTag") || "latest";
-
-// Build and push placeholder images to ACR
-const placeholderImages = ["marketing-mautic_web", "marketing-nginx", "marketing-mautic_init", "marketing-mautic_cron", "marketing-mautic_worker"];
-
-// Ensure no imageBuilds are defined here to prevent duplication

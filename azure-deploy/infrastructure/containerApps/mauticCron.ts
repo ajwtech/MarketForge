@@ -1,9 +1,6 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as azure_native from "@pulumi/azure-native";
-import { acrUsername, acrPassword, registryUrl } from "../registries/acrRegistry";
-import { marketing_env } from "../managedEnvironment/managedEnvironment";
-import { storageAccountKey, storageAccountName, mauticAppFilesStorage, storageAccount } from "../storage/storageAccount";
-import { imageTag } from "../../index"; 
+import { storageAccountName, storageAccount } from "../storage/storageAccount";
 import { imageBuilds } from "../dockerImages"; 
 const config = new pulumi.Config();
 const location = config.require("location");
@@ -44,7 +41,7 @@ export function mauticCron(args: {
             }],
         },
         containerAppName: "mautic-cron",
-        environmentId: marketing_env.id,
+        environmentId: args.managedEnvironmentId,
         identity: {
             type: azure_native.app.ManagedServiceIdentityType.None,
         },
@@ -74,7 +71,7 @@ export function mauticCron(args: {
                         value: args.storageAccountKey, 
                     },
                 ],
-                image: imageBuilds["marketing-mautic_cron"].imageName, 
+                image: args.image, // Use the passed-in image parameter
                 name: "mautic-cron",
                 resources: {
                     cpu: 0.5,
@@ -128,27 +125,27 @@ export function mauticCron(args: {
                 },
                 {
                     name: "cron",
-                    storageName: mauticAppFilesStorage.name,
+                    storageName: args.storageName,
                     storageType: azure_native.app.StorageType.AzureFile,
                 },
                 {
                     name: "config",
-                    storageName: mauticAppFilesStorage.name,
+                    storageName: args.storageName,
                     storageType: azure_native.app.StorageType.AzureFile,
                 },
                 {
                     name: "logs",
-                    storageName: mauticAppFilesStorage.name,
+                    storageName: args.storageName,
                     storageType: azure_native.app.StorageType.AzureFile,
                 },
                 {
                     name: "files",
-                    storageName: mauticAppFilesStorage.name,
+                    storageName: args.storageName,
                     storageType: azure_native.app.StorageType.AzureFile,
                 },
                 {
                     name: "images",
-                    storageName: mauticAppFilesStorage.name,
+                    storageName: args.storageName,
                     storageType: azure_native.app.StorageType.AzureFile,
                 },
             ],
