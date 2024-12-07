@@ -1,9 +1,6 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as azure_native from "@pulumi/azure-native";
-import { acrUsername, acrPassword, registryUrl } from "../registries/acrRegistry";
-import { marketing_env } from "../../index";
-import { storageAccountName, storageAccountKey, mauticAppFilesStorage, storageAccount } from "../storage/storageAccount";
-import { nginxUrl } from "./mauticNginx";
+import { storageAccountName, storageAccountKey, storageAccount } from "../storage/storageAccount";
 import { imageBuilds } from "../dockerImages"; 
 
 const config = new pulumi.Config();
@@ -24,7 +21,8 @@ export function mauticWeb(args: {
     dbUser: pulumi.Input<string>;
     dbPassword: pulumi.Input<string>;
     appSecret: pulumi.Input<string>;
-    resourceGroupName: pulumi.Input<string>; // Add this line
+    resourceGroupName: pulumi.Input<string>; 
+    siteurn: pulumi.Output<string>
 }) {
     return new azure_native.app.ContainerApp("mautic-web", {
         configuration: {
@@ -50,7 +48,7 @@ export function mauticWeb(args: {
             }],
         },
         containerAppName: "mautic-web",
-        environmentId: marketing_env.id,
+        environmentId: args.managedEnvironmentId,
         identity: {
             type: azure_native.app.ManagedServiceIdentityType.None,
         },
@@ -60,7 +58,7 @@ export function mauticWeb(args: {
         template: {
             containers: [{
                 name: "mautic-web",
-                image: imageBuilds["marketing-mautic_web"].imageName, 
+                image: args.image, 
                 env: [
                     { name: "APP_ENV", value: args.env },
                     { name: "DB_HOST", value: args.dbHost },
@@ -83,7 +81,7 @@ export function mauticWeb(args: {
                     },
                     {
                         name: "SITE_URL",
-                        value: nginxUrl.apply(url => `https://${url}`), // Use nginxUrl here
+                        value: `https://${args.siteurn}`,
                     },
                     {
                         name: "STORAGE_ACCOUNT_KEY",
@@ -125,40 +123,40 @@ export function mauticWeb(args: {
                     },
                 ],
             }],
-            initContainers: [{
-                env: [
-                    {
-                        name: "MAUTIC_ROLE",
-                        value: "mautic_init",
-                    },
-                    {
-                        name: "APP_ENV",
-                        value: "prod",
-                    },
-                    {
-                        name: "STORAGE_ACCOUNT_NAME",
-                        value: storageAccountName,
-                    },
-                    {
-                        name: "STORAGE_ACCOUNT_KEY",
-                        value: storageAccountKey,
-                    },
-                    {
-                        name: "FILE_SHARE_NAME",
-                        value: "mautic-app-files",
-                    },
-                ],
-                image: args.image, // Use the passed-in image parameter
-                name: "init-rsync",
-                resources: {
-                    cpu: 0.25,
-                    memory: "0.5Gi",
-                },
-                volumeMounts: [{
-                    mountPath: "/datastore",
-                    volumeName: "datastore",
-                }],
-            }],
+            // initContainers: [{
+            //     env: [
+            //         {
+            //             name: "MAUTIC_ROLE",
+            //             value: "mautic_init",
+            //         },
+            //         {
+            //             name: "APP_ENV",
+            //             value: "prod",
+            //         },
+            //         {
+            //             name: "STORAGE_ACCOUNT_NAME",
+            //             value: storageAccountName,
+            //         },
+            //         {
+            //             name: "STORAGE_ACCOUNT_KEY",
+            //             value: storageAccountKey,
+            //         },
+            //         {
+            //             name: "FILE_SHARE_NAME",
+            //             value: args.storageName,
+            //         },
+            //     ],
+            //     image: args.image, // Use the passed-in image parameter
+            //     name: "init-rsync",
+            //     resources: {
+            //         cpu: 0.25,
+            //         memory: "0.5Gi",
+            //     },
+            //     volumeMounts: [{
+            //         mountPath: "/datastore",
+            //         volumeName: "datastore",
+            //     }],
+            // }],
             revisionSuffix: "",
             scale: {
                 maxReplicas: 10,
@@ -175,37 +173,37 @@ export function mauticWeb(args: {
             volumes: [
                 {
                     name: "cron",
-                    storageName: mauticAppFilesStorage.name,
+                    storageName: args.storageName,
                     storageType: azure_native.app.StorageType.AzureFile,
                 },
                 {
                     name: "config",
-                    storageName: mauticAppFilesStorage.name,
+                    storageName: args.storageName,
                     storageType: azure_native.app.StorageType.AzureFile,
                 },
                 {
                     name: "logs",
-                    storageName: mauticAppFilesStorage.name,
+                    storageName: args.storageName,
                     storageType: azure_native.app.StorageType.AzureFile,
                 },
                 {
                     name: "files",
-                    storageName: mauticAppFilesStorage.name,
+                    storageName: args.storageName,
                     storageType: azure_native.app.StorageType.AzureFile,
                 },
                 {
                     name: "images",
-                    storageName: mauticAppFilesStorage.name,
+                    storageName: args.storageName,
                     storageType: azure_native.app.StorageType.AzureFile,
                 },
                 {
                     name: "docroot",
-                    storageName: mauticAppFilesStorage.name,
+                    storageName: args.storageName,
                     storageType: azure_native.app.StorageType.AzureFile,
                 },
                 {
                     name: "datastore",
-                    storageName: mauticAppFilesStorage.name,
+                    storageName: args.storageName,
                     storageType: azure_native.app.StorageType.AzureFile,
                 },
             ],

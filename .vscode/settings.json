@@ -12,6 +12,7 @@
         "mauticuser",
         "operationalinsights",
         "pulumi",
+        "siteurn",
         "vnet"
     ]
 }

@@ -39,14 +39,15 @@ server {
     location ~ /\.ht {
         deny all;
     }# nginx.conf.template
-}
 
-location /health_check {
-    access_log off;
-    fastcgi_pass ${MAUTIC_WEB_URL};
-    fastcgi_index index.php;
-    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-    fastcgi_param SCRIPT_NAME $fastcgi_script_name;
-    return 200 'Healthy';
-    add_header Content-Type text/plain;
+
+    location /health_check {
+        access_log off;
+        fastcgi_pass ${MAUTIC_WEB_URL};
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param SCRIPT_NAME $fastcgi_script_name;
+        return 200 'Healthy';
+        add_header Content-Type text/plain;
+    }
 }

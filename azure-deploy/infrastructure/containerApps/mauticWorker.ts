@@ -1,31 +1,10 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as azure_native from "@pulumi/azure-native";
-import { marketingcr } from "../registries/acrRegistry";
 import { storageAccount, storageAccountKey, storageAccountName } from "../storage/storageAccount";
-import { ResourceGroup } from "../resourceGroup"; 
-import { marketing_env } from "../managedEnvironment/managedEnvironment";
-import * as docker from "@pulumi/docker";
 import { imageBuilds } from "../dockerImages"; // Ensure correct import
 
 const config = new pulumi.Config();
 const mauticRoleWorker = config.get("mauticRoleWorker") || "mautic_worker";
-const dbUser = config.require("dbUser");
-const dbHost = config.require("dbHost");
-const dbPort = config.require("dbPort");
-const dbName = config.require("dbName");
-const dbPassword = config.requireSecret("dbPassword");
-const appSecret = config.requireSecret("appSecret");
-
-// Adjust 'acrCredentials' to use 'ResourceGroup.name'
-const acrCredentials = pulumi.all([marketingcr.name, ResourceGroup.name]).apply(([registryName, resourceGroupName]) => 
-    azure_native.containerregistry.listRegistryCredentials({
-        registryName: registryName,
-        resourceGroupName: resourceGroupName
-    })
-);
-const acrUsername = acrCredentials.apply(creds => creds.username || "");
-const acrPassword = acrCredentials.apply(creds => (creds.passwords && creds.passwords[0].value) || "");
-const registryUrl = marketingcr.loginServer;
 
 export function mauticWorker(args: {
     env: string;
@@ -60,7 +39,7 @@ export function mauticWorker(args: {
             }],
         },
         containerAppName: "mautic-worker",
-        environmentId: marketing_env.id,
+        environmentId: args.managedEnvironmentId,
         identity: {
             type: azure_native.app.ManagedServiceIdentityType.None,
         },
@@ -107,7 +86,7 @@ export function mauticWorker(args: {
                         value: storageAccountKey, // Use config secret
                     },
                 ],
-                image: imageBuilds["marketing-mautic_worker"].imageName, // Reference centralized image build
+                image: args.image, // Use the passed-in image parameter
                 name: "mautic-worker",
                 resources: {
                     cpu: 0.5,
