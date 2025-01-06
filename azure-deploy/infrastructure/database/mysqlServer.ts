@@ -60,4 +60,4 @@ export const mysqlFirewallRule = new azure_native.dbformysql.FirewallRule("Allow
     resourceGroupName: ResourceGroup.name,
     serverName: mysqlServerName,
     startIpAddress: "0.0.0.0",
-});
+}, { dependsOn: [marketing_mysql] });

@@ -9,6 +9,7 @@
         "MAUTIC",
         "mauticdb",
         "Mauticpassword",
+        "mauticstatichosting",
         "mauticuser",
         "operationalinsights",
         "pulumi",
