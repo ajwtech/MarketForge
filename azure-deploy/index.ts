@@ -5,10 +5,10 @@ import * as random from "@pulumi/random";
 
 // import resources to manage
 import { ResourceGroup } from "./infrastructure/resourceGroup";
-import { storageAccount, storageAccountKey, mauticAppFilesStorage } from "./infrastructure/storage/storageAccount";
+import { storageAccount, storageAccountKey, mauticAppFilesStorage, mauticStaticHosting } from "./infrastructure/storage/storageAccount";
 import { marketing_mysql } from "./infrastructure/database/mysqlServer";
 import { acrUsername, acrPassword, registryUrl } from "./infrastructure/registries/acrRegistry";
-import { mauticWeb, mauticCron, mauticNginx } from "./infrastructure/containerApps/mauticApps";
+import { mauticWeb, mauticNginx } from "./infrastructure/containerApps/mauticApps";
 import { marketing_env } from "./infrastructure/managedEnvironment/managedEnvironment"; // Import from managedEnvironment.ts
 import { imageBuilds } from "./infrastructure/dockerImages"; // Ensure correct import
 
@@ -24,8 +24,7 @@ const dbUser = config.get("dbUser") || "mauticuser";
 const dbPassword = config.requireSecret("dbPassword");
 const appSecret = config.get("appSecret") || new random.RandomPassword("appSecret", {length: 32, special: true,}).result;
 const storageAccountName = config.require("storageAccountName");
-
-// Create storage configuration in the managed environment
+// Create storage configuration in the managed environment 
 const storage = new azure_native.app.ManagedEnvironmentsStorage("mautic-app-files-storage", {
     environmentName: marketing_env.name,
     resourceGroupName: ResourceGroup.name,
@@ -42,6 +41,12 @@ const storage = new azure_native.app.ManagedEnvironmentsStorage("mautic-app-file
     protect: false,
     dependsOn: [mauticAppFilesStorage]
 });
+
+//set the env var MAUTIC_STORAGE_STATIC_WEB to the static site container URN
+const urnString = mauticStaticHosting.urn.apply(urnString  => {
+    return urnString;
+});
+
 
 // Make imageTag configurable
 const imageTag = config.get("imageTag") || "latest"; 
@@ -65,6 +70,7 @@ export const mauticNginxApp = mauticNginx({
     dbPort: dbPort,
     dbName: dbName,
     resourceGroupName: ResourceGroup.name,
+    staticSiteContainer: urnString,
 });
 
 const siteURN = mauticNginxApp.urn
@@ -88,25 +94,25 @@ export const mauticWebApp = mauticWeb({
     siteurn: siteURN,
 });
 
-// Deploy the Mautic Cron Job
-const mauticCronApp = mauticCron({
-    env: appEnv,
-    image: getImageName(imageBuilds, "marketing-mautic_cron"),
-    registryUrl: registryUrl,
-    registryUsername: acrUsername,
-    registryPassword: acrPassword,
-    managedEnvironmentId: marketing_env.id,
-    storageName: storage.name, 
-    storageMountPath: "/var/www/html",
-    dbHost: dbHost,
-    dbPort: dbPort,
-    dbName: dbName,
-    dbUser: dbUser,
-    dbPassword: dbPassword,
-    appSecret: appSecret,
-    resourceGroupName: ResourceGroup.name,
-    storageAccountKey: storageAccountKey, 
-});
+// // Deploy the Mautic Cron Job
+// const mauticCronApp = mauticCron({
+//     env: appEnv,
+//     image: getImageName(imageBuilds, "marketing-mautic_cron"),
+//     registryUrl: registryUrl,
+//     registryUsername: acrUsername,
+//     registryPassword: acrPassword,
+//     managedEnvironmentId: marketing_env.id,
+//     storageName: storage.name, 
+//     storageMountPath: "/var/www/html",
+//     dbHost: dbHost,
+//     dbPort: dbPort,
+//     dbName: dbName,
+//     dbUser: dbUser,
+//     dbPassword: dbPassword,
+//     appSecret: appSecret,
+//     resourceGroupName: ResourceGroup.name,
+//     storageAccountKey: storageAccountKey, 
+// });
 
 //Removed the below to try and figure out a better way to manage in Azure.
 // Deploy the Mautic Worker

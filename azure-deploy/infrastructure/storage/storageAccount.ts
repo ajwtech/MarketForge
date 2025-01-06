@@ -63,4 +63,12 @@ export const mauticAppFilesStorage = new azure_native.storage.FileShare("mautic-
     
 });
 
+export const mauticStaticHosting = new azure_native.storage.StorageAccountStaticWebsite("mauticstatichosting", {
+    accountName: storageAccount.name,
+    resourceGroupName:  ResourceGroup.name,
+   // error404Document: "string",
+   //indexDocument: "string",
+});
+
 export const storageAccountName = storageAccount.name;
+

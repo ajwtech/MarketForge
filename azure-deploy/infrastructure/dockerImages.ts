@@ -9,7 +9,7 @@ const config = new pulumi.Config();
 const imageTag = config.get('imageTag') || 'latest';
 const imageNames = [
   'marketing-nginx',
-  'marketing-mautic_cron',
+ // 'marketing-mautic_cron',
   'marketing-mautic_web',
  // 'marketing-mautic_worker',
  // 'marketing-mautic_init',
@@ -41,8 +41,8 @@ marketingcr.name.apply(acrName => {
     for (const imageName of imageNames) {
       const fullImageName = pulumi.interpolate`${registry}/${imageName}:${imageTag}`;
       const buildOptions: DockerBuild = {
-        context: '.',
-        dockerfile: `./Dockerfile`,
+        context: '../mautic',
+        dockerfile: `../mautic/${imageName}.dockerfile`,
         platform: 'linux/amd64',
       };
 
@@ -59,9 +59,7 @@ marketingcr.name.apply(acrName => {
           },
           skipPush: imageExists(acrName,imageName)  
         },
-        {
 
-        }
       );
     }
   });
