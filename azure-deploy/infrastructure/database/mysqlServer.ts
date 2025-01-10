@@ -11,6 +11,7 @@ const mysqlAdminUser = config.require("mysqlAdminUser");
 
 // Add configurable server name
 const mysqlServerName = config.require("mysqlServerName"); // Use config value
+const mysqlDbName = config.require("mysqlDbName"); // Use config value
 
 // Add configurable SKU name and tier
 const mysqlSkuName = config.require("mysqlSkuName")
@@ -24,6 +25,7 @@ export const marketing_mysql = new azure_native.dbformysql.Server(mysqlServerNam
         backupRetentionDays: 7,
         geoRedundantBackup: azure_native.dbformysql.EnableStatusEnum.Disabled,
     },
+    
     highAvailability: {
         mode: azure_native.dbformysql.HighAvailabilityMode.Disabled,
         standbyAvailabilityZone: "",
@@ -50,9 +52,28 @@ export const marketing_mysql = new azure_native.dbformysql.Server(mysqlServerNam
         storageSizeGB: 32,
     },
     version: azure_native.dbformysql.ServerVersion.ServerVersion_8_0_21,
+    
 }, {
+    
     protect: false,
-});
+}
+);
+export const configuration = new azure_native.dbformysql.Configuration("configuration",
+    {
+        resourceGroupName: ResourceGroup.name,
+        configurationName: "require_secure_transport",
+        serverName: mysqlServerName,
+        source: "user-override",
+        value: "OFF",
+    });
+
+// Create a database in the server
+export const marketing_database = new azure_native.dbformysql.Database(mysqlDbName, {
+    charset: "utf8",
+    collation: "utf8_unicode_ci",
+    resourceGroupName: ResourceGroup.name,
+    serverName: mysqlServerName,
+}, { dependsOn: [marketing_mysql] });
 
 // Allow the MysqlAdmin user to login from anywhere
 export const mysqlFirewallRule = new azure_native.dbformysql.FirewallRule("AllowAllIps", {

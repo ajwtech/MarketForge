@@ -40,6 +40,7 @@ This repository contains the infrastructure code for deploying MarketForge using
     pulumi config set marketing:mysqlServerName <your-mysqlServerName>
     pulumi config set marketing:mysqlSkuName <value> [size names and tiers](https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/general-purpose/bv1-series?tabs=sizebasic)
     pulumi config set marketing:mysqlSkuTier <Burstable, GeneralPurpose, MemoryOptimized>
+    pulumi config set marketing:mysqlDbName <your-mysql-db-name>
     ```
 
 ## Deployment
