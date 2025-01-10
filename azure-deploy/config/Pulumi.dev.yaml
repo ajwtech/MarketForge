@@ -1,0 +1,15 @@
+config:
+  marketing:location: East US 2
+  marketing:subscriptionId:
+    secure: AAABAA68eaERSZ+0JfazCdx6lLOMqkJgkC6zsXqKunvV9yZ3EI2jNaoXeQzbawqcDJkX3aWDCpfFYAbheyPdVOHiVw0=
+  marketing:dbPassword:
+    secure: AAABAHH610JfdWLrjHsYUmG0j4Jm6qnUIlcuWkYgUMM9UrR3Mb+CbHXiGsb9d/1ot9aqFEIfYQ==
+  marketing:storageAccountName: marketingstackstorage
+  marketing:resourceGroupName: marketingRG
+  marketing:mysqlAdminPassword:
+    secure: AAABAGNilRa05E3MXg8ljgG5S3IrDlHl8o4rbb049GEQpuI9jK+E4B6R6qSqpq/ZRdrpsFLvnQ==
+  marketing:mysqlAdminUser: mysqladmin
+  marketing:mysqlServerName: marketingstackmysql
+  marketing:mysqlSkuName: Standard_B1ms
+  marketing:mysqlSkuTier: Burstable
+  marketing:marketingcr: marketingcr

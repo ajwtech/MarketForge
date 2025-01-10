@@ -4,7 +4,7 @@ set -e
 # Define source and destination directories
 SOURCE="/var/www/html/"
 DESTINATION="/datastore"
-LOGDIR="/datastore/var/logs"
+LOGDIR="/var/logs"
 LOGFILE="$LOGDIR/init_$(date +'%Y%m%d_%H%M%S').log"
 
 # Function to rotate logs
@@ -76,7 +76,7 @@ else
 
     # Use rsync to copy or update files
     echo "Starting rsync..."
-    rsync -a --progress --exclude='config/local.php' --exclude='var/logs' "$SOURCE" "$DESTINATION/" || { echo "Rsync failed"; exit 1; }
+    rsync -az --progress --exclude='config/local.php' --exclude='var/logs' "$SOURCE" "$DESTINATION/" || { echo "Rsync failed"; exit 1; }
     echo "rsync completed."
 
     # Copy local.php if it doesn't exist in the destination but does exist in the source. Otherwise, skip.

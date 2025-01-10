@@ -15,9 +15,9 @@ const appEnv = config.get("appEnv") || "prod";
 const mauticWebUrl = config.get("mauticWebUrl") || "http://mautic-web:9000";
 const mauticServerName = config.get("mauticServerName") || "mautic-nginx";
 
-const dbHost = config.require("dbHost");
-const dbPort = config.require("dbPort");
-const dbName = config.require("dbName");
+// const dbHost = config.require("dbHost");
+// const dbPort = config.require("dbPort");
+// const dbName = config.require("dbName");
 
 // Adjust 'acrCredentials' to use 'ResourceGroup.name'
 const acrCredentials = pulumi.all([marketingcr.name, ResourceGroup.name]).apply(([registryName, resourceGroupName]) => 

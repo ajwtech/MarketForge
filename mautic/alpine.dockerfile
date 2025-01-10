@@ -18,7 +18,7 @@ ARG DB_NAME=mauticdb
 ARG ${DB_NAME:-mauticdb}
 ARG ${DB_USER:-mauticuser}
 ARG ${DB_PASSWORD:-'Mautic-password'}
-ARG APP_VERSION=5.1.1
+ARG ${APP_VERSION:-5.2.1}
 
 # Assign build arguments to environment variables
 ENV APP_ENV=${APP_ENV} \
@@ -29,7 +29,8 @@ ENV APP_ENV=${APP_ENV} \
     DB_PASSWORD=${DB_PASSWORD} \
     APP_SECRET=${APP_SECRET} \
     NODE_ENV=production \
-    PATH="/usr/local/bin:/usr/local/lib/node_modules/.bin:${PATH}" 
+    PATH="/usr/local/bin:/usr/local/lib/node_modules/.bin:${PATH}" \
+    APP_VERSION=${APP_VERSION}
 
 RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
     # Install dev/build dependencies
@@ -97,7 +98,7 @@ WORKDIR /opt/
 # this is where it gets complicated. Composer for php and npm for node are configured in the reccomended project in a way that causes a catch 22 for a new instance of the project. Essentially the post install scripts in each one are dependent on the other being installed first. So this is how I am going to handle it. 
 # First I will install the reccomended project with composer include the dev dependencies and disable the scripts. note that the app version is parameterized so the mautic folder will have versioned subfolders to assist in future updates and rollbacks. This has to be the first step because the npm install depends on the packages.json from the recommended project. npx is also required for the post install scripts to eventually run.
 # Now when the npm install is run it will have npx needed by composer and the packages.json needed by npm. The npm post install script will run which will allow us to add the additional dev dependencies but we still need to disable the scripts because on a new system they will need to execute in a different order. Generate Assets, and patch-package need to run first.which will then complete the build. 
-RUN COMPOSER_ALLOW_SUPERUSER=1 COMPOSER_PROCESS_TIMEOUT=10000 composer create-project mautic/recommended-project:^${APP_VERSION} mautic \
+RUN COMPOSER_ALLOW_SUPERUSER=1 COMPOSER_PROCESS_TIMEOUT=10000 composer create-project "mautic/recommended-project:${APP_VERSION}" mautic \
         --no-interaction --prefer-install=auto --no-scripts && \
     cd mautic && \
     npm install -g npx && \
@@ -119,8 +120,6 @@ RUN COMPOSER_ALLOW_SUPERUSER=1 COMPOSER_PROCESS_TIMEOUT=10000 composer create-pr
 
 # Stage 3: Production
 FROM php:8.2-fpm-alpine3.20
-
-ARG APP_VERSION=5.1.1
 
 # Create log directories for PHP-FPM
 RUN mkdir -p /var/log/php-fpm && \
@@ -159,8 +158,8 @@ php82-intl \
 
 # Copy configuration files to their correct locations
 COPY ./php.ini /usr/local/etc/php/php.ini
-COPY ./www.conf /usr/local/etc/php-fpm.d/www.conf
-COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+##COPY ./www.conf /usr/local/etc/php-fpm.d/www.conf
+##COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY ./entrypoint_mautic_web.sh /entrypoint_mautic_web.sh
 COPY ./entrypoint_mautic_cron.sh /entrypoint_mautic_cron.sh
 COPY ./entrypoint_mautic_worker.sh /entrypoint_mautic_worker.sh
@@ -188,8 +187,8 @@ ENV DOCKER_MAUTIC_WORKERS_CONSUME_EMAIL=2 \
     DOCKER_MAUTIC_WORKERS_CONSUME_FAILED=2
 
 # In Dockerfile
-RUN mkdir -p /var/www/html/var/logs/supervisor && \
-    chown -R www-data:www-data /var/www/html/var/logs/supervisor
+##RUN mkdir -p /var/www/html/var/logs/supervisor && \
+ ##   chown -R www-data:www-data /var/www/html/var/logs/supervisor
 
 EXPOSE 9000
 # Define the entrypoint

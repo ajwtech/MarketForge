@@ -4,8 +4,8 @@ import { ResourceGroup } from "../resourceGroup";
 
 const config = new pulumi.Config();
 const acrSkuName = (config.get("acrSkuName") as azure_native.containerregistry.SkuName) || azure_native.containerregistry.SkuName.Basic;
-
-export const marketingcr = new azure_native.containerregistry.Registry("marketingcr", {
+const containerRegistryName = config.get("marketingcr") || "marketingcr";
+export const marketingcr = new azure_native.containerregistry.Registry(containerRegistryName, {
     adminUserEnabled: true,
     dataEndpointEnabled: false,
     encryption: {
@@ -30,7 +30,7 @@ export const marketingcr = new azure_native.containerregistry.Registry("marketin
         },
     },
     publicNetworkAccess: azure_native.containerregistry.PublicNetworkAccess.Enabled,
-    registryName: "marketingcr",
+    registryName: containerRegistryName,
     resourceGroupName: ResourceGroup.name,
     sku: {
         name: azure_native.containerregistry.SkuName[acrSkuName],
