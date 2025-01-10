@@ -13,3 +13,5 @@ config:
   marketing:mysqlSkuName: Standard_B1ms
   marketing:mysqlSkuTier: Burstable
   marketing:marketingcr: marketingcr
+  marketing:mysqlDbName: mauticDB
+
