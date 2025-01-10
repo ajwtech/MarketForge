@@ -1,0 +1,15 @@
+[10-Jan-2025 02:55:23 UTC] PHP Deprecation - Creation of dynamic property Mautic\Middleware\MiddlewareBuilder::$specs is deprecated - in file /var/www/html/docroot/app/middlewares/MiddlewareBuilder.php - at line 24
+[10-Jan-2025 02:55:23 UTC] PHP Deprecated:  Creation of dynamic property Mautic\Middleware\MiddlewareBuilder::$specs is deprecated in /var/www/html/docroot/app/middlewares/MiddlewareBuilder.php on line 24
+[10-Jan-2025 02:55:24 UTC] Doctrine\DBAL\Exception: An exception occurred while establishing a connection to figure out your platform version.
+You can circumvent this by setting a 'server_version' configuration value
+
+For further information have a look at:
+https://github.com/doctrine/DoctrineBundle/issues/673 - in file /var/www/html/vendor/doctrine/doctrine-bundle/src/ConnectionFactory.php - at line 189
+[10-Jan-2025 02:58:24 UTC] PHP Deprecation - Creation of dynamic property Mautic\Middleware\MiddlewareBuilder::$specs is deprecated - in file /var/www/html/docroot/app/middlewares/MiddlewareBuilder.php - at line 24
+[10-Jan-2025 02:58:24 UTC] PHP Deprecated:  Creation of dynamic property Mautic\Middleware\MiddlewareBuilder::$specs is deprecated in /var/www/html/docroot/app/middlewares/MiddlewareBuilder.php on line 24
+[10-Jan-2025 02:58:24 UTC] PHP Deprecation - Creation of dynamic property Mautic\Middleware\MiddlewareBuilder::$specs is deprecated - in file /var/www/html/docroot/app/middlewares/MiddlewareBuilder.php - at line 24
+[10-Jan-2025 02:58:24 UTC] PHP Deprecated:  Creation of dynamic property Mautic\Middleware\MiddlewareBuilder::$specs is deprecated in /var/www/html/docroot/app/middlewares/MiddlewareBuilder.php on line 24
+[10-Jan-2025 02:58:33 UTC] PHP Deprecation - Creation of dynamic property Mautic\Middleware\MiddlewareBuilder::$specs is deprecated - in file /var/www/html/docroot/app/middlewares/MiddlewareBuilder.php - at line 24
+[10-Jan-2025 02:58:33 UTC] PHP Deprecated:  Creation of dynamic property Mautic\Middleware\MiddlewareBuilder::$specs is deprecated in /var/www/html/docroot/app/middlewares/MiddlewareBuilder.php on line 24
+[10-Jan-2025 02:58:33 UTC] PHP Deprecation - Creation of dynamic property Mautic\Middleware\MiddlewareBuilder::$specs is deprecated - in file /var/www/html/docroot/app/middlewares/MiddlewareBuilder.php - at line 24
+[10-Jan-2025 02:58:33 UTC] PHP Deprecated:  Creation of dynamic property Mautic\Middleware\MiddlewareBuilder::$specs is deprecated in /var/www/html/docroot/app/middlewares/MiddlewareBuilder.php on line 24

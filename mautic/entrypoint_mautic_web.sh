@@ -44,6 +44,7 @@ $parameters = array(
     'mailer_transport' => 'smtp',
     'site_url'       => getenv('SITE_URL'),
     'locale'         => 'en',
+    'log_level' => 'debug',
 );
 EOF
 chown www-data:www-data /var/www/html/config/local.php

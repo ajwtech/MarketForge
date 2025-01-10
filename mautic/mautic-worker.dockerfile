@@ -18,7 +18,7 @@ ARG DB_NAME=mauticdb
 ARG ${DB_NAME:-mauticdb}
 ARG ${DB_USER:-mauticuser}
 ARG ${DB_PASSWORD:-'Mautic-password'}
-ARG APP_VERSION=5.1.1
+ARG ${APP_VERSION:-'5.2.1'}
 
 # Assign build arguments to environment variables
 ENV APP_ENV=${APP_ENV} \
@@ -120,7 +120,7 @@ RUN COMPOSER_ALLOW_SUPERUSER=1 COMPOSER_PROCESS_TIMEOUT=10000 composer create-pr
 # Stage 3: Production
 FROM php:8.2-fpm-alpine3.20
 
-ARG APP_VERSION=5.1.1
+ARG ${APP_VERSION:-'5.2.1'}
 
 # Create log directories for PHP-FPM
 RUN mkdir -p /var/log/php-fpm && \

@@ -9,10 +9,10 @@ const config = new pulumi.Config();
 const imageTag = config.get('imageTag') || 'latest';
 const imageNames = [
   'marketing-nginx',
- // 'marketing-mautic_cron',
   'marketing-mautic_web',
- // 'marketing-mautic_worker',
- // 'marketing-mautic_init',
+  ////uncomment the following lines to build the images for the marketing-mautic_cron and marketing-mautic_worker
+  // 'marketing-mautic_cron',
+  // 'marketing-mautic_worker',
 ];
 
 const imageBuilds: { [key: string]: docker.Image } = {};

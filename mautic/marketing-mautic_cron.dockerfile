@@ -18,7 +18,7 @@ ARG DB_NAME=mauticdb
 ARG ${DB_NAME:-mauticdb}
 ARG ${DB_USER:-mauticuser}
 ARG ${DB_PASSWORD:-'Mautic-password'}
-ARG APP_VERSION=5.1.1
+ARG ${APP_VERSION:-'5.2.1'}
 
 # Assign build arguments to environment variables
 ENV APP_ENV=${APP_ENV} \
@@ -120,7 +120,7 @@ RUN COMPOSER_ALLOW_SUPERUSER=1 COMPOSER_PROCESS_TIMEOUT=10000 composer create-pr
 # Stage 3: Production
 FROM php:8.2-fpm-alpine3.20
 
-ARG APP_VERSION=5.1.1
+ARG ${APP_VERSION:-'5.2.1'}
 
 # Create log directories for PHP-FPM
 RUN mkdir -p /var/log/php-fpm && \
@@ -159,8 +159,8 @@ php82-intl \
 
 # Copy configuration files to their correct locations
 COPY ./php.ini /usr/local/etc/php/php.ini
-COPY ./www.conf /usr/local/etc/php-fpm.d/www.conf
-COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+##COPY ./www.conf /usr/local/etc/php-fpm.d/www.conf
+##COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY ./entrypoint_mautic_web.sh /entrypoint_mautic_web.sh
 COPY ./entrypoint_mautic_cron.sh /entrypoint_mautic_cron.sh
 COPY ./entrypoint_mautic_worker.sh /entrypoint_mautic_worker.sh
@@ -188,8 +188,8 @@ ENV DOCKER_MAUTIC_WORKERS_CONSUME_EMAIL=2 \
     DOCKER_MAUTIC_WORKERS_CONSUME_FAILED=2
 
 # In Dockerfile
-RUN mkdir -p /var/www/html/var/logs/supervisor && \
-    chown -R www-data:www-data /var/www/html/var/logs/supervisor
+#RUN mkdir -p /var/www/html/var/logs/supervisor && \
+#    chown -R www-data:www-data /var/www/html/var/logs/supervisor
 
 EXPOSE 9000
 # Define the entrypoint
