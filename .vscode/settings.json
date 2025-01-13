@@ -13,7 +13,7 @@
         "mauticuser",
         "operationalinsights",
         "pulumi",
-        "siteurn",
+        "siteRevFQDN",
         "vnet"
     ]
 }
