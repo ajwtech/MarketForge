@@ -40,7 +40,7 @@ export function mauticNginx(args: {
     dbPort: pulumi.Input<string>;
     dbName: pulumi.Input<string>;
     resourceGroupName: pulumi.Input<string>;
-    staticSiteContainer: pulumi.Input<string>;
+    staticfilesUrl: pulumi.Input<string>;
 }) {
 
     return new azure_native.app.ContainerApp("mautic-nginx", {
@@ -114,7 +114,7 @@ export function mauticNginx(args: {
                     },
                     {
                         name: "MAUTIC_STORAGE_STATIC_WEB",
-                        value: args.staticSiteContainer,
+                        value: args.staticfilesUrl,
                     }
                 ],
                 image: args.image, // Use the passed-in image parameter

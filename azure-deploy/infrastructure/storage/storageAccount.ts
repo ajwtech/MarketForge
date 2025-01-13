@@ -60,14 +60,14 @@ export const storageAccountKey = pulumi.all([storageAccount.name, ResourceGroup.
 export const mauticAppFilesStorage = new azure_native.storage.FileShare("mautic-app-files", {
     accountName: storageAccount.name,
     resourceGroupName: ResourceGroup.name,
-    
+    shareName: "mautic-app-files",
 });
 
 export const mauticStaticHosting = new azure_native.storage.StorageAccountStaticWebsite("mauticstatichosting", {
     accountName: storageAccount.name,
-    resourceGroupName:  ResourceGroup.name,
-   // error404Document: "string",
-   //indexDocument: "string",
+    resourceGroupName: ResourceGroup.name,
+    //indexDocument: "index.html",
+    //error404Document: "404.html",
 });
 
 export const storageAccountName = storageAccount.name;

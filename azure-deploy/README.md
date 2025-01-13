@@ -61,6 +61,10 @@ pulumi destroy
 pulumi stack rm
 ```
 
+## Important Note
+
+If you want to run this locally, you will need to add your IP to the firewall rules or set up another way to connect to the database. Ensure that your database connection is properly configured to allow access from your local environment.
+
 ## Futures Notes
 
 - Ensure that your Azure CLI is authenticated with the correct subscription.

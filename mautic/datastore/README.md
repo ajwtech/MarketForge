@@ -16,7 +16,7 @@ After that you can create the project:
 ```
 composer create-project mautic/recommended-project:^5.0 some-dir --no-interaction
 ```
-ok
+
 With `composer require ...` you can download new dependencies to your installation.
 
 Example of installing a plugin:
