@@ -1,7 +1,5 @@
 import * as pulumi from '@pulumi/pulumi';
-import * as docker from '@pulumi/docker';
-
-import { DockerBuild } from '@pulumi/docker/types/input';
+import * as dockerbuild from '@pulumi/docker-build';
 import { marketingcr, acrUsername, acrPassword, registryUrl } from './registries/acrRegistry';
 import * as command  from "@pulumi/command";
 
@@ -14,12 +12,15 @@ const imageNames = [
   // 'marketing-mautic_cron',
   // 'marketing-mautic_worker',
 ];
+const pushImages = config.get('pushImages') || 'false'
+const imageBuilds: { [key: string]: dockerbuild.Image } = {};
 
-const imageBuilds: { [key: string]: docker.Image } = {};
-
-      // Use Azure CLI to check if the image exists in ACR
+// Use Azure CLI to check if the image exists in ACR
 function imageExists(acrName: string, imageName: string ): pulumi.Output<boolean> {
     try {
+      if (pushImages === 'true') {
+        return pulumi.output(true);
+    }
         const imageExistsCommand = command.local.runOutput({
             command: pulumi.interpolate`az acr repository show-tags --name ${acrName} --repository ${imageName} -o json || echo []`,
         });
@@ -40,29 +41,29 @@ marketingcr.name.apply(acrName => {
   registryUrl.apply(registry => {
     for (const imageName of imageNames) {
       const fullImageName = pulumi.interpolate`${registry}/${imageName}:${imageTag}`;
-      const buildOptions: DockerBuild = {
-        context: '../mautic',
-        dockerfile: `../mautic/${imageName}.dockerfile`,
-        platform: 'linux/amd64',
-      };
-
-      // Define the docker.Image resource
-      imageBuilds[imageName] = new docker.Image(
+      // Define the dockerbuild.Image resource
+      imageBuilds[imageName] = new dockerbuild.Image(
         imageName,
         {
-          imageName: fullImageName,
-          build: buildOptions,
-          registry: {
-            server: registry,
+          context: {
+            location: '../mautic',
+          },
+          push: true,
+          dockerfile: {
+            location: `../mautic/${imageName}.dockerfile`,
+          },
+          platforms: ['linux/amd64'],
+
+          registries: [{
+            address: registry,
             username: acrUsername,
             password: acrPassword,
-          },
-          skipPush: imageExists(acrName,imageName)  
-        },
-
-      );
+          }],
+          tags: [fullImageName],
+    });
     }
   });
 });
-    // Export the image builds so they can be used elsewhere in the Pulumi stack
-    export { imageBuilds };
+
+// Export the image builds so they can be used elsewhere in the Pulumi stack
+export { imageBuilds };

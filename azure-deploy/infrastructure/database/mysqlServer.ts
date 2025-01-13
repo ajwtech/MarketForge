@@ -65,7 +65,7 @@ export const configuration = new azure_native.dbformysql.Configuration("configur
         serverName: mysqlServerName,
         source: "user-override",
         value: "OFF",
-    });
+    }, { dependsOn: [marketing_mysql] });
 
 // Create a database in the server
 export const marketing_database = new azure_native.dbformysql.Database(mysqlDbName, {

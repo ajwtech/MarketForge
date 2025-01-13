@@ -1,6 +1,6 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as azure_native from "@pulumi/azure-native";
-import * as docker from "@pulumi/docker";
+import * as dockerbuild from "@pulumi/docker-build";
 import * as random from "@pulumi/random";
 
 // import resources to manage
@@ -14,8 +14,7 @@ import { imageBuilds } from "./infrastructure/dockerImages"; // Ensure correct i
 
 const config = new pulumi.Config();
 
-//TODO: Re-enable this and add code to manage versions later
-//const appVersion = config.get("appVersion") || "5.1.1";
+
 const appEnv = config.get("appEnv") || "prod";
 const dbHost = marketing_mysql.fullyQualifiedDomainName;
 const dbPort = config.get("dbPort") || "3306";
@@ -52,8 +51,8 @@ const urnString = mauticStaticHosting.urn.apply(urnString  => {
 const imageTag = config.get("imageTag") || "latest"; 
 
 // Function to get the image name from imageBuilds or return the existing image name
-function getImageName(imageBuilds: { [key: string]: docker.Image }, imageName: string): pulumi.Output<string> {
-    return imageBuilds[imageName] ? imageBuilds[imageName].imageName : pulumi.interpolate`${registryUrl}/${imageName}:${imageTag}`;
+function getImageName(imageBuilds: { [key: string]: dockerbuild.Image }, imageName: string): pulumi.Output<string> {
+    return imageBuilds[imageName] ? imageBuilds[imageName].tags.apply(tags => tags ? tags[0] : "") : pulumi.interpolate`${registryUrl}/${imageName}:${imageTag}`;
 }
 
 // Deploy the Mautic Nginx App
@@ -73,7 +72,7 @@ export const mauticNginxApp = mauticNginx({
     staticSiteContainer: urnString,
 });
 
-const siteURN = mauticNginxApp.urn
+const siteRevFQDN = mauticNginxApp.latestRevisionFqdn
 // Deploy the Mautic Web App
 export const mauticWebApp = mauticWeb({
     env: appEnv,
@@ -91,7 +90,7 @@ export const mauticWebApp = mauticWeb({
     dbPassword: dbPassword,
     appSecret: appSecret,
     resourceGroupName: ResourceGroup.name, 
-    siteurn: siteURN,
+    siteRevFQDN: siteRevFQDN,
 });
 
 // // Deploy the Mautic Cron Job

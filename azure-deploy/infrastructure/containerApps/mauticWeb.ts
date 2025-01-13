@@ -5,7 +5,7 @@ import { imageBuilds } from "../dockerImages";
 
 const config = new pulumi.Config();
 const location = config.require("location");
-
+const appVersion = config.get("appVersion") || "5.1.1";
 export function mauticWeb(args: {
     env: string;
     image: pulumi.Input<string>;
@@ -22,7 +22,8 @@ export function mauticWeb(args: {
     dbPassword: pulumi.Input<string>;
     appSecret: pulumi.Input<string>;
     resourceGroupName: pulumi.Input<string>; 
-    siteurn: pulumi.Output<string>
+    siteRevFQDN: pulumi.Output<string>
+    
 }) {
     return new azure_native.app.ContainerApp("mautic-web", {
         configuration: {
@@ -69,7 +70,7 @@ export function mauticWeb(args: {
                     { name: "APP_SECRET", value: args.appSecret },
                     {
                         name: "APP_VERSION",
-                        value: "5.1.1",
+                        value: appVersion,
                     },
                     {
                         name: "MAUTIC_ROLE",
@@ -81,7 +82,7 @@ export function mauticWeb(args: {
                     },
                     {
                         name: "SITE_URL",
-                        value: `https://${args.siteurn}`,
+                        value: `https://${args.siteRevFQDN}`,
                     },
                     {
                         name: "STORAGE_ACCOUNT_KEY",
