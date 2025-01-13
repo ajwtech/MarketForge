@@ -41,10 +41,8 @@ const storage = new azure_native.app.ManagedEnvironmentsStorage("mautic-app-file
     dependsOn: [mauticAppFilesStorage]
 });
 
-//set the env var MAUTIC_STORAGE_STATIC_WEB to the static site container URN
-const urnString = mauticStaticHosting.urn.apply(urnString  => {
-    return urnString;
-});
+//set the env var MAUTIC_STORAGE_STATIC_WEB to the static site container URL
+const StorageAccountStaticWebsiteUrl = pulumi.interpolate`https://${storageAccount.name}.web.core.windows.net/$web`; 
 
 
 // Make imageTag configurable
@@ -69,7 +67,7 @@ export const mauticNginxApp = mauticNginx({
     dbPort: dbPort,
     dbName: dbName,
     resourceGroupName: ResourceGroup.name,
-    staticSiteContainer: urnString,
+    staticfilesUrl: StorageAccountStaticWebsiteUrl,
 });
 
 const siteRevFQDN = mauticNginxApp.latestRevisionFqdn

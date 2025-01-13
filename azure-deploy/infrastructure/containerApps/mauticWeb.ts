@@ -100,27 +100,29 @@ export function mauticWeb(args: {
                 volumeMounts: [
                     {
                         mountPath: "/var/www/html/config",
-                        volumeName: "config",
+                        volumeName: "datastore",
+                        subPath: "config",
+
                     },
                     {
                         mountPath: "/var/www/html/logs",
-                        volumeName: "logs",
+                        volumeName: "datastore",
+                        subPath: "logs",
                     },
                     {
                         mountPath: "/var/www/html/media/files",
-                        volumeName: "files",
+                        volumeName: "datastore",
+                        subPath: "files",
                     },
                     {
                         mountPath: "/var/www/html/media/images",
-                        volumeName: "images",
+                        volumeName: "datastore",
+                        subPath: "images",
                     },
                     {
                         mountPath: "/opt/mautic/cron",
-                        volumeName: "cron",
-                    },
-                    {
-                        mountPath: "/var/www/html",
-                        volumeName: "docroot",
+                        volumeName: "datastore",
+                        subPath: "cron",
                     },
                 ],
             }],
@@ -172,36 +174,6 @@ export function mauticWeb(args: {
                 }],
             },
             volumes: [
-                {
-                    name: "cron",
-                    storageName: args.storageName,
-                    storageType: azure_native.app.StorageType.AzureFile,
-                },
-                {
-                    name: "config",
-                    storageName: args.storageName,
-                    storageType: azure_native.app.StorageType.AzureFile,
-                },
-                {
-                    name: "logs",
-                    storageName: args.storageName,
-                    storageType: azure_native.app.StorageType.AzureFile,
-                },
-                {
-                    name: "files",
-                    storageName: args.storageName,
-                    storageType: azure_native.app.StorageType.AzureFile,
-                },
-                {
-                    name: "images",
-                    storageName: args.storageName,
-                    storageType: azure_native.app.StorageType.AzureFile,
-                },
-                {
-                    name: "docroot",
-                    storageName: args.storageName,
-                    storageType: azure_native.app.StorageType.AzureFile,
-                },
                 {
                     name: "datastore",
                     storageName: args.storageName,
