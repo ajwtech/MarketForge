@@ -1,6 +1,8 @@
 import * as pulumi from "@pulumi/pulumi";
+import {v20241001preview as azure_mysqldb}  from "@pulumi/azure-native/dbformysql";
 import * as azure_native from "@pulumi/azure-native";
 import { ResourceGroup } from "../resourceGroup";
+import { mysqlSubnet } from "../networking/subnet";
 
 const config = new pulumi.Config();
 const location = config.require("location");
@@ -15,19 +17,20 @@ const mysqlDbName = config.require("mysqlDbName"); // Use config value
 
 // Add configurable SKU name and tier
 const mysqlSkuName = config.require("mysqlSkuName")
-const mysqlSkuTier = config.require("mysqlSkuTier") as keyof typeof azure_native.dbformysql.SkuTier;
+const mysqlSkuTier = config.require("mysqlSkuTier") as keyof typeof azure_mysqldb.ServerSkuTier;
 
-export const marketing_mysql = new azure_native.dbformysql.Server(mysqlServerName, {
+
+
+export const marketing_mysql = new azure_mysqldb.Server(mysqlServerName, {
     administratorLogin: mysqlAdminUser, 
     administratorLoginPassword: mysqlPassword,
     availabilityZone: "1",
     backup: {
         backupRetentionDays: 7,
-        geoRedundantBackup: azure_native.dbformysql.EnableStatusEnum.Disabled,
+        geoRedundantBackup: azure_mysqldb.EnableStatusEnum.Disabled,
     },
-    
     highAvailability: {
-        mode: azure_native.dbformysql.HighAvailabilityMode.Disabled,
+        mode: azure_mysqldb.HighAvailabilityMode.Disabled,
         standbyAvailabilityZone: "",
     },
     location: location,
@@ -37,7 +40,7 @@ export const marketing_mysql = new azure_native.dbformysql.Server(mysqlServerNam
         startHour: 0,
         startMinute: 0,
     },
-    replicationRole: azure_native.dbformysql.ReplicationRole.None,
+    replicationRole: azure_mysqldb.ReplicationRole.None,
     resourceGroupName: ResourceGroup.name,
     serverName: mysqlServerName, 
     sku: {
@@ -45,16 +48,21 @@ export const marketing_mysql = new azure_native.dbformysql.Server(mysqlServerNam
         tier: mysqlSkuTier, // Ensure tier is correctly set from config
     },
     storage: {
-        autoGrow: azure_native.dbformysql.EnableStatusEnum.Enabled,
-        autoIoScaling: azure_native.dbformysql.EnableStatusEnum.Disabled,
+        autoGrow: azure_mysqldb.EnableStatusEnum.Enabled,
+        autoIoScaling: azure_mysqldb.EnableStatusEnum.Disabled,
         iops: 396,
-        logOnDisk: azure_native.dbformysql.EnableStatusEnum.Disabled,
+        logOnDisk: azure_mysqldb.EnableStatusEnum.Disabled,
         storageSizeGB: 32,
     },
-    version: azure_native.dbformysql.ServerVersion.ServerVersion_8_0_21,
+    version: azure_mysqldb.ServerVersion.ServerVersion_8_0_21,
+    network: {
+        delegatedSubnetResourceId: mysqlSubnet.id,
+        // privateDnsZoneResourceId: privateDnsZone.id,
+        publicNetworkAccess: "Disabled",
+      },
     
+
 }, {
-    
     protect: false,
 }
 );
@@ -67,6 +75,7 @@ export const configuration = new azure_native.dbformysql.Configuration("configur
         value: "OFF",
     }, { dependsOn: [marketing_mysql] });
 
+
 // Create a database in the server
 export const marketing_database = new azure_native.dbformysql.Database(mysqlDbName, {
     charset: "utf8",
@@ -75,10 +84,4 @@ export const marketing_database = new azure_native.dbformysql.Database(mysqlDbNa
     serverName: mysqlServerName,
 }, { dependsOn: [marketing_mysql] });
 
-// Allow the MysqlAdmin user to login from anywhere
-export const mysqlFirewallRule = new azure_native.dbformysql.FirewallRule("AllowAllIps", {
-    endIpAddress: "0.0.0.0",
-    resourceGroupName: ResourceGroup.name,
-    serverName: mysqlServerName,
-    startIpAddress: "0.0.0.0",
-}, { dependsOn: [marketing_mysql] });
+

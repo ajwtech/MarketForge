@@ -10,25 +10,10 @@ COPY --from=composer /composer /usr/bin/composer
 COPY --from=node /usr/local/bin/node /usr/local/bin/
 COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules/
 
-# Define build-time arguments with default values
-ARG APP_ENV=prod
-ARG DB_HOST=mysql
-ARG DB_PORT=3306
-ARG DB_NAME=mauticdb
-ARG ${DB_NAME:-mauticdb}
-ARG ${DB_USER:-mauticuser}
-ARG ${DB_PASSWORD:-'Mautic-password'}
 ARG ${APP_VERSION:-'5.2.1'}
 
 # Assign build arguments to environment variables
-ENV APP_ENV=${APP_ENV} \
-    DB_HOST=${DB_HOST} \
-    DB_PORT=${DB_PORT} \
-    DB_NAME=${DB_NAME} \
-    DB_USER=${DB_USER} \
-    DB_PASSWORD=${DB_PASSWORD} \
-    APP_SECRET=${APP_SECRET} \
-    NODE_ENV=production \
+ENV NODE_ENV=production \
     PATH="/usr/local/bin:/usr/local/lib/node_modules/.bin:${PATH}" 
 
 RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
@@ -127,6 +112,7 @@ RUN mkdir -p /var/log/php-fpm && \
     touch /var/log/php-fpm/error.log /var/log/php-fpm/access.log && \
     chmod -R 755 /var/log/php-fpm
 
+
 WORKDIR /var/www/html
 # Copy PHP extensions and configuration from builder
 COPY --from=builder /usr/local/lib/php/extensions /usr/local/lib/php/extensions
@@ -138,6 +124,7 @@ COPY --from=builder --chown=www-data:www-data /opt/mautic /var/www/html
 # Install PHP extensions requirements and other dependencies
 RUN apk update && apk add --no-cache \
 bash \
+gettext \
 unzip \
 libwebp \
 libzip \
@@ -166,17 +153,12 @@ COPY ./entrypoint_mautic_cron.sh /entrypoint_mautic_cron.sh
 COPY ./entrypoint_mautic_worker.sh /entrypoint_mautic_worker.sh
 COPY ./entrypoint_mautic_init.sh /entrypoint_mautic_init.sh
 COPY ./docker-entrypoint.sh /entrypoint.sh
+COPY --chown=www-data:www-data ./local.php.conf /var/www/html/local.php.conf
 
-RUN echo "memory_limit = 512M" >> /usr/local/etc/php/php.ini && \
+RUN echo "memory_limit = -1" >> /usr/local/etc/php/php.ini && \
     echo "date.timezone = America/New_York" >> /usr/local/etc/php/php.ini && \
     echo "zend.assertions = -1" >> /usr/local/etc/php/php.ini
 
-# Setting PHP properties
-ENV PHP_INI_VALUE_DATE_TIMEZONE=America/New_York \
-    PHP_INI_VALUE_MEMORY_LIMIT=512M \
-    PHP_INI_VALUE_UPLOAD_MAX_FILESIZE=512M \
-    PHP_INI_VALUE_POST_MAX_FILESIZE=512M \
-    PHP_INI_VALUE_MAX_EXECUTION_TIME=300
     
 # Apply necessary permissions
 RUN chmod +x /entrypoint.sh /entrypoint_mautic_web.sh /entrypoint_mautic_cron.sh \
@@ -187,6 +169,12 @@ ENV DOCKER_MAUTIC_WORKERS_CONSUME_EMAIL=2 \
     DOCKER_MAUTIC_WORKERS_CONSUME_HIT=2 \
     DOCKER_MAUTIC_WORKERS_CONSUME_FAILED=2
 
+    # Setting PHP properties
+ENV PHP_INI_VALUE_DATE_TIMEZONE=America/New_York \
+PHP_INI_VALUE_MEMORY_LIMIT=512M \
+PHP_INI_VALUE_UPLOAD_MAX_FILESIZE=512M \
+PHP_INI_VALUE_POST_MAX_FILESIZE=512M \
+PHP_INI_VALUE_MAX_EXECUTION_TIME=300
 
 #RUN mkdir -p /var/www/html/var/logs/supervisor && \
     #chown -R www-data:www-data /var/www/html/var/logs/supervisor

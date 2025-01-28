@@ -1,7 +1,7 @@
 import * as pulumi from "@pulumi/pulumi";
-import * as azure_native from "@pulumi/azure-native";
-import { storageAccountName, storageAccountKey, storageAccount } from "../storage/storageAccount";
-import { imageBuilds } from "../dockerImages"; 
+import { storageAccountName, storageAccountKey, storageAccount, configFilePlaceholder } from "../storage/storageAccount";
+import { imageBuilds } from "../dockerImages";
+import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 
 const config = new pulumi.Config();
 const location = config.require("location");
@@ -14,20 +14,20 @@ export function mauticWeb(args: {
     registryPassword: pulumi.Input<string>;
     managedEnvironmentId: pulumi.Input<string>;
     storageName: pulumi.Input<string>;
-    storageMountPath: string;
     dbHost: pulumi.Input<string>;
     dbPort: pulumi.Input<string>;
     dbName: pulumi.Input<string>;
     dbUser: pulumi.Input<string>;
     dbPassword: pulumi.Input<string>;
     appSecret: pulumi.Input<string>;
-    resourceGroupName: pulumi.Input<string>; 
-    siteRevFQDN: pulumi.Output<string>
-    
+    resourceGroupName: pulumi.Input<string>;
+    siteFQDN: pulumi.Output<string>
+
 }) {
-    return new azure_native.app.ContainerApp("mautic-web", {
+
+    return new azure_app.ContainerApp("mautic-web", {
         configuration: {
-            activeRevisionsMode: azure_native.app.ActiveRevisionsMode.Single,
+            activeRevisionsMode: azure_app.ActiveRevisionsMode.Single,
             ingress: {
                 external: false,
                 targetPort: 9000,
@@ -51,15 +51,15 @@ export function mauticWeb(args: {
         containerAppName: "mautic-web",
         environmentId: args.managedEnvironmentId,
         identity: {
-            type: azure_native.app.ManagedServiceIdentityType.None,
+            type: azure_app.ManagedServiceIdentityType.None,
         },
         location: location,
         managedEnvironmentId: args.managedEnvironmentId,
-        resourceGroupName: args.resourceGroupName, // Use the passed-in resourceGroupName
+        resourceGroupName: args.resourceGroupName,
         template: {
             containers: [{
                 name: "mautic-web",
-                image: args.image, 
+                image: args.image,
                 env: [
                     { name: "APP_ENV", value: args.env },
                     { name: "DB_HOST", value: args.dbHost },
@@ -78,11 +78,11 @@ export function mauticWeb(args: {
                     },
                     {
                         name: "APP_DEBUG",
-                        value: "1",
+                        value: "0",
                     },
                     {
                         name: "SITE_URL",
-                        value: `https://${args.siteRevFQDN}`,
+                        value: pulumi.interpolate`https://${args.siteFQDN}`,
                     },
                     {
                         name: "STORAGE_ACCOUNT_KEY",
@@ -99,71 +99,33 @@ export function mauticWeb(args: {
                 },
                 volumeMounts: [
                     {
-                        mountPath: "/var/www/html/config",
-                        volumeName: "datastore",
-                        subPath: "config",
+                        mountPath: "/var/www/html/config/local.php",
+                        volumeName: "config",
+                        subPath: "config/local.php",
 
                     },
                     {
-                        mountPath: "/var/www/html/logs",
-                        volumeName: "datastore",
-                        subPath: "logs",
+                        mountPath: "/var/log",
+                        volumeName: "log",
+                        subPath: "log/web",
                     },
                     {
-                        mountPath: "/var/www/html/media/files",
-                        volumeName: "datastore",
-                        subPath: "files",
+                        mountPath: "/var/www/html/docroot/media/files",  // Path where Nginx expects media files
+                        volumeName: "files",
+                        subPath: "media/files",   // Maps to /media in the Azure File Share root
                     },
                     {
-                        mountPath: "/var/www/html/media/images",
-                        volumeName: "datastore",
-                        subPath: "images",
+                        mountPath: "/var/www/html/docroot/media/images",  // Path where Nginx expects media files
+                        volumeName: "images",
+                        subPath: "media/images",   // Maps to /media in the Azure File Share root
                     },
-                    {
-                        mountPath: "/opt/mautic/cron",
-                        volumeName: "datastore",
-                        subPath: "cron",
-                    },
+
                 ],
             }],
-            // initContainers: [{
-            //     env: [
-            //         {
-            //             name: "MAUTIC_ROLE",
-            //             value: "mautic_init",
-            //         },
-            //         {
-            //             name: "APP_ENV",
-            //             value: "prod",
-            //         },
-            //         {
-            //             name: "STORAGE_ACCOUNT_NAME",
-            //             value: storageAccountName,
-            //         },
-            //         {
-            //             name: "STORAGE_ACCOUNT_KEY",
-            //             value: storageAccountKey,
-            //         },
-            //         {
-            //             name: "FILE_SHARE_NAME",
-            //             value: args.storageName,
-            //         },
-            //     ],
-            //     image: args.image, // Use the passed-in image parameter
-            //     name: "init-rsync",
-            //     resources: {
-            //         cpu: 0.25,
-            //         memory: "0.5Gi",
-            //     },
-            //     volumeMounts: [{
-            //         mountPath: "/datastore",
-            //         volumeName: "datastore",
-            //     }],
-            // }],
             revisionSuffix: "",
             scale: {
-                maxReplicas: 10,
-                minReplicas: 0,
+                maxReplicas: 3,
+                minReplicas: 1,
                 rules: [{
                     name: "tcp-scaler",
                     tcp: {
@@ -175,14 +137,29 @@ export function mauticWeb(args: {
             },
             volumes: [
                 {
-                    name: "datastore",
+                    name: "config",
                     storageName: args.storageName,
-                    storageType: azure_native.app.StorageType.AzureFile,
+                    storageType: azure_app.StorageType.AzureFile,
+                },
+                {
+                    name: "log",
+                    storageName: args.storageName,
+                    storageType: azure_app.StorageType.AzureFile,
+                },
+                {
+                    name: "files",
+                    storageName: args.storageName,
+                    storageType: azure_app.StorageType.AzureFile,
+                },
+                {
+                    name: "images",
+                    storageName: args.storageName,
+                    storageType: azure_app.StorageType.AzureFile,
                 },
             ],
         },
     }, {
         protect: false,
-        dependsOn: [storageAccount, imageBuilds["marketing-mautic_web"]], 
+        dependsOn: [storageAccount, imageBuilds["marketing-mautic_web"], configFilePlaceholder],
     });
 }

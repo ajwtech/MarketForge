@@ -5,5 +5,5 @@ azure-deploy/infra/Pulumi.test.yaml
 
 __azurite_db_table__.json
 azure-deploy/config/pulumi.marketing.yaml
-mautic/logs/php_errors.log
-azure-deploy/config/Pulumi.dev.yaml
+mautic/logs/*
+azure-deploy/infrastructure/storage/local.php

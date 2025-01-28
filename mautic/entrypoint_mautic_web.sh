@@ -13,6 +13,13 @@ else
   echo "docroot is populated. Continuing..."
 fi
 
+if [ ! -s /var/www/html/config/local.php ]; then
+  echo "Generating Mautic configuration file..."
+  envsubst '${DB_HOST} ${DB_PORT} ${DB_NAME} ${DB_USER} ${DB_PASSWORD} ${SITE_URL}' < local.php.conf > /var/www/html/config/local.php
+  chown www-data:www-data /var/www/html/config/local.php
+else
+  echo "Mautic configuration file already exists. Skipping..."
+fi
 
 echo "Waiting for MySQL to be ready..."
 
@@ -22,34 +29,8 @@ done
 
 echo "MySQL is up and running!"
 
-# generate a local config file if it doesn't exist.
-# This is needed to ensure the db credentials can be prefilled in the UI, as env vars aren't taken into account.
-# Generate Mautic configuration from environment variables if it doesn't exist
-if [ ! -f /var/www/html/config/local.php ]; then
-    echo "Generating Mautic configuration file..."
-    su -s /bin/bash www-data -c 'mkdir -p /var/www/html/config'
 
-    cat <<'EOF' > /var/www/html/config/local.php
-<?php
-$parameters = array( 
-    'db_driver'      => 'pdo_mysql',
-    'db_host'        => getenv('DB_HOST'),
-    'db_port'        => getenv('DB_PORT'),
-    'db_name'        => getenv('DB_NAME'),
-    'db_user'        => getenv('DB_USER'),
-    'db_password'    => getenv('DB_PASSWORD'),
-    'db_table_prefix'=> null,
-    'db_backup_tables' => 1,
-    'db_backup_prefix' => 'bak_',
-    'mailer_transport' => 'smtp',
-    'site_url'       => getenv('SITE_URL'),
-    'locale'         => 'en',
-    'log_level' => 'debug',
-);
-EOF
-chown www-data:www-data /var/www/html/config/local.php
 
-fi
 
 
 # Run database migrations if configured
