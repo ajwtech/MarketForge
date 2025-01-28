@@ -161,9 +161,6 @@ COPY ./php.ini /usr/local/etc/php/php.ini
 ##COPY ./www.conf /usr/local/etc/php-fpm.d/www.conf
 ##COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY ./entrypoint_mautic_web.sh /entrypoint_mautic_web.sh
-COPY ./entrypoint_mautic_cron.sh /entrypoint_mautic_cron.sh
-COPY ./entrypoint_mautic_worker.sh /entrypoint_mautic_worker.sh
-COPY ./entrypoint_mautic_init.sh /entrypoint_mautic_init.sh
 COPY ./docker-entrypoint.sh /entrypoint.sh
 
 RUN echo "memory_limit = 512M" >> /usr/local/etc/php/php.ini && \
@@ -178,8 +175,7 @@ ENV PHP_INI_VALUE_DATE_TIMEZONE=America/New_York \
     PHP_INI_VALUE_MAX_EXECUTION_TIME=300
     
 # Apply necessary permissions
-RUN chmod +x /entrypoint.sh /entrypoint_mautic_web.sh /entrypoint_mautic_cron.sh \
-    /entrypoint_mautic_worker.sh /entrypoint_mautic_init.sh
+RUN chmod +x /entrypoint.sh /entrypoint_mautic_web.sh 
 
 # Setting worker env vars
 ENV DOCKER_MAUTIC_WORKERS_CONSUME_EMAIL=2 \

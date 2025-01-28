@@ -9,26 +9,6 @@ x-mautic-volumes:
  # - ./ssl:/etc/certs:z
 
 services: 
-  mautic_init:
-    build:
-      context: .
-      dockerfile: alpine.dockerfile
-      args:
-        APP_VERSION: ${APP_VERSION}
-        DB_HOST: ${DB_HOST}
-        DB_PORT: ${DB_PORT}
-        DB_NAME: ${DB_NAME}
-        DB_USER: ${DB_USER}
-        DB_PASSWORD: ${DB_PASSWORD}
-    volumes: 
-      - ./datastore:/datastore:z
-    environment:
-      MAUTIC_ROLE: mautic_init
-    env_file:
-      - .env
-    networks:
-      - default
-
   mautic_web:
     build:
       context: .

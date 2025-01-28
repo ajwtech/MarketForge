@@ -149,9 +149,6 @@ COPY ./php.ini /usr/local/etc/php/php.ini
 #COPY ./www.conf /usr/local/etc/php-fpm.d/www.conf
 #COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY ./entrypoint_mautic_web.sh /entrypoint_mautic_web.sh
-COPY ./entrypoint_mautic_cron.sh /entrypoint_mautic_cron.sh
-COPY ./entrypoint_mautic_worker.sh /entrypoint_mautic_worker.sh
-COPY ./entrypoint_mautic_init.sh /entrypoint_mautic_init.sh
 COPY ./docker-entrypoint.sh /entrypoint.sh
 COPY --chown=www-data:www-data ./local.php.conf /var/www/html/local.php.conf
 
@@ -161,8 +158,7 @@ RUN echo "memory_limit = -1" >> /usr/local/etc/php/php.ini && \
 
     
 # Apply necessary permissions
-RUN chmod +x /entrypoint.sh /entrypoint_mautic_web.sh /entrypoint_mautic_cron.sh \
-    /entrypoint_mautic_worker.sh /entrypoint_mautic_init.sh
+RUN chmod +x /entrypoint.sh /entrypoint_mautic_web.sh
 
 # Setting worker env vars
 ENV DOCKER_MAUTIC_WORKERS_CONSUME_EMAIL=2 \
