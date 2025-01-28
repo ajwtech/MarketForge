@@ -12,5 +12,4 @@ export const vnet = new azure_native.network.VirtualNetwork(vnetName, {
     addressSpace: {
         addressPrefixes: vnetAddressPrefixes,
     },
-
 });

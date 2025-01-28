@@ -1,25 +1,20 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as azure_native from "@pulumi/azure-native";
 import { ResourceGroup } from "../resourceGroup";
+import * as fs from "fs";
+import * as path from "path";
+import * as command from "@pulumi/command";
 
 const config = new pulumi.Config();
 const configStorageAccountName = config.require("storageAccountName"); 
-const location = config.require("location");
 const ipAddressOrRange = config.get("ipAddressOrRange");
-const resourceGroupName = config.require("resourceGroupName");
 
-export const storageAccount = new azure_native.storage.StorageAccount("marketingstackstorage", {
+export const storageAccount = new azure_native.storage.StorageAccount(configStorageAccountName, {
     accessTier: azure_native.storage.AccessTier.Hot,
     accountName: configStorageAccountName, 
-    allowBlobPublicAccess: true, // Allow public access for static web content
     allowCrossTenantReplication: false,
-    allowSharedKeyAccess: true,
-    defaultToOAuthAuthentication: false,
-    dnsEndpointType: azure_native.storage.DnsEndpointType.Standard,
-    enableHttpsTrafficOnly: true, // Enable HTTPS traffic only for security
     kind: azure_native.storage.Kind.StorageV2,
-    largeFileSharesState: azure_native.storage.LargeFileSharesState.Disabled, // Disable large file shares
-    location: location,
+    
     minimumTlsVersion: azure_native.storage.MinimumTlsVersion.TLS1_2,
     networkRuleSet: ipAddressOrRange ? {
         bypass: azure_native.storage.Bypass.AzureServices,
@@ -56,18 +51,58 @@ export const storageAccountKey = pulumi.all([storageAccount.name, ResourceGroup.
     }).then(keys => keys.keys[0].value)
 );
 
-// Define the File Share for static web content
 export const mauticAppFilesStorage = new azure_native.storage.FileShare("mautic-app-files", {
     accountName: storageAccount.name,
     resourceGroupName: ResourceGroup.name,
     shareName: "mautic-app-files",
 });
 
-export const mauticStaticHosting = new azure_native.storage.StorageAccountStaticWebsite("mauticstatichosting", {
-    accountName: storageAccount.name,
-    resourceGroupName: ResourceGroup.name,
-    //indexDocument: "index.html",
-    //error404Document: "404.html",
+
+
+const configFileName = "local.php";
+const localPhpFilePath = path.join(__dirname, configFileName);
+fs.writeFileSync(localPhpFilePath,"");
+
+ 
+// Command to create the config directory
+const createConfigDirectory = new command.local.Command("CreateConfigDirectory", {
+    create: pulumi.interpolate`az storage directory create --account-name ${storageAccount.name} \
+      --share-name ${mauticAppFilesStorage.name} \
+      --auth-mode key \
+      --account-key ${storageAccountKey} \
+      --name config`,
+    triggers: [new Date().toISOString()],
+}, {
+    
+    dependsOn: [mauticAppFilesStorage],
+});
+
+const configFileExists = new command.local.Command("Check for Config File Exists", {
+    create: pulumi.interpolate`az storage file exists --account-name ${storageAccount.name} \
+      --share-name ${mauticAppFilesStorage.name} \
+      --auth-mode key \
+      --account-key ${storageAccountKey} \
+      --path config/${configFileName}`,
+      triggers: [createConfigDirectory.stdout, new Date().toISOString()],
+  },{
+        dependsOn: [mauticAppFilesStorage, createConfigDirectory]
+  });
+
+export const configFilePlaceholder = new command.local.Command("uploadFile", {
+    create: configFileExists.stdout.apply(out => 
+        out.includes('"exists": false') ? pulumi.interpolate` \
+            az storage file upload --account-name ${storageAccount.name} \
+            --source ${localPhpFilePath} \
+            --share-name ${mauticAppFilesStorage.name} \
+            --auth-mode key \
+            --account-key ${storageAccountKey} \
+            --path config/${configFileName}` 
+            : pulumi.interpolate`echo "File already exists. Skipping upload. File exists: ${out}"`,
+    ),
+    triggers: [configFileExists.stdout, createConfigDirectory.stdout, new Date().toISOString()],
+}, {
+
+    dependsOn: [mauticAppFilesStorage, createConfigDirectory, configFileExists],
 });
 
 export const storageAccountName = storageAccount.name;

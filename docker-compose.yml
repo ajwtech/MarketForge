@@ -1,7 +1,7 @@
 x-mautic-volumes:
   &mautic-volumes
   - ./mautic/config:/var/www/html/config:z
-  - ./mautic/logs:/var/www/html/var/logs:z
+  - ./mautic/logs:/var/logs:z
   - ./mautic/media/files:/var/www/html/media/files:z
   - ./mautic/media/images:/var/www/html/media/images:z
   - ./cron:/opt/mautic/cron:z
@@ -35,7 +35,6 @@ services:
   nginx:
     image: nginx
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - mautic:/var/www/html:z
     depends_on:
       - mautic_web
