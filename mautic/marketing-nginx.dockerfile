@@ -123,13 +123,14 @@ RUN chmod -R 755 /var/www/html/docroot
 
 COPY ./nginx.configd/fastcgi-params.conf /etc/nginx/conf.d/fastcgi-params.conf
 
-COPY ./nginx.configd/nginx.conf /etc/nginx/nginx.conf
+
 COPY ./nginx.configd/options-gzip-nginx.conf /etc/nginx/conf.d/options-gzip-nginx.conf
 COPY ./nginx.configd/options-ssl-nginx.conf /etc/nginx/conf.d/options-ssl-nginx.conf
 
 #configs with templates
 COPY ./nginx.configd/mauticdemo.nginx.conf /etc/nginx/templates/default.conf.template
 COPY ./nginx.configd/fastcgi-php-nginx.conf /etc/nginx/templates/fastcgi-php-nginx.conf.template 
+COPY ./nginx.configd/nginx.conf /etc/nginx/templates/nginx.conf.template
 
 # Copy startup script
 COPY ./entrypoint_nginx.sh /entrypoint_nginx.sh

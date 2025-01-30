@@ -153,7 +153,8 @@ export function mauticNginx(args: {
                 },             
             ],
         },
-    }, {
+        
+    },{
         
         protect: false,
         dependsOn: [mauticAppFilesStorage, storageAccount, imageBuilds["marketing-nginx"]], // Reference centralized image build

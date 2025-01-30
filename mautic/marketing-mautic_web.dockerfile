@@ -146,31 +146,29 @@ php82-intl \
 
 # Copy configuration files to their correct locations
 COPY ./php.ini /usr/local/etc/php/php.ini
-#COPY ./www.conf /usr/local/etc/php-fpm.d/www.conf
+COPY ./www.conf /usr/local/etc/php-fpm.d/www.conf
 #COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY ./entrypoint_mautic_web.sh /entrypoint_mautic_web.sh
 COPY ./docker-entrypoint.sh /entrypoint.sh
 COPY --chown=www-data:www-data ./local.php.conf /var/www/html/local.php.conf
 
-RUN echo "memory_limit = -1" >> /usr/local/etc/php/php.ini && \
-    echo "date.timezone = America/New_York" >> /usr/local/etc/php/php.ini && \
-    echo "zend.assertions = -1" >> /usr/local/etc/php/php.ini
+
 
     
 # Apply necessary permissions
 RUN chmod +x /entrypoint.sh /entrypoint_mautic_web.sh
 
-# Setting worker env vars
-ENV DOCKER_MAUTIC_WORKERS_CONSUME_EMAIL=2 \
-    DOCKER_MAUTIC_WORKERS_CONSUME_HIT=2 \
-    DOCKER_MAUTIC_WORKERS_CONSUME_FAILED=2
+# # Setting worker env vars
+# ENV DOCKER_MAUTIC_WORKERS_CONSUME_EMAIL=2 \
+#     DOCKER_MAUTIC_WORKERS_CONSUME_HIT=2 \
+#     DOCKER_MAUTIC_WORKERS_CONSUME_FAILED=2
 
     # Setting PHP properties
-ENV PHP_INI_VALUE_DATE_TIMEZONE=America/New_York \
-PHP_INI_VALUE_MEMORY_LIMIT=512M \
-PHP_INI_VALUE_UPLOAD_MAX_FILESIZE=512M \
-PHP_INI_VALUE_POST_MAX_FILESIZE=512M \
-PHP_INI_VALUE_MAX_EXECUTION_TIME=300
+# ENV PHP_INI_VALUE_DATE_TIMEZONE=America/New_York \
+# PHP_INI_VALUE_MEMORY_LIMIT=512M \
+# PHP_INI_VALUE_UPLOAD_MAX_FILESIZE=512M \
+# PHP_INI_VALUE_POST_MAX_FILESIZE=512M \
+# PHP_INI_VALUE_MAX_EXECUTION_TIME=300
 
 #RUN mkdir -p /var/www/html/var/logs/supervisor && \
     #chown -R www-data:www-data /var/www/html/var/logs/supervisor
