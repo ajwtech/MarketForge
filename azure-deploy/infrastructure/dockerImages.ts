@@ -4,6 +4,7 @@ import { marketingcr, acrUsername, acrPassword, registryUrl } from './registries
 
 const config = new pulumi.Config();
 const imageTag = config.get('imageTag') || 'latest';
+const appVersion = config.get('appVersion') || '5.2.1';
 const imageNames = [
   'marketing-nginx',
   'marketing-mautic_web',
@@ -19,10 +20,14 @@ marketingcr.name.apply(acrName => {
       imageBuilds[imageName] = new dockerbuild.Image(
         imageName,
         {
+          buildArgs: {
+            APP_VERSION: appVersion,
+          },
           context: {
             location: '../mautic',
           },
           push: true,
+
           dockerfile: {
             location: `../mautic/${imageName}.dockerfile`,
           },
