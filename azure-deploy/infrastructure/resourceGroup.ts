@@ -6,6 +6,6 @@ const location = config.require("location");
 const resourceGroupName = config.require("resourceGroupName");
 
 export const ResourceGroup = new azure_native.resources.ResourceGroup(resourceGroupName, {
-    location: config.require("location"),
+    location: location,
     resourceGroupName: config.require("resourceGroupName"),
 });
