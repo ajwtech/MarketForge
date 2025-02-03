@@ -44,6 +44,7 @@ RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
         freetype-dev \
         oniguruma-dev \
         linux-headers \
+        imap-dev \
     && apk add --no-cache \
         ca-certificates \
         curl \

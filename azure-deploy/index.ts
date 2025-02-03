@@ -11,14 +11,15 @@ import { acrUsername, acrPassword, registryUrl } from "./infrastructure/registri
 import { mauticWeb, mauticNginx } from "./infrastructure/containerApps/mauticApps";
 import { marketing_env } from "./infrastructure/managedEnvironment/managedEnvironment"; // Import from managedEnvironment.ts
 import { imageBuilds } from "./infrastructure/dockerImages"; // Ensure correct import
+import { strapiApp } from "./infrastructure/containerApps/strapiApp"; // Import strapiApp
 
 const config = new pulumi.Config();
-
 
 const appEnv = config.get("appEnv") || "prod";
 const dbHost = marketing_mysql.fullyQualifiedDomainName;
 const dbPort = config.get("dbPort") || "3306";
 const dbName = config.get("dbName") || "mauticdb";
+const strapiDbName = config.get("strapiDbName") || "strapi";
 const dbUser = config.get("dbUser") || "mauticuser";
 const dbPassword = config.requireSecret("dbPassword");
 const appSecret = config.get("appSecret") || new random.RandomPassword("appSecret", {length: 32, special: true,}).result;
@@ -41,8 +42,6 @@ const storage = new azure_app.ManagedEnvironmentsStorage("mautic-app-files-stora
     protect: false,
     dependsOn: [mauticAppFilesStorage],
 });
-
-
 
 // Make imageTag configurable
 const imageTag = config.get("imageTag") || "latest"; 
@@ -86,4 +85,27 @@ export const mauticWebApp = mauticWeb({
     appSecret: appSecret,
     resourceGroupName: ResourceGroup.name, 
     siteFQDN: siteFQDN,
+});
+
+// Deploy the Strapi App
+export const deployedStrapiApp = strapiApp({
+    env: appEnv,
+    image: getImageName(imageBuilds, "marketing-strapi-app"),
+    registryUrl: registryUrl,
+    registryUsername: acrUsername,
+    registryPassword: acrPassword,
+    managedEnvironmentId: marketing_env.id,
+    storageName: storage.name,
+    dbHost: dbHost,
+    dbPort: dbPort,
+    dbName: strapiDbName,
+    dbUser: dbUser,
+    dbPassword: dbPassword,
+    dbClient: config.require("dbClient"),
+    jwtSecret: config.require("jwtSecret"),
+    adminJwtSecret: config.require("adminJwtSecret"),
+    appKeys: config.require("appKeys"),
+    nodeEnv: config.require("nodeEnv"),
+    resourceGroupName: ResourceGroup.name,
+    apiToken: config.require("apiToken"),
 });

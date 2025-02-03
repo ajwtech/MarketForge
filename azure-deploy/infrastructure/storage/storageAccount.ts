@@ -57,25 +57,18 @@ export const mauticAppFilesStorage = new azure_native.storage.FileShare("mautic-
     shareName: "mautic-app-files",
 });
 
-
+export const strapiAppFilesStorage = new azure_native.storage.FileShare("strapi-app-files", {
+    accountName: storageAccount.name,
+    resourceGroupName: ResourceGroup.name,
+    shareName: "strapi-app-files",
+});
 
 const configFileName = "local.php";
 const localPhpFilePath = path.join(__dirname, configFileName);
 fs.writeFileSync(localPhpFilePath,"");
 
  
-// Command to create the config directory
-const createConfigDirectory = new command.local.Command("CreateConfigDirectory", {
-    create: pulumi.interpolate`az storage directory create --account-name ${storageAccount.name} \
-      --share-name ${mauticAppFilesStorage.name} \
-      --auth-mode key \
-      --account-key ${storageAccountKey} \
-      --name config`,
-    triggers: [new Date().toISOString()],
-}, {
-    
-    dependsOn: [mauticAppFilesStorage],
-});
+
 
 const configFileExists = new command.local.Command("Check for Config File Exists", {
     create: pulumi.interpolate`az storage file exists --account-name ${storageAccount.name} \
@@ -83,10 +76,24 @@ const configFileExists = new command.local.Command("Check for Config File Exists
       --auth-mode key \
       --account-key ${storageAccountKey} \
       --path config/${configFileName}`,
-      triggers: [createConfigDirectory.stdout, new Date().toISOString()],
+      triggers: [new Date().toISOString()],
   },{
-        dependsOn: [mauticAppFilesStorage, createConfigDirectory]
+        dependsOn: [mauticAppFilesStorage]
   });
+
+
+// Command to create the config directory
+const createConfigDirectory = new command.local.Command("CreateConfigDirectory", {
+    create: pulumi.interpolate`az storage directory create --account-name ${storageAccount.name} \
+      --share-name ${mauticAppFilesStorage.name} \
+      --auth-mode key \
+      --account-key ${storageAccountKey} \
+      --name config`,
+    triggers: [configFileExists],
+}, {
+    
+    dependsOn: [mauticAppFilesStorage],
+});
 
 export const configFilePlaceholder = new command.local.Command("uploadFile", {
     create: configFileExists.stdout.apply(out => 
@@ -99,7 +106,7 @@ export const configFilePlaceholder = new command.local.Command("uploadFile", {
             --path config/${configFileName}` 
             : pulumi.interpolate`echo "File already exists. Skipping upload. File exists: ${out}"`,
     ),
-    triggers: [configFileExists.stdout, createConfigDirectory.stdout, new Date().toISOString()],
+    triggers: [createConfigDirectory.stdout],
 }, {
 
     dependsOn: [mauticAppFilesStorage, createConfigDirectory, configFileExists],

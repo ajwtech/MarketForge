@@ -46,6 +46,7 @@ RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
         ca-certificates \
         curl \
         imagemagick \
+        php83-imap \
         graphicsmagick \
         unzip \
         supervisor \
@@ -124,6 +125,7 @@ COPY --from=builder --chown=www-data:www-data /opt/mautic /var/www/html
 RUN apk update && apk add --no-cache \
 bash \
 gettext \
+imap-dev \
 unzip \
 libwebp \
 libzip \
@@ -138,7 +140,7 @@ linux-headers \
 mysql-client \
 mariadb-connector-c \
 php83-intl \
-&& docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
+php83-imap \
 && docker-php-ext-install imap \
 && docker-php-ext-enable amqp
 
