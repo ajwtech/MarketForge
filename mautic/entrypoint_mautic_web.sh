@@ -29,17 +29,11 @@ done
 
 echo "MySQL is up and running!"
 
-
-
-
-
 # Run database migrations if configured
 if [ "\$DOCKER_MAUTIC_RUN_MIGRATIONS" = "true" ]; then
     echo "Running database migrations..."
     su -s /bin/bash www-data -c 'php /var/www/html/docroot/bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration'
 fi
-
-
 
 # Start PHP-FPM
 echo "Starting PHP-FPM..."
