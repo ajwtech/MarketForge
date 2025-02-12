@@ -7,9 +7,14 @@ import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 import { imageBuilds } from "../dockerImages"; // Ensure correct import
 
 const config = new pulumi.Config(); 
+const nginxServerName = config.get("nginxServerName") || "mautic-nginx";
 const mauticWebUrl = config.get("mauticWebUrl") || "mautic-web";
-const mauticServerName = config.get("mauticServerName") || "mautic-nginx";
-
+const strapiAppUrl = config.get("strapiAppUrl") || "strapi-app";
+const vtigerAppUrl = config.get("vtigerAppUrl") || "vtiger-app";
+const domain = config.require("domain");
+const cmsSubdomain = config.get("cmsSubdomain") || "cms";
+const crmSubdomain = config.get("crmSubdomain") || "crm";
+const mapSubdomain = config.get("mapSubdomain") || "map";
 
 export function mauticNginx(args: {
     env: string;
@@ -23,15 +28,18 @@ export function mauticNginx(args: {
     dbPort: pulumi.Input<string>;
     dbName: pulumi.Input<string>;
     resourceGroupName: pulumi.Input<string>;
+    createSubdomains: pulumi.Input<boolean>;
 }) {
-
+        const imageDigest = imageBuilds["marketing-nginx"].digest;
+        const revisionSuffix = imageDigest.apply(digest => digest.replace(/[^a-zA-Z0-9]/g, "").substring(0, 12));
+    
+   
     return new azure_app.ContainerApp("mautic-nginx", {
-        
+
         configuration: {
-            
             activeRevisionsMode: azure_app.ActiveRevisionsMode.Single,
             ingress: {
-                allowInsecure: true,
+                allowInsecure: false,
                 clientCertificateMode: "Ignore",
                 external: true,
                 targetPort: 80,
@@ -39,7 +47,11 @@ export function mauticNginx(args: {
                     latestRevision: true, 
                     weight: 100,
                 }],
-                transport: "Http", 
+                transport: "Auto",
+                customDomains: [
+                    { bindingType: 'Disabled', name: `${crmSubdomain}.${domain}` },
+                    { bindingType: 'Disabled', name: `${mapSubdomain}.${domain}` }
+                ] ,
             },
             maxInactiveRevisions: 100,
             registries: [{
@@ -73,8 +85,16 @@ export function mauticNginx(args: {
                         value: mauticWebUrl,
                     },
                     {
+                        name: "STRAPI_APP_URL", 
+                        value: strapiAppUrl,
+                    },
+                    {
+                        name: "VTIGER_APP_URL", 
+                        value: vtigerAppUrl,
+                    },
+                    {
                         name: "MAUTIC_SERVER_NAME",
-                        value: mauticServerName,
+                        value: nginxServerName,
                     },
                     {
                         name: "STORAGE_ACCOUNT_NAME",
@@ -122,7 +142,7 @@ export function mauticNginx(args: {
 
                 ],
             }],
-            revisionSuffix: "",
+            revisionSuffix: revisionSuffix,
             scale: {
                 maxReplicas: 3, 
                 minReplicas: 1,
@@ -155,8 +175,8 @@ export function mauticNginx(args: {
         },
         
     },{
-        
+        replaceOnChanges: ["image", "createSubdomains" ],
         protect: false,
-        dependsOn: [mauticAppFilesStorage, storageAccount, imageBuilds["marketing-nginx"]], // Reference centralized image build
+        dependsOn: [ mauticAppFilesStorage, storageAccount, imageBuilds["marketing-nginx"]], // Reference centralized image build
     });
 }

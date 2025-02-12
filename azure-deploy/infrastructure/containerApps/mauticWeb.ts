@@ -24,8 +24,11 @@ export function mauticWeb(args: {
     siteFQDN: pulumi.Output<string>
 
 }) {
+    const imageDigest = imageBuilds["marketing-mautic-app"].digest;
+    const revisionSuffix = imageDigest.apply(digest => digest.replace(/[^a-zA-Z0-9]/g, "").substring(0, 12));
 
     return new azure_app.ContainerApp("mautic-web", {
+
         configuration: {
             activeRevisionsMode: azure_app.ActiveRevisionsMode.Single,
             ingress: {
@@ -54,7 +57,6 @@ export function mauticWeb(args: {
             type: azure_app.ManagedServiceIdentityType.None,
         },
         location: location,
-        managedEnvironmentId: args.managedEnvironmentId,
         resourceGroupName: args.resourceGroupName,
         template: {
             containers: [{
@@ -94,8 +96,8 @@ export function mauticWeb(args: {
                     },
                 ],
                 resources: {
-                    cpu: 1,
-                    memory: "2Gi",
+                    cpu: 0.75,
+                    memory: "1.5Gi",
                 },
                 volumeMounts: [
                     {
@@ -122,7 +124,7 @@ export function mauticWeb(args: {
 
                 ],
             }],
-            revisionSuffix: "",
+            revisionSuffix: revisionSuffix,
             scale: {
                 maxReplicas: 3,
                 minReplicas: 1,
@@ -160,6 +162,6 @@ export function mauticWeb(args: {
         },
     }, {
         protect: false,
-        dependsOn: [storageAccount, imageBuilds["marketing-mautic_web"], configFilePlaceholder],
+        dependsOn: [storageAccount, imageBuilds["marketing-mautic-app"], configFilePlaceholder],
     });
 }

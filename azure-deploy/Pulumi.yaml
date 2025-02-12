@@ -9,3 +9,6 @@ stackConfigDir: ./config
 pulumi:tags:
   value:
     pulumi:template: azure-typescript
+config:
+    cloudflare:apiToken:
+        value: ${env.CLOUDFLARE_API_TOKEN}

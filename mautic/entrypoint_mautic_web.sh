@@ -7,7 +7,7 @@ set -e
 echo "Main container: Checking shared docroot population..."
 
 if [ ! -d "/var/www/html/docroot" ] || [ -z "$(ls -A /var/www/html/docroot)" ]; then
-  echo "Error: /var/www/html/docroot is not populated. Init container may have failed."
+  echo "Error: /var/www/html/docroot is not populated."
   exit 1
 else
   echo "docroot is populated. Continuing..."

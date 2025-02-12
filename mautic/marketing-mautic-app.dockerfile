@@ -34,7 +34,6 @@ RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
         libpng-dev \
         giflib-dev \
         zlib-dev \
-        postgresql-dev \
         libwebp-dev \
         libxpm-dev \
         apr-util-dev \
@@ -124,6 +123,7 @@ COPY --from=builder --chown=www-data:www-data /opt/mautic /var/www/html
 # Install PHP extensions requirements and other dependencies
 RUN apk update && apk add --no-cache \
 bash \
+curl \
 gettext \
 imap-dev \
 unzip \
