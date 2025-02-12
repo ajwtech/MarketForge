@@ -36,7 +36,6 @@ RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
         libpng-dev \
         giflib-dev \
         zlib-dev \
-        postgresql-dev \
         libwebp-dev \
         libxpm-dev \
         apr-util-dev \
@@ -74,7 +73,7 @@ RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
     && echo "memory_limit = -1" > /usr/local/etc/php/php.ini
     
 # ssh
-ENV SSH_PASSWD "root:Docker!"
+ENV SSH_PASSWD="root:Docker!"
 
 RUN echo "$SSH_PASSWD" | chpasswd 
 
@@ -113,32 +112,48 @@ ARG ${APP_VERSION:-'5.2.1'}
 # Install envsubst
 RUN apk update && apk add gettext
 
-# Create docroot directory
+# Create Mautic docroot directory
 RUN addgroup -g 82 -S www-data || true && adduser -u 82 -S www-data -G www-data || true && \
     mkdir -p /var/www/html/
 WORKDIR /var/www/html
-# Updated COPY command
 
 COPY --from=builder --chown=www-data:www-data /opt/mautic /var/www/html
 RUN chmod -R 755 /var/www/html/docroot
 
-COPY ./nginx.configd/fastcgi-params.conf /etc/nginx/conf.d/fastcgi-params.conf
+# Create vTiger directory
+RUN addgroup -g 82 -S www-data || true && adduser -u 82 -S www-data -G www-data || true && \
+    mkdir -p /var/vtiger/www/html/
+
+# Copy application files into the container
+COPY vtigercrm/ /var/vtiger/www/html 
+RUN chown -R www-data:www-data /var/vtiger/www/html && \
+    chmod -R 755 /var/vtiger/www/html
+
+RUN mkdir /etc/nginx/utils.d && \
+    chmod -R 755 /etc/nginx/utils.d
 
 
-COPY ./nginx.configd/options-gzip-nginx.conf /etc/nginx/conf.d/options-gzip-nginx.conf
-COPY ./nginx.configd/options-ssl-nginx.conf /etc/nginx/conf.d/options-ssl-nginx.conf
+#utility configs
+COPY ./mautic/nginx.configd/fastcgi-params.conf /etc/nginx/utils.d/fastcgi-params.conf
+COPY ./mautic/nginx.configd/options-gzip-nginx.conf /etc/nginx/utils.d/options-gzip-nginx.conf
+COPY ./mautic/nginx.configd/options-ssl-nginx.conf /etc/nginx/utils.d/options-ssl-nginx.conf
+COPY ./mautic/nginx.configd/fastcgi-php-nginx.conf /etc/nginx/utils.d/fastcgi-php-nginx.conf 
+
+#server configs
+COPY ./mautic/nginx.configd/mauticdemo.nginx.conf /etc/nginx/conf.d/default.conf
+COPY ./mautic/nginx.configd/strapi.conf /etc/nginx/conf.d/strapi.conf
+COPY ./mautic/nginx.configd/vtiger.conf /etc/nginx/conf.d/vtiger.conf
 
 #configs with templates
-COPY ./nginx.configd/mauticdemo.nginx.conf /etc/nginx/templates/default.conf.template
-COPY ./nginx.configd/fastcgi-php-nginx.conf /etc/nginx/templates/fastcgi-php-nginx.conf.template 
-COPY ./nginx.configd/nginx.conf /etc/nginx/templates/nginx.conf.template
+COPY ./mautic/nginx.configd/nginx.conf /etc/nginx/templates/nginx.conf.template
 
 # Copy startup script
-COPY ./entrypoint_nginx.sh /entrypoint_nginx.sh
+COPY ./mautic/entrypoint_nginx.sh /entrypoint_nginx.sh
 RUN chmod +x /entrypoint_nginx.sh
 
 # Create log directory
 RUN mkdir -p /var/log/nginx && \
+    mkdir -p /data/nginx/cache && \
     touch /var/log/nginx/access.log /var/log/nginx/error.log && \
     chmod -R 755 /var/log/nginx
 

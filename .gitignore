@@ -7,3 +7,4 @@ __azurite_db_table__.json
 azure-deploy/config/pulumi.marketing.yaml
 mautic/logs/*
 azure-deploy/infrastructure/storage/local.php
+azure-deploy/config/Pulumi.test.yaml

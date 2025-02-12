@@ -8,8 +8,8 @@ import { imageBuilds } from "../dockerImages"; // Ensure correct import
 
 const config = new pulumi.Config(); 
 const strapiAppUrl = config.get("strapiAppUrl") || "strapi-app";
-const mauticServerName = config.get("mauticServerName") || "mautic-nginx";
-
+const domain = config.require("domain");
+const cmsSubdomain = config.get("cmsSubdomain") || "cms";
 
 export function strapiApp(args: {
     env: string;
@@ -32,9 +32,10 @@ export function strapiApp(args: {
     nodeEnv: pulumi.Input<string>;
     apiToken: pulumi.Input<string>;
 }) {
+    const imageDigest = imageBuilds["marketing-strapi-app"].digest;
+    const revisionSuffix = imageDigest.apply(digest => digest.replace(/[^a-zA-Z0-9]/g, "").substring(0, 12));
 
     return new azure_app.ContainerApp(strapiAppUrl, {
-        
         configuration: {
             
             activeRevisionsMode: azure_app.ActiveRevisionsMode.Single,
@@ -47,7 +48,10 @@ export function strapiApp(args: {
                     latestRevision: true, 
                     weight: 100,
                 }],
-                transport: "Http", 
+                customDomains: [
+                    { bindingType: 'Disabled', name: `${cmsSubdomain}.${domain}` },
+                ],
+                transport: "Auto", 
             },
             maxInactiveRevisions: 100,
             registries: [{
@@ -169,7 +173,7 @@ export function strapiApp(args: {
 
                 ],
             }],
-            revisionSuffix: "",
+            revisionSuffix: revisionSuffix, // Unique revision suffix to force a new revision
             scale: {
                 maxReplicas: 3, 
                 minReplicas: 1,
@@ -219,6 +223,6 @@ export function strapiApp(args: {
     },{
         
         protect: false,
-        dependsOn: [strapiAppFilesStorage, storageAccount, imageBuilds["strapi-app"]], // Reference centralized image build
+        dependsOn: [strapiAppFilesStorage, storageAccount, imageBuilds["marketing-strapi-app"]],
     });
 }

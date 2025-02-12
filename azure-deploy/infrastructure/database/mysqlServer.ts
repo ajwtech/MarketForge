@@ -13,8 +13,9 @@ const mysqlAdminUser = config.require("mysqlAdminUser");
 
 // Add configurable server name
 const mysqlServerName = config.require("mysqlServerName"); // Use config value
-const mysqlDbName = config.require("mysqlDbName"); // Use config value
-const strapiDbName = config.require("strapiDbName"); // Use config value
+const mysqlDbName = config.get("mysqlDbName") || "mautic";; // Use config value
+const strapiDbName = config.get("strapiDbName") || "strapi";; // Use config value
+const vtigerDbName = config.get("vtigerDbName") || "vtiger";; // Use config value
 // Add configurable SKU name and tier
 const mysqlSkuName = config.require("mysqlSkuName")
 const mysqlSkuTier = config.require("mysqlSkuTier") as keyof typeof azure_mysqldb.ServerSkuTier;
@@ -66,7 +67,7 @@ export const marketing_mysql = new azure_mysqldb.Server(mysqlServerName, {
     protect: false,
 }
 );
-export const configuration = new azure_native.dbformysql.Configuration("configuration",
+export const configurationRequire_secure_transport = new azure_native.dbformysql.Configuration("configuration",
     {
         resourceGroupName: ResourceGroup.name,
         configurationName: "require_secure_transport",
@@ -75,6 +76,14 @@ export const configuration = new azure_native.dbformysql.Configuration("configur
         value: "OFF",
     }, { dependsOn: [marketing_mysql] });
 
+// Set `NO_ENGINE_SUBSTITUTION` SQL mode
+export const configurationSqlMode = new azure_native.dbformysql.Configuration("sqlModeConfig", {
+    resourceGroupName: ResourceGroup.name,
+    serverName: mysqlServerName,
+    configurationName: "sql_mode",
+    source: "user-override",
+    value: "NO_ENGINE_SUBSTITUTION"
+});
 
 // Create a database in the server
 export const marketing_database = new azure_native.dbformysql.Database(mysqlDbName, {
@@ -93,3 +102,10 @@ export const strapi_database = new azure_native.dbformysql.Database(strapiDbName
 }, { dependsOn: [marketing_mysql] });
 
 
+// Create a database in the server
+export const vtiger_database = new azure_native.dbformysql.Database(vtigerDbName, {
+    charset: "utf8",
+    collation: "utf8_unicode_ci",
+    resourceGroupName: ResourceGroup.name,
+    serverName: mysqlServerName,
+}, { dependsOn: [marketing_mysql] });

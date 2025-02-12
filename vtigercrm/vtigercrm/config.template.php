@@ -15,7 +15,7 @@
 
 // Adjust error_reporting favourable to deployment.
 version_compare(PHP_VERSION, '5.5.0') <= 0 ? error_reporting(E_WARNING & ~E_NOTICE & ~E_DEPRECATED & E_ERROR) : error_reporting(E_WARNING & ~E_NOTICE & ~E_DEPRECATED  & E_ERROR & ~E_STRICT); // PRODUCTION
-//ini_set('display_errors','on'); version_compare(PHP_VERSION, '5.5.0') <= 0 ? error_reporting(E_WARNING & ~E_NOTICE & ~E_DEPRECATED) : error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT);   // DEBUGGING
+ini_set('display_errors','on'); version_compare(PHP_VERSION, '5.5.0') <= 0 ? error_reporting(E_WARNING & ~E_NOTICE & ~E_DEPRECATED) : error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT);   // DEBUGGING
 //ini_set('display_errors','on'); error_reporting(E_ALL); // STRICT DEVELOPMENT
 
 
@@ -31,8 +31,8 @@ $CALENDAR_DISPLAY = 'true';
 $USE_RTE = 'true';
 
 // helpdesk support email id and support name (Example: 'support@vtiger.com' and 'vtiger support')
-$HELPDESK_SUPPORT_EMAIL_ID = '_USER_SUPPORT_EMAIL_';
-$HELPDESK_SUPPORT_NAME = 'your-support name';
+$HELPDESK_SUPPORT_EMAIL_ID = 'adam@amwinvest.com';
+$HELPDESK_SUPPORT_NAME = 'Adam Wheeler';
 $HELPDESK_SUPPORT_EMAIL_REPLY_ID = $HELPDESK_SUPPORT_EMAIL_ID;
 
 /* database configuration
@@ -44,12 +44,12 @@ $HELPDESK_SUPPORT_EMAIL_REPLY_ID = $HELPDESK_SUPPORT_EMAIL_ID;
       db_name
 */
 
-$dbconfig['db_server'] = '_DBC_SERVER_';
-$dbconfig['db_port'] = ':_DBC_PORT_';
-$dbconfig['db_username'] = '_DBC_USER_';
-$dbconfig['db_password'] = '_DBC_PASS_';
-$dbconfig['db_name'] = '_DBC_NAME_';
-$dbconfig['db_type'] = '_DBC_TYPE_';
+$dbconfig['db_server'] = "$DB_HOST";
+$dbconfig['db_port']   = ":$DB_PORT";
+$dbconfig['db_username'] = "$DB_USER";
+$dbconfig['db_password'] = "$DB_PASSWORD";
+$dbconfig['db_name']   = "$DB_NAME";
+$dbconfig['db_type'] = 'mysqli';
 $dbconfig['db_status'] = '_DB_STAT_';
 
 // TODO: test if port is empty
@@ -66,7 +66,7 @@ $dbconfigoption['persistent'] = true;
 $dbconfigoption['autofree'] = false;
 
 // debug default value = 0
-$dbconfigoption['debug'] = 0;
+$dbconfigoption['debug'] = 1;
 
 // seqname_format default value = '%s_seq'
 $dbconfigoption['seqname_format'] = '%s_seq';
@@ -79,15 +79,15 @@ $dbconfigoption['ssl'] = false;
 
 $host_name = $dbconfig['db_hostname'];
 
-$site_URL = '_SITE_URL_';
+$site_URL = "$SITE_URL";
 
 // url for customer portal (Example: http://vtiger.com/portal)
 $PORTAL_URL = $site_URL.'/customerportal';
 // root directory path
-$root_directory = '_VT_ROOTDIR_';
+$root_directory = '/var/vtiger/www/html';
 
 // cache direcory path
-$cache_dir = '_VT_CACHEDIR_';
+$cache_dir = '/var/vtiger/www/html/cache';
 
 // tmp_dir default value prepended by cache_dir = images/
 $tmp_dir = '_VT_TMPDIR_';
@@ -100,7 +100,8 @@ $upload_dir = '_VT_UPLOADDIR_';
 
 // maximum file size for uploaded files in bytes also used when uploading import files
 // upload_maxsize default value = 3000000
-$upload_maxsize = 3145728;//3MB
+//$upload_maxsize = 3145728;//3MB
+$upload_maxsize = 104857600;//100MB
 
 // flag to allow export functionality
 // 'all' to allow anyone to use exports 
@@ -118,6 +119,9 @@ $list_max_entries_per_page = '20';
 
 // history_max_viewed default value = 5
 $history_max_viewed = '5';
+
+//module open after login
+$default_module = 'Home';    
 
 // default_action default value = index
 $default_action = 'index';
@@ -139,15 +143,15 @@ $default_password = '';
 $create_default_user = false;
 
 //Master currency name
-$currency_name = '_MASTER_CURRENCY_';
+$currency_name = 'USD';
 
 // default charset
 // default charset default value = 'UTF-8' or 'ISO-8859-1'
-$default_charset = '_VT_CHARSET_';
+$default_charset = 'UTF-8';
 
 // default language
 // default_language default value = en_us
-$default_language = '_VT_DEFAULT_LANGUAGE_';
+$default_language = 'en_us';
 
 //Option to hide empty home blocks if no entries.
 $display_empty_home_blocks = false;
@@ -162,7 +166,7 @@ $application_unique_key = '_VT_APP_UNIQKEY_';
 $listview_max_textlength = 40;
 
 // Maximum time limit for PHP script execution (in seconds)
-$php_max_execution_time = 0;
+$php_max_execution_time = 600;
 
 // Set the default timezone as per your preference
 $default_timezone = 'UTC';
