@@ -125,7 +125,7 @@ RUN addgroup -g 82 -S www-data || true && adduser -u 82 -S www-data -G www-data 
     mkdir -p /var/vtiger/www/html/
 
 # Copy application files into the container
-COPY vtigercrm/ /var/vtiger/www/html 
+COPY vtigercrm/vtigercrm/ /var/vtiger/www/html 
 RUN chown -R www-data:www-data /var/vtiger/www/html && \
     chmod -R 755 /var/vtiger/www/html
 
