@@ -8,6 +8,7 @@ COPY --from=composer /composer /usr/bin/composer
 
 RUN apk update && apk add --no-cache --virtual .build-deps \
         imap-dev \
+        build-base \
         brotli \
         git \
         curl-dev \
@@ -27,7 +28,6 @@ RUN apk update && apk add --no-cache --virtual .build-deps \
         ca-certificates \
         curl \
         imagemagick \
-        php83-imap \
         gettext \
         graphicsmagick \
         unzip \
@@ -41,31 +41,34 @@ RUN apk update && apk add --no-cache --virtual .build-deps \
         php83-intl \
         php83-xml \
         php83-pdo_mysql \
-        php83-mysqli \
-        php83-gd \
         php83-curl \
         php83-zip \
         php83-soap \
+        php83-sockets \
+        php83-exif \
+        php83-imap \
         dialog \
         openssh-server \
         cronie \
         libzip-dev \
-        python3 \ 
-        py3-setuptools \ 
+        python3 \
+        py3-setuptools \
         py3-pip \
         wget \
         unzip 
 
-        
-ENV PHPMYADMIN_VERSION=5.2.2  
-
 # Configure, install, and enable PHP extensions 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-&& docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
-&& docker-php-ext-configure opcache --enable-opcache \
-&& docker-php-ext-install -j$(nproc) intl mbstring mysqli curl pdo_mysql zip bcmath sockets exif gd imap opcache \
-&& docker-php-ext-enable intl mbstring mysqli curl pdo_mysql zip bcmath sockets exif gd imap opcache \
-&& apk del .build-deps
+    && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
+    && docker-php-ext-install -j$(nproc)  gd imap mysqli \
+    && docker-php-ext-enable mysqli gd imap \
+    && apk del .build-deps
+    
+# Set permissions for the entrypoint script
+COPY --chown=root:www-data ./entrypoint.sh /var/local/entrypoint.sh
+RUN chmod +x /var/local/entrypoint.sh
+        
+ENV PHPMYADMIN_VERSION=5.2.2  
 
 # Copy application files into the container
 COPY --chown=root:www-data vtigercrm/ /var/vtiger/www/html
@@ -74,11 +77,19 @@ COPY --chown=root:www-data vtigercrm/ /var/vtiger/www/html
 RUN chown -R root:www-data /var/vtiger/www/html \
     && chmod -R 755 /var/vtiger/www/html 
 
-# Set permissions for the entrypoint script
-COPY --chown=root:www-data ./entrypoint.sh /var/local/entrypoint.sh
-RUN chmod +x /var/local/entrypoint.sh
-
+# Set the working directory
 WORKDIR /var/vtiger/www/html
+
+# Install Composer dependencies
+ENV COMPOSER_ALLOW_SUPERUSER=1
+ENV COMPOSER_PROCESS_TIMEOUT=10000
+RUN COMPOSER_ALLOW_SUPERUSER=1 COMPOSER_PROCESS_TIMEOUT=10000 composer update 
+RUN composer dump-autoload -o --apcu
+
+# Apply necessary permissions
+RUN chown -R root:www-data /var/vtiger/www/html \
+    && chmod -R 755 /var/vtiger/www/html 
+
 
 RUN find -type d -exec chmod 755 {} \; \
     && chmod 775 backup/ \
@@ -101,10 +112,6 @@ RUN find -type d -exec chmod 755 {} \; \
     && chmod 664 user_privileges/default_module_view.php \
     && chmod 664 user_privileges/enable_backup.php
 
-    # Ensure Composer can run as the superuser
-
-ENV COMPOSER_ALLOW_SUPERUSER=1
-
 # for Azure ssh
 ENV  SSH_PASSWD="root:Docker!"
 RUN echo "$SSH_PASSWD" | chpasswd 
@@ -122,9 +129,7 @@ RUN chmod -R 644 /usr/local/etc/php/php.ini \
 # Apply necessary permissions
 RUN chmod +x /var/local/entrypoint.sh
 
-# Install Composer dependencies
-RUN COMPOSER_ALLOW_SUPERUSER=1 COMPOSER_PROCESS_TIMEOUT=10000 composer install --no-interaction --no-scripts --optimize-autoloader; \
-    composer dump-autoload --optimize
+
 
 EXPOSE 9000
 # Define the entrypoint
