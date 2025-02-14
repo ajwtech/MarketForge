@@ -142,7 +142,7 @@ export function mauticNginx(args: {
 
                 ],
             }],
-            revisionSuffix: revisionSuffix,
+            //revisionSuffix: revisionSuffix,
             scale: {
                 maxReplicas: 3, 
                 minReplicas: 1,

@@ -80,6 +80,7 @@ export function vtigerApp(args: VtigerAppArgs) {
                     { name: "DB_USER", value: args.dbUser },
                     { name: "DB_PASSWORD", value: args.dbPassword },
                     { name: "DB_TYPE", value: args.dbType },
+                    { name: "DB_NAME", value: args.dbName },
                     { name: "APP_SECRET", value: args.appSecret },
                     { name: "SITE_URL", value: args.siteUrl },
                     { name: "SITE_FQDN", value: args.siteFQDN },
@@ -96,7 +97,7 @@ export function vtigerApp(args: VtigerAppArgs) {
                     subPath: "",
                     }],
             }],
-            revisionSuffix: revisionSuffix,
+            //revisionSuffix: revisionSuffix,
             scale: {
                 minReplicas: 1,
                 maxReplicas: 3,
