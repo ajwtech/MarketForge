@@ -44,17 +44,17 @@ $HELPDESK_SUPPORT_EMAIL_REPLY_ID = $HELPDESK_SUPPORT_EMAIL_ID;
       db_name
 */
 
-$dbconfig['db_server'] = "$DB_HOST";
-$dbconfig['db_port']   = ":$DB_PORT";
-$dbconfig['db_username'] = "$DB_USER";
-$dbconfig['db_password'] = "$DB_PASSWORD";
-$dbconfig['db_name']   = "$DB_NAME";
-$dbconfig['db_type'] = 'mysqli';
-$dbconfig['db_status'] = '_DB_STAT_';
+$dbconfig['db_server']   = '_DBC_SERVER_';
+$dbconfig['db_port']     = '_DBC_PORT_';
+$dbconfig['db_username'] = '_DBC_USER_';
+$dbconfig['db_password'] = '_DBC_PASS_';
+$dbconfig['db_name']     = '_DBC_NAME_';
+$dbconfig['db_type']     = '_DBC_TYPE_';
+$dbconfig['db_status']   = '_DB_STAT_';
 
 // TODO: test if port is empty
 // TODO: set db_hostname dependending on db_type
-$dbconfig['db_hostname'] = $dbconfig['db_server'].$dbconfig['db_port'];
+$dbconfig['db_hostname'] = $dbconfig['db_server'].':'.$dbconfig['db_port'];
 
 // log_sql default value = false
 $dbconfig['log_sql'] = false;
@@ -79,15 +79,15 @@ $dbconfigoption['ssl'] = false;
 
 $host_name = $dbconfig['db_hostname'];
 
-$site_URL = "$SITE_URL";
+$site_URL = '_SITE_URL_';
 
 // url for customer portal (Example: http://vtiger.com/portal)
 $PORTAL_URL = $site_URL.'/customerportal';
 // root directory path
-$root_directory = '/var/vtiger/www/html';
+$root_directory = '_VT_ROOTDIR_';
 
 // cache direcory path
-$cache_dir = '/var/vtiger/www/html/cache';
+$cache_dir = '_VT_CACHEDIR_';
 
 // tmp_dir default value prepended by cache_dir = images/
 $tmp_dir = '_VT_TMPDIR_';
@@ -143,15 +143,15 @@ $default_password = '';
 $create_default_user = false;
 
 //Master currency name
-$currency_name = 'USD';
+$currency_name = '_MASTER_CURRENCY_';
 
 // default charset
 // default charset default value = 'UTF-8' or 'ISO-8859-1'
-$default_charset = 'UTF-8';
+$default_charset = '_VT_CHARSET_';
 
 // default language
 // default_language default value = en_us
-$default_language = 'en_us';
+$default_language = '_VT_DEFAULT_LANGUAGE_';
 
 //Option to hide empty home blocks if no entries.
 $display_empty_home_blocks = false;
@@ -166,7 +166,7 @@ $application_unique_key = '_VT_APP_UNIQKEY_';
 $listview_max_textlength = 40;
 
 // Maximum time limit for PHP script execution (in seconds)
-$php_max_execution_time = 600;
+$php_max_execution_time = 1600;
 
 // Set the default timezone as per your preference
 $default_timezone = 'UTC';

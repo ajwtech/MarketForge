@@ -143,7 +143,7 @@ ini_set('memory_limit','64M');
 \$HELPDESK_SUPPORT_EMAIL_REPLY_ID = \$HELPDESK_SUPPORT_EMAIL_ID;
 
 \$dbconfig['db_server'] = '{$this->dbHostname}';
-\$dbconfig['db_port'] = ':{$this->dbPort}';
+\$dbconfig['db_port'] = '{$this->dbPort}';
 \$dbconfig['db_username'] = '{$this->dbUsername}';
 \$dbconfig['db_password'] = '{$this->dbPassword}';
 \$dbconfig['db_name'] = '{$this->dbName}';
