@@ -173,7 +173,7 @@ export function strapiApp(args: {
 
                 ],
             }],
-            revisionSuffix: revisionSuffix, // Unique revision suffix to force a new revision
+            //revisionSuffix: revisionSuffix, // Unique revision suffix to force a new revision
             scale: {
                 maxReplicas: 3, 
                 minReplicas: 1,

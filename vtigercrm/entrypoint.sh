@@ -18,6 +18,7 @@ echo "DB_HOST: ${DB_HOST}"
 echo "DB_NAME: ${DB_NAME}"
 echo "DB_PORT: ${DB_PORT}"
 echo "DB_USER: ${DB_USER}"
+echo "DB_TYPE: ${DB_TYPE}"
 until mysqladmin --host=${DB_HOST} --port=${DB_PORT} --user=${DB_USER} --password=${DB_PASSWORD} ping | grep -q "mysqld is alive"; do
     sleep 2
 done

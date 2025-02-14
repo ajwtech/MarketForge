@@ -25,7 +25,7 @@ export function mauticWeb(args: {
 
 }) {
     const imageDigest = imageBuilds["marketing-mautic-app"].digest;
-    const revisionSuffix = imageDigest.apply(digest => digest.replace(/[^a-zA-Z0-9]/g, "").substring(0, 12));
+    // const revisionSuffix = imageDigest.apply(digest => digest.replace(/[^a-zA-Z0-9]/g, "").substring(0, 12));
 
     return new azure_app.ContainerApp("mautic-web", {
 
@@ -124,7 +124,7 @@ export function mauticWeb(args: {
 
                 ],
             }],
-            revisionSuffix: revisionSuffix,
+            //revisionSuffix: revisionSuffix,
             scale: {
                 maxReplicas: 3,
                 minReplicas: 1,
