@@ -64,7 +64,7 @@ export function nginxCerts(
         --environment ${environment.name} \
         --validation-method CNAME`,
         triggers: [mapCert.systemData.lastModifiedAt, nginxApp.systemData.lastModifiedAt],
-    }, { dependsOn: [mapCert, nginxApp, environment] });
+    }, { dependsOn: [mapCert, nginxApp, environment, bindCmsCommand] });
 
     const bindCrmCommand = new command.local.Command("bind-crm-custom-domain", {
         create: pulumi.interpolate `az containerapp hostname bind \

@@ -85,7 +85,7 @@ class Vtiger_WebUI extends Vtiger_EntryPoint {
 
 	function isInstalled() {
 		global $dbconfig;
-		if (empty($dbconfig) || empty($dbconfig['db_name']) || $dbconfig['db_name'] == '_DBC_TYPE_') {
+		if (empty($dbconfig) || empty($dbconfig['db_name']) || $dbconfig['db_name'] == '_DBC_NAME_') {
 			return false;
 		}
 		return true;
