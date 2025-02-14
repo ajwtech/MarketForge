@@ -22,7 +22,8 @@ until mysqladmin --host=${DB_HOST} --port=${DB_PORT} --user=${DB_USER} --passwor
     sleep 2
 done
 
-envsubst '${DB_HOST} ${DB_PORT} ${DB_USER} ${DB_PASSWORD} ${DB_NAME} ${DB_CLIENT} ${SITE_URL} '  < config.template.php > config.php
+# envsubst '${DB_HOST} ${DB_PORT} ${DB_USER} ${DB_PASSWORD} ${DB_NAME} ${dbType} ${SITE_URL} '  < config.template.php > config.php
+envsubst '${DB_HOST} ${DB_PORT} ${DB_USER} ${DB_PASSWORD} ${DB_NAME} ${DB_TYPE} ${SITE_URL} '  < config.db.template.php > config.db.php
 
 echo "Connection Successful: MySQL is up and running!"
 
