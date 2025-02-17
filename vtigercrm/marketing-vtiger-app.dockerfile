@@ -33,7 +33,6 @@ RUN apk update && apk add --no-cache --virtual .build-deps \
         unzip \
         fcgi \
         mysql-client \
-        phpmyadmin \
         php83-bcmath \
         php83-common \
         php83-sqlite3 \
