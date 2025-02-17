@@ -10,7 +10,7 @@ COPY --from=composer /composer /usr/bin/composer
 COPY --from=node /usr/local/bin/node /usr/local/bin/
 COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules/
 
-ARG ${APP_VERSION:-'5.2.1'}
+ARG ${APP_VERSION:-'5.2.2'}
 
 # Assign build arguments to environment variables
 ENV NODE_ENV=production \
@@ -96,6 +96,7 @@ RUN COMPOSER_ALLOW_SUPERUSER=1 COMPOSER_PROCESS_TIMEOUT=10000 composer create-pr
     php bin/console mautic:assets:generate && \
     npx patch-package && \
     find node_modules -mindepth 1 -maxdepth 1 -not \( -name 'jquery' -or -name 'vimeo-froogaloop2'  \) | xargs rm -rf && \
+    composer require acquia/mc-cs-plugin-custom-objects --no-interaction --no-scripts && \
     COMPOSER_ALLOW_SUPERUSER=1 composer dump-env prod && \
     npm cache clean --force && \
     apk del .build-deps
@@ -104,7 +105,7 @@ RUN COMPOSER_ALLOW_SUPERUSER=1 COMPOSER_PROCESS_TIMEOUT=10000 composer create-pr
 # Stage 3: Production
 FROM php:8.3.16-fpm-alpine3.20
 
-ARG ${APP_VERSION:-'5.2.1'}
+ARG ${APP_VERSION:-'5.2.2'}
 
 # Create log directories for PHP-FPM
 RUN mkdir -p /var/log/php-fpm && \
@@ -153,6 +154,10 @@ COPY --chown=www-data:www-data ./local.php.conf /var/www/html/local.php.conf
 
 # Apply necessary permissions
 RUN chmod +x /entrypoint.sh /entrypoint_mautic_web.sh
+
+# #install from marketplace
+# RUN php -vvv bin/console mautic:marketplace:install acquia/mc-cs-plugin-custom-objects 
+
 
 EXPOSE 9000
 # Define the entrypoint
