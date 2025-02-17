@@ -16,6 +16,7 @@ import { strapiApp } from "./infrastructure/containerApps/strapiApp"; // Import 
 import { vtigerApp } from "./infrastructure/containerApps/vtigerApp"; // Import vtigerApp
 import { setupDns } from "./infrastructure/dns/customDomains";
 import { nginxCerts } from "./infrastructure/certificates/nginxCerts";
+import { jumpBox as jumpbox } from "./infrastructure/containerApps/jumpbox"; // Import jumpbox deployment function
 
 
 const config = new pulumi.Config();
@@ -167,5 +168,15 @@ const cloudflareDNSentries = BoolSubdomains? setupDns({
 
 // Update mauticNginxApp to use the cloudflareDNSentries as the customDomains
 export const customDomains = nginxCerts(mauticNginxApp, deployedStrapiApp,  marketing_env ); // Set to true if subdomains need to be created
+
+// Deploy the Jumpbox container app
+export const jumpboxApp = jumpbox({
+    env: appEnv,
+    managedEnvironmentId: marketing_env.id,
+    storageName: storage.name,
+    dbHost: dbHost,
+    dbPort: dbPort,
+    resourceGroupName: ResourceGroup.name,
+});
 
 
