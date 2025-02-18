@@ -5,7 +5,7 @@ import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 
 const config = new pulumi.Config();
 const location = config.require("location");
-const appVersion = config.get("appVersion") || "5.1.1";
+const appVersion = config.get("appVersion") || "5.2.2";
 export function mauticWeb(args: {
     env: string;
     image: pulumi.Input<string>;

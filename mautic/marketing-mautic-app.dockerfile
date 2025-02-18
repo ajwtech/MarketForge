@@ -78,9 +78,18 @@ RUN echo "$SSH_PASSWD" | chpasswd
 #set the working directory to the selected app version
 
 WORKDIR /opt/
-# this is where it gets complicated. Composer for php and npm for node are configured in the reccomended project in a way that causes a catch 22 for a new instance of the project. Essentially the post install scripts in each one are dependent on the other being installed first. So this is how I am going to handle it. 
-# First I will install the reccomended project with composer include the dev dependencies and disable the scripts. note that the app version is parameterized so the mautic folder will have versioned subfolders to assist in future updates and rollbacks. This has to be the first step because the npm install depends on the packages.json from the recommended project. npx is also required for the post install scripts to eventually run.
-# Now when the npm install is run it will have npx needed by composer and the packages.json needed by npm. The npm post install script will run which will allow us to add the additional dev dependencies but we still need to disable the scripts because on a new system they will need to execute in a different order. Generate Assets, and patch-package need to run first.which will then complete the build. 
+# this is where it gets complicated. Composer for php and npm for node are configured in the reccomended project in a way that causes 
+# a catch 22 for a new instance of the project. Essentially the post install scripts in each one are dependent on the other being 
+# installed first. So this is how I am going to handle it. 
+# First I will install the reccomended project with composer include the dev dependencies and disable the scripts. 
+# Note that the app version is parameterized.
+# 
+# This has to be the first step because the npm install depends on the packages.json from the recommended project. 
+# npx is also required for the post install scripts to eventually run.
+# Now when the npm install is run, it will have npx needed by composer and the packages.json needed by npm. 
+# The npm post install script will run which will allow us to add the additional dev dependencies but we still need to disable the scripts
+# because on a new system they will need to execute in a different order. Generate Assets, and patch-package need to run first. 
+# Which will then complete the build. 
 RUN COMPOSER_ALLOW_SUPERUSER=1 COMPOSER_PROCESS_TIMEOUT=10000 composer create-project mautic/recommended-project ${APP_VERSION} mautic \
         --no-interaction --prefer-install=auto --no-scripts && \
     cd mautic && \
@@ -92,14 +101,18 @@ RUN COMPOSER_ALLOW_SUPERUSER=1 COMPOSER_PROCESS_TIMEOUT=10000 composer create-pr
     symfony/debug-bundle \
     symfony/var-dumper \
     symfony/flex && \
+    COMPOSER_ALLOW_SUPERUSER=1 composer require --no-scripts \
+    acquia/mc-cs-plugin-custom-objects \
+    && \
     COMPOSER_ALLOW_SUPERUSER=1 composer install --no-interaction --no-scripts --dev --optimize-autoloader && \
     php bin/console mautic:assets:generate && \
     npx patch-package && \
     find node_modules -mindepth 1 -maxdepth 1 -not \( -name 'jquery' -or -name 'vimeo-froogaloop2'  \) | xargs rm -rf && \
-    composer require acquia/mc-cs-plugin-custom-objects --no-interaction --no-scripts && \
     COMPOSER_ALLOW_SUPERUSER=1 composer dump-env prod && \
     npm cache clean --force && \
-    apk del .build-deps
+    apk del .build-deps \
+    && \
+    npm prune --omit=dev
 
 
 # Stage 3: Production

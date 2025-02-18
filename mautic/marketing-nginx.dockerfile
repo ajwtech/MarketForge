@@ -12,7 +12,7 @@ COPY --from=node /usr/local/bin/node /usr/local/bin/
 COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules/
 
 
-ARG ${APP_VERSION:-'5.2.1'}
+ARG ${APP_VERSION:-'5.2.2'}
 
 # Assign build arguments to environment variables
 ENV NODE_ENV=production \
@@ -107,7 +107,7 @@ RUN COMPOSER_ALLOW_SUPERUSER=1 COMPOSER_PROCESS_TIMEOUT=10000 composer create-pr
 # Stage 3: Production
 FROM nginx:mainline-alpine3.20-slim
 
-ARG ${APP_VERSION:-'5.2.1'}
+ARG ${APP_VERSION:-'5.2.2'}
 
 # Install envsubst
 RUN apk update && apk add gettext

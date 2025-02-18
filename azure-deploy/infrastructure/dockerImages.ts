@@ -4,7 +4,7 @@ import { marketingcr, acrUsername, acrPassword, registryUrl } from './registries
 
 const config = new pulumi.Config();
 const imageTag = config.get('imageTag') || 'latest';
-const mauticAppVersion = config.get('appVersion') || '5.2.1';
+const mauticAppVersion = config.get('appVersion') || '5.2.2';
 const imageNames = [
   'marketing-nginx',
   'marketing-mautic-app',
