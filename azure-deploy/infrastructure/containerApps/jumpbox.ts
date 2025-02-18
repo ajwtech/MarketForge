@@ -16,7 +16,8 @@ export function jumpBox(args: {
     dbHost: pulumi.Input<string>;
     dbPort: pulumi.Input<string>;
     resourceGroupName: pulumi.Input<string>;
-}) {return new azure_app.ContainerApp("ubuntu-sshd", {
+}) 
+{return new azure_app.ContainerApp("ubuntu-sshd", {
         configuration: {
             activeRevisionsMode: azure_app.ActiveRevisionsMode.Single,
             ingress: {
@@ -88,8 +89,8 @@ export function jumpBox(args: {
             }],
             //revisionSuffix: revisionSuffix,
             scale: {
-                maxReplicas: 3, 
-                minReplicas: 1,
+                maxReplicas: 2, 
+                minReplicas: 0,
                 rules: [{
                     name: "tcp-scaler", 
                     tcp: { 
