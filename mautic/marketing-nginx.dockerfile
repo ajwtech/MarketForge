@@ -120,14 +120,14 @@ WORKDIR /var/www/html
 COPY --from=builder --chown=www-data:www-data /opt/mautic /var/www/html
 RUN chmod -R 755 /var/www/html/docroot
 
-# Create vTiger directory
-RUN addgroup -g 82 -S www-data || true && adduser -u 82 -S www-data -G www-data || true && \
-    mkdir -p /var/vtiger/www/html/
+# # Create vTiger directory
+# RUN addgroup -g 82 -S www-data || true && adduser -u 82 -S www-data -G www-data || true && \
+#     mkdir -p /var/vtiger/www/html/
 
-# Copy application files into the container
-COPY vtigercrm/vtigercrm/ /var/vtiger/www/html 
-RUN chown -R www-data:www-data /var/vtiger/www/html && \
-    chmod -R 755 /var/vtiger/www/html
+# # Copy application files into the container
+# COPY vtigercrm/vtigercrm/ /var/vtiger/www/html 
+# RUN chown -R www-data:www-data /var/vtiger/www/html && \
+#     chmod -R 755 /var/vtiger/www/html
 
 RUN mkdir /etc/nginx/utils.d && \
     chmod -R 755 /etc/nginx/utils.d
@@ -142,7 +142,7 @@ COPY ./mautic/nginx.configd/fastcgi-php-nginx.conf /etc/nginx/utils.d/fastcgi-ph
 #server configs
 COPY ./mautic/nginx.configd/mauticdemo.nginx.conf /etc/nginx/conf.d/default.conf
 COPY ./mautic/nginx.configd/strapi.conf /etc/nginx/conf.d/strapi.conf
-COPY ./mautic/nginx.configd/vtiger.conf /etc/nginx/conf.d/vtiger.conf
+# COPY ./mautic/nginx.configd/vtiger.conf /etc/nginx/conf.d/vtiger.conf
 
 #configs with templates
 COPY ./mautic/nginx.configd/nginx.conf /etc/nginx/templates/nginx.conf.template

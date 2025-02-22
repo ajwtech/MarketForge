@@ -9,7 +9,7 @@ const imageNames = [
   'marketing-nginx',
   'marketing-mautic-app',
   'marketing-strapi-app',
-  'marketing-vtiger-app', // Added new image
+  // 'marketing-vtiger-app', // Added new image
 ];
 const imageBuilds: { [key: string]: dockerbuild.Image } = {};
 
@@ -17,7 +17,7 @@ const imageConfigs: { [key: string]: { context: string, dockerfile: string } } =
   'marketing-nginx': { context: '../', dockerfile: '../mautic/marketing-nginx.dockerfile' },
   'marketing-mautic-app': { context: '../mautic', dockerfile: '../mautic/marketing-mautic-app.dockerfile' },
   'marketing-strapi-app': { context: '../strapi', dockerfile: '../strapi/Dockerfile.prod' },
-  'marketing-vtiger-app': { context: '../vtigercrm', dockerfile: '../vtigercrm/marketing-vtiger-app.dockerfile' },
+  // 'marketing-vtiger-app': { context: '../vtigercrm', dockerfile: '../vtigercrm/marketing-vtiger-app.dockerfile' },
 };
 
 // Wait for the ACR to be created before proceeding
@@ -32,7 +32,7 @@ for (const imageName of imageNames) {
     imageName,
     {
       buildArgs: {
-        APP_VERSION: mauticAppVersion,
+        APP_VERSION: mauticAppVersion, // parameterize the build args so that each app can have their own build args set here. 
       },
       context: {
         location: config.context,

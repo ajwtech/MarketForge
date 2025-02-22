@@ -13,7 +13,7 @@ import { mauticWeb, mauticNginx } from "./infrastructure/containerApps/mauticApp
 import { marketing_env } from "./infrastructure/managedEnvironment/managedEnvironment"; // Import from managedEnvironment.ts
 import { imageBuilds } from "./infrastructure/dockerImages"; // Ensure correct import
 import { strapiApp } from "./infrastructure/containerApps/strapiApp"; // Import strapiApp
-import { vtigerApp } from "./infrastructure/containerApps/vtigerApp"; // Import vtigerApp
+// import { vtigerApp } from "./infrastructure/containerApps/vtigerApp"; // Import vtigerApp
 import { setupDns } from "./infrastructure/dns/customDomains";
 import { nginxCerts } from "./infrastructure/certificates/nginxCerts";
 import { jumpBox as jumpbox } from "./infrastructure/containerApps/jumpbox"; // Import jumpbox deployment function
@@ -27,7 +27,7 @@ const dbPort = config.get("dbPort") || "3306";
 const dbName = config.get("dbName") || "mauticdb";
 const dbType = config.get("dbType") || "mysqli";
 const strapiDbName = config.get("strapiDbName") || "strapi";
-const vTigerDbName = config.get("vTigerDbName") || "vtiger";
+// const vTigerDbName = config.get("vTigerDbName") || "vtiger";
 const dbUser = config.get("dbUser") || "mauticuser";
 const dbPassword = config.requireSecret("dbPassword");
 const appSecret = config.get("appSecret") || new random.RandomPassword("appSecret", {length: 32, special: true,}).result;
@@ -128,28 +128,28 @@ export const deployedStrapiApp = strapiApp({
     apiToken: config.require("apiToken"),
 });
 
-// Deploy the Vtiger App
-export const deployedVtigerApp = vtigerApp({
-    env: appEnv,
-    appSecret: appSecret,
-    siteFQDN: siteFQDN,
-    image: getImageName(imageBuilds, "marketing-vtiger-app"),
-    registryUrl: registryUrl,
-    registryUsername: acrUsername,
-    registryPassword: acrPassword,
-    managedEnvironmentId: marketing_env.id,
-    storageName: storage.name,
-    dbHost: dbHost,
-    dbPort: dbPort,
-    dbName: vTigerDbName,
-    dbUser: dbUser,
-    dbPassword: dbPassword,
-    dbType: dbType,
-    resourceGroupName: ResourceGroup.name,
-    siteUrl: pulumi.interpolate`http://${crmSubdomain}.${domain}`,
-    crmSubdomain: crmSubdomain,
-    domain: domain,
-});
+// // Deploy the Vtiger App
+// export const deployedVtigerApp = vtigerApp({
+//     env: appEnv,
+//     appSecret: appSecret,
+//     siteFQDN: siteFQDN,
+//     image: getImageName(imageBuilds, "marketing-vtiger-app"),
+//     registryUrl: registryUrl,
+//     registryUsername: acrUsername,
+//     registryPassword: acrPassword,
+//     managedEnvironmentId: marketing_env.id,
+//     storageName: storage.name,
+//     dbHost: dbHost,
+//     dbPort: dbPort,
+//     dbName: vTigerDbName,
+//     dbUser: dbUser,
+//     dbPassword: dbPassword,
+//     dbType: dbType,
+//     resourceGroupName: ResourceGroup.name,
+//     siteUrl: pulumi.interpolate`http://${crmSubdomain}.${domain}`,
+//     crmSubdomain: crmSubdomain,
+//     domain: domain,
+// });
 
 
 const cloudflareDNSentries = BoolSubdomains? setupDns({
@@ -162,8 +162,8 @@ const cloudflareDNSentries = BoolSubdomains? setupDns({
     mauticNginxApp: mauticNginxApp,
     strapiApp: deployedStrapiApp,
     strapiFQDN: deployedStrapiApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
-    vtigerApp: deployedVtigerApp,
-    vtigerFQDN: deployedVtigerApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
+    // vtigerApp: deployedVtigerApp,
+    // vtigerFQDN: deployedVtigerApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
 }): undefined; // Set to undefined if BoolSubdomains is false
 
 // Update mauticNginxApp to use the cloudflareDNSentries as the customDomains
