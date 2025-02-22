@@ -63,11 +63,11 @@ export const strapiAppFilesStorage = new azure_native.storage.FileShare("strapi-
     shareName: "strapi-app-files",
 });
 
-export const vtigerAppFilesStorage = new azure_native.storage.FileShare("vtiger-app-files", {
-    accountName: storageAccount.name,
-    resourceGroupName: ResourceGroup.name,
-    shareName: "vtiger-app-files",
-});
+// export const vtigerAppFilesStorage = new azure_native.storage.FileShare("vtiger-app-files", {
+//     accountName: storageAccount.name,
+//     resourceGroupName: ResourceGroup.name,
+//     shareName: "vtiger-app-files",
+// });
 
 const configFileName = "local.php";
 const localPhpFilePath = path.join(__dirname, configFileName);
