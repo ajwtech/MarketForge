@@ -5,3 +5,5 @@ azure-deploy/config/pulumi.marketing.yaml
 mautic/logs/*
 azure-deploy/infrastructure/storage/local.php
 azure-deploy/config/Pulumi.test.yaml
+azure-deploy/infrastructure/storage/config_override.php
+.vscode/settings.json

@@ -102,8 +102,8 @@ RUN COMPOSER_ALLOW_SUPERUSER=1 COMPOSER_PROCESS_TIMEOUT=10000 composer create-pr
     symfony/var-dumper \
     symfony/flex && \
     COMPOSER_ALLOW_SUPERUSER=1 composer require --no-scripts \
-    acquia/mc-cs-plugin-custom-objects \
-    && \
+    # acquia/mc-cs-plugin-custom-objects \
+     && \
     COMPOSER_ALLOW_SUPERUSER=1 composer install --no-interaction --no-scripts --dev --optimize-autoloader && \
     php bin/console mautic:assets:generate && \
     npx patch-package && \
@@ -167,10 +167,10 @@ COPY --chown=www-data:www-data ./local.php.conf /var/www/html/local.php.conf
 
 # Apply necessary permissions
 RUN chmod +x /entrypoint.sh /entrypoint_mautic_web.sh
+RUN chmod +x /var/www/html/bin/console
 
-# #install from marketplace
-# RUN php -vvv bin/console mautic:marketplace:install acquia/mc-cs-plugin-custom-objects 
-
+# Create cache directory with proper ownership to fix permission errors
+#RUN mkdir -p /var/www/html/var/cache/production && chown -R www-data:www-data /var/www/html/var
 
 EXPOSE 9000
 # Define the entrypoint

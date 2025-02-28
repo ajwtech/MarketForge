@@ -17,7 +17,10 @@ export function jumpBox(args: {
     dbPort: pulumi.Input<string>;
     resourceGroupName: pulumi.Input<string>;
 }) 
-{return new azure_app.ContainerApp("ubuntu-sshd", {
+{
+    const imageDigest = imageBuilds["marketing-nginx"].digest; // Ensure correct image reference
+   
+    return new azure_app.ContainerApp("ubuntu-sshd", {
         configuration: {
             activeRevisionsMode: azure_app.ActiveRevisionsMode.Single,
             ingress: {
@@ -69,6 +72,11 @@ export function jumpBox(args: {
                         name: "ROOT_PASSWORD",
                         secretRef: "root-password-secret",
                     },
+                    // Use a dummy variable to force revision updates when the image changes.
+                    {
+                        name: "DEPLOY_TRIGGER",
+                        value: imageDigest,
+                    },
 
                 ],
                 args: ["echo 'root:$ROOT_PASSWORD' | chpasswd && exec /usr/sbin/sshd -D"],
@@ -87,7 +95,6 @@ export function jumpBox(args: {
 
                 ],
             }],
-            //revisionSuffix: revisionSuffix,
             scale: {
                 maxReplicas: 2, 
                 minReplicas: 0,

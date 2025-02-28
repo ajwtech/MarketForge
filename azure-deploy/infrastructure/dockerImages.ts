@@ -9,7 +9,7 @@ const imageNames = [
   'marketing-nginx',
   'marketing-mautic-app',
   'marketing-strapi-app',
-  // 'marketing-vtiger-app', // Added new image
+  'marketing-suitecrm-app', // Added new image
 ];
 const imageBuilds: { [key: string]: dockerbuild.Image } = {};
 
@@ -17,7 +17,7 @@ const imageConfigs: { [key: string]: { context: string, dockerfile: string } } =
   'marketing-nginx': { context: '../', dockerfile: '../mautic/marketing-nginx.dockerfile' },
   'marketing-mautic-app': { context: '../mautic', dockerfile: '../mautic/marketing-mautic-app.dockerfile' },
   'marketing-strapi-app': { context: '../strapi', dockerfile: '../strapi/Dockerfile.prod' },
-  // 'marketing-vtiger-app': { context: '../vtigercrm', dockerfile: '../vtigercrm/marketing-vtiger-app.dockerfile' },
+  'marketing-suitecrm-app': { context: '../suitecrm', dockerfile: '../suiteCrm/marketing-suitecrm-app.dockerfile' },
 };
 
 // Wait for the ACR to be created before proceeding

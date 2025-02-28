@@ -10,9 +10,8 @@ const config = new pulumi.Config();
 const nginxServerName = config.get("nginxServerName") || "mautic-nginx";
 const mauticWebUrl = config.get("mauticWebUrl") || "mautic-web";
 const strapiAppUrl = config.get("strapiAppUrl") || "strapi-app";
-const vtigerAppUrl = config.get("vtigerAppUrl") || "vtiger-app";
+const suiteCrmAppUrl = config.get("suiteCrmAppUrl") || "suitecrm-app";
 const domain = config.require("domain");
-const cmsSubdomain = config.get("cmsSubdomain") || "cms";
 const crmSubdomain = config.get("crmSubdomain") || "crm";
 const mapSubdomain = config.get("mapSubdomain") || "map";
 
@@ -24,16 +23,16 @@ export function mauticNginx(args: {
     registryPassword: pulumi.Input<string>;
     managedEnvironmentId: pulumi.Input<string>;
     storageName: pulumi.Input<string>;
+    suiteCrmStorageName: pulumi.Input<string>;
     dbHost: pulumi.Input<string>;
     dbPort: pulumi.Input<string>;
     dbName: pulumi.Input<string>;
     resourceGroupName: pulumi.Input<string>;
     createSubdomains: pulumi.Input<boolean>;
 }) {
-        const imageDigest = imageBuilds["marketing-nginx"].digest;
-        const revisionSuffix = imageDigest.apply(digest => digest.replace(/[^a-zA-Z0-9]/g, "").substring(0, 12));
-    
    
+    const imageDigest = imageBuilds["marketing-nginx"].digest; // Ensure correct image reference
+
     return new azure_app.ContainerApp("mautic-nginx", {
 
         configuration: {
@@ -89,8 +88,8 @@ export function mauticNginx(args: {
                         value: strapiAppUrl,
                     },
                     {
-                        name: "VTIGER_APP_URL", 
-                        value: vtigerAppUrl,
+                        name: "SUITECRM_APP_URL", 
+                        value: suiteCrmAppUrl,
                     },
                     {
                         name: "MAUTIC_SERVER_NAME",
@@ -116,6 +115,11 @@ export function mauticNginx(args: {
                         name: "DB_NAME",
                         value: args.dbName, 
                     },
+                    // Use a dummy variable to force revision updates when the image changes.
+                    {
+                        name: "DEPLOY_TRIGGER",
+                        value: imageDigest,
+                    },
                 ],
                 image: args.image, // Use the passed-in image parameter
                 name: "mautic-nginx",
@@ -127,7 +131,7 @@ export function mauticNginx(args: {
                     {
                         mountPath: "/var/log",   // Nginx writes logs here
                         volumeName: "log",
-                        subPath: "log",            // Maps to /log/nginx in the file share
+                        subPath: "log/nginx",            // Maps to /log/nginx in the file share
                     },
                     {
                         mountPath: "/var/www/html/docroot/media/files",  // Path where Nginx expects media files
@@ -139,10 +143,14 @@ export function mauticNginx(args: {
                         volumeName: "images",
                         subPath: "media/images",   // Maps to /media in the Azure File Share root
                     },
+                    {
+                        mountPath: "/var/suitecrm/www/html/public/legacy/cache",
+                        volumeName: "suitecrm-app-cache",
+                        subPath: "cache",
+                    },
 
                 ],
             }],
-            //revisionSuffix: revisionSuffix,
             scale: {
                 maxReplicas: 3, 
                 minReplicas: 1,
@@ -170,7 +178,12 @@ export function mauticNginx(args: {
                     name: "images",
                     storageName: args.storageName,
                     storageType: azure_app.StorageType.AzureFile,
-                },             
+                },
+                {
+                    name: "suitecrm-app-cache",
+                    storageName: args.suiteCrmStorageName,
+                    storageType: azure_app.StorageType.AzureFile
+                }             
             ],
         },
         

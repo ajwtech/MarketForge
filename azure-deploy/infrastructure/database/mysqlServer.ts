@@ -13,9 +13,9 @@ const mysqlAdminUser = config.require("mysqlAdminUser");
 
 // Add configurable server name
 const mysqlServerName = config.require("mysqlServerName"); // Use config value
-const mysqlDbName = config.get("mysqlDbName") || "mautic";; // Use config value
-const strapiDbName = config.get("strapiDbName") || "strapi";; // Use config value
-const vtigerDbName = config.get("vtigerDbName") || "vtiger";; // Use config value
+const mysqlDbName = config.get("mysqlDbName") || "mautic"; // Use config value
+const strapiDbName = config.get("strapiDbName") || "strapi"; // Use config value
+const suiteCrmDbName = config.get("suiteCrmDbName") || "suitecrm"; // Use config value
 // Add configurable SKU name and tier
 const mysqlSkuName = config.require("mysqlSkuName")
 const mysqlSkuTier = config.require("mysqlSkuTier") as keyof typeof azure_mysqldb.ServerSkuTier;
@@ -103,9 +103,10 @@ export const strapi_database = new azure_native.dbformysql.Database(strapiDbName
 
 
 // Create a database in the server
-export const vtiger_database = new azure_native.dbformysql.Database(vtigerDbName, {
+export const suitecrm_database = new azure_native.dbformysql.Database(suiteCrmDbName, {
     charset: "utf8",
-    collation: "utf8_unicode_ci",
+    collation: "utf8mb3_unicode_520_ci",
+    databaseName: suiteCrmDbName,
     resourceGroupName: ResourceGroup.name,
     serverName: mysqlServerName,
 }, { dependsOn: [marketing_mysql] });

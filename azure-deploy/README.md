@@ -44,7 +44,7 @@ This repository contains the infrastructure code for deploying MarketForge using
     pulumi config set marketing:mysqlSkuName <sku-name>
     pulumi config set marketing:mysqlSkuTier <sku-tier>
     pulumi config set marketing:mysqlDbName <your-mysql-db-name>
-    pulumi config set marketing:domain <your-domain>         # e.g., amwinvest.com
+    pulumi config set marketing:domain <your-domain> 
     pulumi config set --secret cloudflare:apiToken <your-cloudflare-api-token>
     pulumi config set --secret marketing:adminJwtSecret <your-adminJwtSecret>
     pulumi config set --secret marketing:jwtSecret <your-jwtSecret>
