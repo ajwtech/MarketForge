@@ -20,6 +20,13 @@ if [ ! -s /var/www/html/config/local.php ]; then
 else
   echo "Mautic configuration file already exists. Skipping..."
 fi
+if [ ! -s /var/www/html/config/local.php ]; then
+  echo "Generating Mautic configuration file..."
+  envsubst '${DB_HOST} ${DB_PORT} ${DB_NAME} ${DB_USER} ${DB_PASSWORD} ${SITE_URL}' < local.php.conf > /var/www/html/config/config_production.php
+  chown www-data:www-data /var/www/html/config/local.php
+else
+  echo "Mautic configuration file already exists. Skipping..."
+fi
 
 echo "Waiting for MySQL to be ready..."
 
@@ -29,11 +36,27 @@ done
 
 echo "MySQL is up and running!"
 
-# Run database migrations if configured
-if [ "\$DOCKER_MAUTIC_RUN_MIGRATIONS" = "true" ]; then
-    echo "Running database migrations..."
-    su -s /bin/bash www-data -c 'php /var/www/html/docroot/bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration'
-fi
+# #TODO fix this so we are not running installs on every start. 
+# echo "Installing marketplace plugins..."
+# su -s /bin/bash www-data -c 'php /var/www/html/bin/console mautic:marketplace:install acquia/mc-cs-plugin-custom-objects --no-interaction'
+
+# echo "Running database migrations..."
+# su -s /bin/bash www-data -c 'php /var/www/html/bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration'
+
+
+# #nicely run the migrations
+# echo "Checking for pending database migrations..."
+# migration_status=$(su -s /bin/bash www-data -c 'php /var/www/html/bin/console doctrine:migrations:status --no-interaction')
+# # Look for the line "New Migrations:" to determine if any pending migrations exist.
+# new_migrations=$(echo "$migration_status" | grep "New Migrations:" | awk '{print $NF}')
+# if [ "$new_migrations" -gt 0 ]; then
+#     echo "Pending migrations found ($new_migrations), running migrations..."
+#     su -s /bin/bash www-data -c 'php /var/www/html/bin/console doctrine:migrations:migrate --no-interaction'
+# else
+#     echo "No pending migrations found. Skipping."
+# fi
+
+
 
 # Start PHP-FPM
 echo "Starting PHP-FPM..."

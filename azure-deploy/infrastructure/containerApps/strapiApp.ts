@@ -33,11 +33,9 @@ export function strapiApp(args: {
     apiToken: pulumi.Input<string>;
 }) {
     const imageDigest = imageBuilds["marketing-strapi-app"].digest;
-    const revisionSuffix = imageDigest.apply(digest => digest.replace(/[^a-zA-Z0-9]/g, "").substring(0, 12));
 
     return new azure_app.ContainerApp(strapiAppUrl, {
         configuration: {
-            
             activeRevisionsMode: azure_app.ActiveRevisionsMode.Single,
             ingress: {
                 allowInsecure: false,
@@ -132,6 +130,11 @@ export function strapiApp(args: {
                         name: "API_TOKEN_SALT",
                         value: args.apiToken, 
                     },
+                    // Use a dummy variable to force revision updates when the image changes.
+                    {
+                        name: "DEPLOY_TRIGGER",
+                        value: imageDigest,
+                    },
                 ],
                 image: args.image, // Use the passed-in image parameter
                 name: strapiAppUrl,
@@ -143,7 +146,7 @@ export function strapiApp(args: {
                     {
                         mountPath: "/opt/app/config",   
                         volumeName: "config",
-                        subPath: "config",            
+                        subPath: "config/strapi",            
                     },
                     {
                         mountPath: "/opt/app/src",  
@@ -173,7 +176,6 @@ export function strapiApp(args: {
 
                 ],
             }],
-            //revisionSuffix: revisionSuffix, // Unique revision suffix to force a new revision
             scale: {
                 maxReplicas: 3, 
                 minReplicas: 1,

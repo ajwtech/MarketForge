@@ -21,12 +21,12 @@ monolog:
       path: "%env(default:log.dir:env.logs:LOG_DIR)%/%env(default:log.main.default:MAIN_LOG_FILE_NAME)%"
       level: '%env(MAIN_LOG_LEVEL)%'
       channels: [ "!event", "!upgrade" ]
-      # uncomment to get logging in your browser
-      # you may have to allow bigger header sizes in your Web server configuration
-      #firephp:
+      #uncomment to get logging in your browser
+      # #you may have to allow bigger header sizes in your Web server configuration
+      # firephp:
       #    type: firephp
       #    level: info
-      #chromephp:
+      # chromephp:
       #    type: chromephp
       #    level: info
     console:

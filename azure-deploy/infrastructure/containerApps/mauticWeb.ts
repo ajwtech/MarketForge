@@ -21,12 +21,11 @@ export function mauticWeb(args: {
     dbPassword: pulumi.Input<string>;
     appSecret: pulumi.Input<string>;
     resourceGroupName: pulumi.Input<string>;
-    siteFQDN: pulumi.Output<string>
+    siteFQDN: pulumi.Output<string>;
+    siteUrl: pulumi.Output<string>;
 
 }) {
     const imageDigest = imageBuilds["marketing-mautic-app"].digest;
-    // const revisionSuffix = imageDigest.apply(digest => digest.replace(/[^a-zA-Z0-9]/g, "").substring(0, 12));
-
     return new azure_app.ContainerApp("mautic-web", {
 
         configuration: {
@@ -63,7 +62,7 @@ export function mauticWeb(args: {
                 name: "mautic-web",
                 image: args.image,
                 env: [
-                    { name: "APP_ENV", value: args.env },
+                    { name: "APP_ENV", value: "prod" }, // Set to prod for production This is to override the suitecrm change to app_env that sets it to production.
                     { name: "DB_HOST", value: args.dbHost },
                     { name: "DB_PORT", value: args.dbPort },
                     { name: "DB_NAME", value: args.dbName },
@@ -84,7 +83,7 @@ export function mauticWeb(args: {
                     },
                     {
                         name: "SITE_URL",
-                        value: pulumi.interpolate`https://${args.siteFQDN}`,
+                        value: args.siteFQDN,
                     },
                     {
                         name: "STORAGE_ACCOUNT_KEY",
@@ -93,6 +92,11 @@ export function mauticWeb(args: {
                     {
                         name: "STORAGE_ACCOUNT_NAME",
                         value: storageAccountName,
+                    },
+                    // Use a dummy variable to force revision updates when the image changes.
+                    {
+                        name: "DEPLOY_TRIGGER",
+                        value: imageDigest,
                     },
                 ],
                 resources: {
@@ -107,10 +111,21 @@ export function mauticWeb(args: {
 
                     },
                     {
+                        mountPath: "/var/www/html/config/config_production.php",
+                        volumeName: "config",
+                        subPath: "config/config_production.php",
+
+                    },
+                    {
                         mountPath: "/var/log",
                         volumeName: "log",
                         subPath: "log/web",
                     },
+                    // {
+                    //     mountPath: "var/www/html/var/logs",
+                    //     volumeName: "log",
+                    //     subPath: "log/mautic/var",
+                    // },
                     {
                         mountPath: "/var/www/html/docroot/media/files",  // Path where Nginx expects media files
                         volumeName: "files",
@@ -124,7 +139,7 @@ export function mauticWeb(args: {
 
                 ],
             }],
-            //revisionSuffix: revisionSuffix,
+
             scale: {
                 maxReplicas: 3,
                 minReplicas: 1,

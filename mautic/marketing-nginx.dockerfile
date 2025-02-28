@@ -95,13 +95,18 @@ RUN COMPOSER_ALLOW_SUPERUSER=1 COMPOSER_PROCESS_TIMEOUT=10000 composer create-pr
     symfony/debug-bundle \
     symfony/var-dumper \
     symfony/flex && \
+    # COMPOSER_ALLOW_SUPERUSER=1 composer require --no-scripts \
+    # acquia/mc-cs-plugin-custom-objects \
+    # && \
     COMPOSER_ALLOW_SUPERUSER=1 composer install --no-interaction --no-scripts --dev --optimize-autoloader && \
     php bin/console mautic:assets:generate && \
     npx patch-package && \
     find node_modules -mindepth 1 -maxdepth 1 -not \( -name 'jquery' -or -name 'vimeo-froogaloop2'  \) | xargs rm -rf && \
     COMPOSER_ALLOW_SUPERUSER=1 composer dump-env prod && \
     npm cache clean --force && \
-    apk del .build-deps
+    apk del .build-deps \
+    && \
+    npm prune --omit=dev
 
 
 # Stage 3: Production
@@ -120,18 +125,8 @@ WORKDIR /var/www/html
 COPY --from=builder --chown=www-data:www-data /opt/mautic /var/www/html
 RUN chmod -R 755 /var/www/html/docroot
 
-# # Create vTiger directory
-# RUN addgroup -g 82 -S www-data || true && adduser -u 82 -S www-data -G www-data || true && \
-#     mkdir -p /var/vtiger/www/html/
-
-# # Copy application files into the container
-# COPY vtigercrm/vtigercrm/ /var/vtiger/www/html 
-# RUN chown -R www-data:www-data /var/vtiger/www/html && \
-#     chmod -R 755 /var/vtiger/www/html
-
 RUN mkdir /etc/nginx/utils.d && \
     chmod -R 755 /etc/nginx/utils.d
-
 
 #utility configs
 COPY ./mautic/nginx.configd/fastcgi-params.conf /etc/nginx/utils.d/fastcgi-params.conf
@@ -142,7 +137,7 @@ COPY ./mautic/nginx.configd/fastcgi-php-nginx.conf /etc/nginx/utils.d/fastcgi-ph
 #server configs
 COPY ./mautic/nginx.configd/mauticdemo.nginx.conf /etc/nginx/conf.d/default.conf
 COPY ./mautic/nginx.configd/strapi.conf /etc/nginx/conf.d/strapi.conf
-# COPY ./mautic/nginx.configd/vtiger.conf /etc/nginx/conf.d/vtiger.conf
+COPY ./mautic/nginx.configd/suitecrm.conf /etc/nginx/conf.d/suitecrm.conf
 
 #configs with templates
 COPY ./mautic/nginx.configd/nginx.conf /etc/nginx/templates/nginx.conf.template
@@ -156,6 +151,25 @@ RUN mkdir -p /var/log/nginx && \
     mkdir -p /data/nginx/cache && \
     touch /var/log/nginx/access.log /var/log/nginx/error.log && \
     chmod -R 755 /var/log/nginx
+
+
+# Create suitecrm directory
+RUN addgroup -g 82 -S www-data || true && adduser -u 82 -S www-data -G www-data || true && \
+    mkdir -p /var/suitecrm/www/html/
+
+
+# Copy SuiteCRM application files for static files
+COPY --chown=root:www-data suitecrm/SuiteCRM-Core/ /var/suitecrm/www/html
+WORKDIR /var/suitecrm/www/html
+RUN find . -type d -not -perm 2775 -exec chmod 2775 {} \; && \
+    find . -type f -not -perm 0664 -exec chmod 0664 {} \; && \
+    find . ! -user root -exec chown root:www-data {} \; 
+    
+
+
+# for Azure ssh
+ENV  SSH_PASSWD="root:Docker!"
+RUN echo "$SSH_PASSWD" | chpasswd 
 
 # Expose port
 EXPOSE 80

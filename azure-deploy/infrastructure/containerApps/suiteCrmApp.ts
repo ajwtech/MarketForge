@@ -6,10 +6,10 @@ import { storageAccount} from "../storage/storageAccount";
 
 const config = new pulumi.Config();
 const location = config.require("location");
-const vtigerAppUrl = config.get("vtigerAppUrl") || "vtiger-app";
+const suitecrmAppUrl = config.get("suitecrmAppUrl") || "suitecrm-app";
 
 
-interface VtigerAppArgs {
+interface suitecrmAppArgs {
     env: string;
     image: pulumi.Input<string>;
     registryUrl: pulumi.Input<string>;
@@ -23,6 +23,8 @@ interface VtigerAppArgs {
     dbUser: pulumi.Input<string>;
     dbPassword: pulumi.Input<string>;
     dbType: pulumi.Input<string>;
+    dbVersion: pulumi.Input<string>;
+    dbCharset: pulumi.Input<string>;
     appSecret: pulumi.Input<string>;
     resourceGroupName: pulumi.Input<string>;
     siteFQDN: pulumi.Output<string>;
@@ -31,11 +33,10 @@ interface VtigerAppArgs {
     domain: pulumi.Input<string>;
 }
 
-export function vtigerApp(args: VtigerAppArgs) {
-    const imageDigest = imageBuilds["marketing-vtiger-app"].digest;
-    const revisionSuffix = imageDigest.apply(digest => digest.replace(/[^a-zA-Z0-9]/g, "").substring(0, 12));
+export function suitecrmApp(args: suitecrmAppArgs) {
+    const imageDigest = imageBuilds["marketing-suitecrm-app"].digest;
 
-    return new azure_app.ContainerApp(vtigerAppUrl, {
+    return new azure_app.ContainerApp(suitecrmAppUrl, {
         resourceGroupName: args.resourceGroupName,
         managedEnvironmentId: args.managedEnvironmentId,
         configuration: {
@@ -61,7 +62,7 @@ export function vtigerApp(args: VtigerAppArgs) {
                         value: args.registryPassword,
                     }],
                 },
-                containerAppName: "vtiger-app",
+                containerAppName: "suitecrm-app",
                 environmentId: args.managedEnvironmentId,
                 identity: {
                     type: azure_app.ManagedServiceIdentityType.None,
@@ -70,7 +71,7 @@ export function vtigerApp(args: VtigerAppArgs) {
                 
                 template: {
                     containers: [{
-                        name: "vtiger-app",
+                        name: "suitecrm-app",
                         image: args.image,
                         env: [
                     { name: "APP_ENV", value: args.env },
@@ -81,23 +82,51 @@ export function vtigerApp(args: VtigerAppArgs) {
                     { name: "DB_PASSWORD", value: args.dbPassword },
                     { name: "DB_TYPE", value: args.dbType },
                     { name: "DB_NAME", value: args.dbName },
+                    { name: "DB_VERSION", value: args.dbVersion },
+                    { name: "DB_CHARSET", value: args.dbCharset },
                     { name: "APP_SECRET", value: args.appSecret },
                     { name: "SITE_URL", value: args.siteUrl },
                     { name: "SITE_FQDN", value: args.siteFQDN },
                     { name: "STORAGE_ACCOUNT_NAME", value: args.storageName },
+                    // Use a dummy variable to force revision updates when the image changes.
+                    {
+                        name: "DEPLOY_TRIGGER",
+                        value: imageDigest,
+                    },
 
                 ],
                 resources: {
                     cpu: 0.75,
                     memory: "1.5Gi",
                 },
-                volumeMounts: [{
-                    mountPath: "/var/vtiger/www/html/uploads",
-                    volumeName: "vtiger-app-uploads",
-                    subPath: "",
-                    }],
+                volumeMounts: [
+                    {
+                        mountPath: "/var/suitecrm/www/html/uploads",
+                        volumeName: "suitecrm-app-uploads",
+                        subPath: "suitecrm-app-uploads",
+                    },
+                    {
+                        mountPath: "/var/suitecrm/www/html/logs",
+                        volumeName: "suitecrm-app-logs",
+                        subPath: "log/suitecrm-app-logs",
+                    },
+                    {
+                        mountPath: "/var/log",
+                        volumeName: "suitecrm-app-logs",
+                        subPath: "log/suitecrm-app-logs/var-log",
+                    },
+                    {
+                        mountPath: "/mnt/persistent-config",
+                        volumeName: "suitecrm-app-config",
+                        subPath: "config/suitecrm",
+                    },
+                    {
+                        mountPath: "/var/suitecrm/www/html/public/legacy/cache",
+                        volumeName: "suitecrm-app-cache",
+                        subPath: "cache",
+                    },
+                ],
             }],
-            //revisionSuffix: revisionSuffix,
             scale: {
                 minReplicas: 1,
                 maxReplicas: 3,
@@ -111,12 +140,28 @@ export function vtigerApp(args: VtigerAppArgs) {
                 }],
             },
             volumes: [{
-                name: "vtiger-app-uploads",
-                storageName: args.storageName, // ensure args.storageName points to your Storage Account name
+                name: "suitecrm-app-uploads",
+                storageName: args.storageName, 
                 storageType: azure_app.StorageType.AzureFile,
-            }],
+            },
+            {
+                name: "suitecrm-app-logs",
+                storageName: args.storageName,
+                storageType: azure_app.StorageType.AzureFile
+            },
+            {
+                name: "suitecrm-app-config",
+                storageName: args.storageName,
+                storageType: azure_app.StorageType.AzureFile
+            },
+            {
+                name: "suitecrm-app-cache",
+                storageName: args.storageName,
+                storageType: azure_app.StorageType.AzureFile
+            }
+        ],
         },
     },{
-        dependsOn:[storageAccount, imageBuilds["marketing-vtiger-app"]],
+        dependsOn:[storageAccount, imageBuilds["marketing-suitecrm-app"]],
     });
 }
