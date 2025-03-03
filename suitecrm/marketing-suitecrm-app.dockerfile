@@ -65,11 +65,6 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     imap \
     ldap 
 
-    #colocate the temp directory with the SuiteCRM directory
-    RUN   mkdir -p /var/suitecrm/www/html/tmp && \
-        chown root:www-data /var/suitecrm/www/html/tmp && \
-        chmod 2775 /var/suitecrm/www/html/tmp 
-
 # Create suitecrm directory
 RUN addgroup -g 82 -S www-data || true && adduser -u 82 -S www-data -G www-data || true && \
 mkdir -p /var/suitecrm/www/html/

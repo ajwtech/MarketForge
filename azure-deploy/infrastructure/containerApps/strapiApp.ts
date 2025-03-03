@@ -178,7 +178,7 @@ export function strapiApp(args: {
             }],
             scale: {
                 maxReplicas: 3, 
-                minReplicas: 1,
+                minReplicas: 0,
                 rules: [{
                     name: "http-scaler", 
                     http: { 
