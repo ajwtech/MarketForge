@@ -128,7 +128,7 @@ export function suitecrmApp(args: suitecrmAppArgs) {
                 ],
             }],
             scale: {
-                minReplicas: 1,
+                minReplicas: 0,  // Changed from 1 to 0 to allow scale to zero
                 maxReplicas: 3,
                 rules: [{
                     name: "tcp-scaler",
