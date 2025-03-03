@@ -9,6 +9,7 @@ This repository contains the infrastructure code for deploying MarketForge using
 3. **Install Docker**: Ensure Docker is installed and running on your machine. You can download it from [docker.com](https://www.docker.com/).
 4. **Azure CLI**: Install the Azure CLI from [docs.microsoft.com](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli).
 5. **Cloudflare Account**: You must have a Cloudflare account with an API token. The token should be configured as a secret in Pulumi.
+6. **Azure Account**: You must have an Azure account since that is the cloud this is built to run on. 
 
 ## Setup
 
@@ -64,7 +65,7 @@ This repository contains the infrastructure code for deploying MarketForge using
     ```
 
 5. **Note on Cloudflare**:  
-   The Cloudflare API token is used to create DNS records for your application's custom domains. Ensure you have the token available in your environment or Pulumi's secure store. It will be referenced in code as `cloudflare:apiToken`.
+   The Cloudflare API token is used to create DNS records for your application's custom domains. Ensure you have the token available in your environment or Pulumi's secure store. It will be referenced in code as `marketing:apiToken`.
 
 ## Deployment
 
