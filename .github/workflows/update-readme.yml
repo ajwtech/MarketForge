@@ -5,10 +5,10 @@ on:
     branches:
       - master
       - main
-      - dev  
+      - dev
 
 permissions:
-  contents: write 
+  contents: write
 
 jobs:
   update-readme:
@@ -23,9 +23,16 @@ jobs:
         with:
           node-version: '20'  # Ensures Node.js is available
 
+      - name: Verify Working Directory
+        run: |
+          echo "Current working directory: $(pwd)"
+          echo "Repository contents:"
+          ls -la
+
       - name: Extract Node.js Version from package.json
-        id: get-node-version
-        run: echo "NODE_VERSION=$(node -p "require('./package.json').engines.node")" >> $GITHUB_ENV
+        run: |
+          NODE_VERSION=$(node -p "require('./azure-deploy/package.json').engines.node")
+          echo "NODE_VERSION=$NODE_VERSION" >> $GITHUB_ENV
 
       - name: Update README.md
         run: |
