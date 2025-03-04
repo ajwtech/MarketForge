@@ -2,10 +2,10 @@
 
 This repository contains the infrastructure code for deploying MarketForge using Pulumi and Azure.
 
-## Prerequisites
+## Prerequisites 
 
-1. **Install Pulumi**: Follow the instructions on the [Pulumi website](https://www.pulumi.com/docs/get-started/install/) to install Pulumi.
-2. **Install Node.js**: Ensure you have Node.js installed. You can download it from [nodejs.org](https://nodejs.org/).
+1. **Install Pulumi**: Ensure you have Pulumi installed. [Pulumi website](https://www.pulumi.com/docs/get-started/install/) to install Pulumi.
+2. **Install Node.js**: Ensure you have Node.js {{NODE_VERSION}} installed.  You can download it from [nodejs.org](https://nodejs.org/).
 3. **Install Docker**: Ensure Docker is installed and running on your machine. You can download it from [docker.com](https://www.docker.com/).
 4. **Azure CLI**: Install the Azure CLI from [docs.microsoft.com](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli).
 5. **Cloudflare Account**: You must have a Cloudflare account with an API token. The token should be configured as a secret in Pulumi.
