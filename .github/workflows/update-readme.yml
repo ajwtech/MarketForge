@@ -21,7 +21,7 @@ jobs:
       - name: Set Up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'  # Ensures Node.js is available
+          node-version: '20'
 
       - name: Verify Working Directory
         run: |
@@ -39,6 +39,7 @@ jobs:
           sed -i "s/{{NODE_VERSION}}/${{ env.NODE_VERSION }}/g" README.md
 
       - name: Commit and Push Changes
+        if: env.changes == 'true'
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
