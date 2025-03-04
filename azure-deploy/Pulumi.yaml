@@ -1,5 +1,5 @@
-name: marketing
-description: dev stack for marketing infrastructure
+name: marketforge
+description: dev stack for marketing and sales infrastructure
 runtime:
   name: nodejs
   options:

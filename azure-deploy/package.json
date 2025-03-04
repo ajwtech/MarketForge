@@ -1,6 +1,9 @@
 {
   "name": "azure-infrastructure",
   "main": "index.ts",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "dev": "pulumi up --stack dev -y"
   },
