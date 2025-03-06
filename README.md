@@ -1,16 +1,32 @@
 # MarketForge Azure Deployment
 
+This repo is used to produce production environments. This readme likely still has some issues. Don't assume it is 100%, let us know if you find any bugs or submit a PR.
+
 This repository contains the infrastructure code for deploying MarketForge using Pulumi and Azure.
 
-## Prerequisites 
- <!-- TODO: change versions to update automatically -->
- 
+MarketForge is meant to be a turnkey marketing and sales platform comprised of OSS's. Currently we use Hubspot features as the target so that we don't require any significant market research. Being turnkey and low complexity requires opinions, and this stack has a lot of them. If you don't like them, feel free to submit issues to change it. If we decide not to accept the change, then fork this repo and build something better. 
+
+## Known Issues
+
+* Cloudflare DNS entries need manual intervention and are not being made at the right time. it should be after the containers and before the certs and binding so that the containers are created with the a disabled sub domain, the dns entries get made in cloudflare then the certs are created validated and assigned to the container.
+
+  * The config variable `createSubdomains` needs to be run as false on the initial run, then set to true for the second run. After that, leave it on true.
+  * It seems that what is happening is the containerApps are initially trying to validate the DNS records before they are "committed" to Cloudflare. I am not sure how yet because the container apps shouldn't have an affect on that. So to get past it I have to manually create the entries in cloudflare. 
+  * On the second run I get an error saying that the DNS record is already present, but it creates the certs and binds them. 
+  * Then I have to remove the entries in cloudflare and let the code update it. I'm sure this is all dependencies and timing. I just havent dug in yet.
+  * `Pulumi up --target` is likely a better solution to this, I just have not yet tried it.
+* Availability zone for the mysqlServer in "mysqlServer.ts" is set to `""` because, if not, then the lowest tier subscription is a lot more limited in regions it can be deployed in.
+
+## Prerequisites
+ <!--- TODO: change versions to update automatically. Create a readme template and then use the sed github action to update the readme. --->
+
 1. **Install Pulumi**: Ensure you have Pulumi installed. [Pulumi website](https://www.pulumi.com/docs/get-started/install/) to install Pulumi.
 2. **Install Node.js**: Ensure you have Node.js >=20.0.0 installed.  You can download it from [nodejs.org](https://nodejs.org/).
 3. **Install Docker**: Ensure Docker is installed and running on your machine. You can download it from [docker.com](https://www.docker.com/).
 4. **Azure CLI**: Install the Azure CLI from [docs.microsoft.com](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli).
 5. **Cloudflare Account**: You must have a Cloudflare account with an API token. The token should be configured as a secret in Pulumi.
-6. **Azure Account**: You must have an Azure account since that is the cloud this is built to run on. 
+6. **Azure Account**: You must have an Azure account since that is the cloud this is built to run on.
+7. Fork this repository
 
 ## Setup
 
@@ -28,7 +44,7 @@ This repository contains the infrastructure code for deploying MarketForge using
 3. **Log in and initialize Pulumi stack**:
     ```sh
     pulumi login
-    pulumi stack init dev
+    pulumi stack init dev # replace dev with the name for your stack
     ```
 
 4. **Set configuration values**:
@@ -36,34 +52,45 @@ This repository contains the infrastructure code for deploying MarketForge using
    ### Required Configuration
    Configure the settings that do not have defaults:
     ```sh
-    pulumi config set --secret marketing:subscriptionId <your-azure-subscription-id>
-    pulumi config set --secret marketing:dbPassword <your-db-password>
-    pulumi config set marketing:storageAccountName <your-storage-account-name>
-    pulumi config set marketing:resourceGroupName <your-resource-group-name>
-    pulumi config set --secret marketing:mysqlAdminPassword <your-mysql-admin-password>
-    pulumi config set marketing:mysqlAdminUser <your-mysql-admin-user>
-    pulumi config set marketing:mysqlServerName <your-mysqlServerName>
-    pulumi config set marketing:mysqlSkuName <sku-name>
-    pulumi config set marketing:mysqlSkuTier <sku-tier>
-    pulumi config set marketing:mysqlDbName <your-mysql-db-name>
-    pulumi config set marketing:domain <your-domain> 
+    pulumi config set --secret azure:subscriptionId <your-azure-subscription-id>
+    pulumi config set --secret azure:dbPassword <your-db-password>
+    pulumi config set --secret azure:storageAccountName <your-storage-account-name>
+    pulumi config set azure:resourceGroupName <your-resource-group-name>
+    pulumi config set --secret azure:mysqlAdminPassword <your-mysql-admin-password>
+    pulumi config set azure:mysqlAdminUser <your-mysql-admin-user>
+    pulumi config set azure:mysqlServerName <your-mysqlServerName>
+    pulumi config set azure:mysqlSkuName <sku-name>
+    pulumi config set azure:mysqlSkuTier <sku-tier>
+    pulumi config set azure:domain <your-domain> 
     pulumi config set --secret cloudflare:apiToken <your-cloudflare-api-token>
-    pulumi config set --secret marketing:adminJwtSecret <your-adminJwtSecret>
-    pulumi config set --secret marketing:jwtSecret <your-jwtSecret>
-    pulumi config set --secret marketing:appKeys <your-appKeys>
-    pulumi config set marketing:apiToken <your-marketing-apiToken>
-    pulumi config set marketing:dbClient mysql    # dbClient currently needs to be mysql
+    pulumi config set --secret strapi:adminJwtSecret <your-adminJwtSecret>
+    pulumi config set --secret strapi:jwtSecret <your-jwtSecret>
+    pulumi config set --secret strapi:appKeys <your-appKeys>
+    pulumi config set azure:dbClient mysql    # dbClient currently needs to be mysql changing this shouldn't be much it just needs the right drives to be installed. 
     ```
 
    ### Optional Configuration
-    ```sh
-    pulumi config set marketing:location <your-azure-location>
-    pulumi config set marketing:appEnv <dev|prod>
-    pulumi config set marketing:cmsSubdomain cms     # override defaults if needed
-    pulumi config set marketing:crmSubdomain crm
-    pulumi config set marketing:mapSubdomain map
-    pulumi config set marketing:imageTag <your-image-tag>
-    ```
+
+   ```sh
+   pulumi config set azure:location <your-azure-location>
+   pulumi config set azure:appEnv <dev|prod>
+   pulumi config set azure:cmsSubdomain cms     # override defaults if needed
+   pulumi config set azure:crmSubdomain crm
+   pulumi config set azure:mapSubdomain map
+   pulumi config set azure:imageTag <your-image-tag>
+   pulumi config set azure:mysqlDbName <your-mysql-db-name>
+   ```
+
+   ### Database name configuration
+
+   If you are running multiple instances of Marketforge but using the same database server you will need to make sure your database names do not clash with the defaults
+<!--- TODO: Make these configurations the where DB's can get thier names --->
+
+   ```sh
+   pulumi config set mautic:mysqlDbName <your-mysql-db-name>
+   pulumi config set strapi:mysqlDbName <your-mysql-db-name>
+   pulumi config set suitecrm:mysqlDbName <your-mysql-db-name>
+   ```
 
 5. **Note on Cloudflare**:  
    The Cloudflare API token is used to create DNS records for your application's custom domains. Ensure you have the token available in your environment or Pulumi's secure store. It will be referenced in code as `marketing:apiToken`.
