@@ -25,7 +25,7 @@ const mysqlSkuTier = config.require("mysqlSkuTier") as keyof typeof azure_mysqld
 export const marketing_mysql = new azure_mysqldb.Server(mysqlServerName, {
     administratorLogin: mysqlAdminUser, 
     administratorLoginPassword: mysqlPassword,
-    availabilityZone: "1",
+    availabilityZone: "",
     backup: {
         backupRetentionDays: 7,
         geoRedundantBackup: azure_mysqldb.EnableStatusEnum.Disabled,
@@ -83,7 +83,7 @@ export const configurationSqlMode = new azure_native.dbformysql.Configuration("s
     configurationName: "sql_mode",
     source: "user-override",
     value: "NO_ENGINE_SUBSTITUTION"
-});
+}, { dependsOn: [marketing_mysql] }); 
 
 // Create a database in the server
 export const marketing_database = new azure_native.dbformysql.Database(mysqlDbName, {

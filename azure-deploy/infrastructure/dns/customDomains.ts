@@ -3,6 +3,17 @@ import * as cloudflare from "@pulumi/cloudflare";
 import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 import { marketing_env } from "../managedEnvironment/managedEnvironment"; 
 
+// Create the interface for the DNS entries
+export interface CloudflareDNSEntries {
+    cmsCNAME: cloudflare.Record;
+    cmsTXT: cloudflare.Record;
+    crmCNAME: cloudflare.Record;
+    crmTXT: cloudflare.Record;
+    mapCNAME: cloudflare.Record;
+    mapTXT: cloudflare.Record;
+}
+
+
 export interface CustomDomainProps {
     domain: string;
     cmsSubdomain: string;
