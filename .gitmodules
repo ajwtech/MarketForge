@@ -1,0 +1,3 @@
+[submodule "epic-stack"]
+	path = epic-stack
+	url = https://github.com/ajwtech/epic-stack.git
