@@ -4,7 +4,7 @@
 set -e
 umask 0002
 # Regular container execution
-echo "Main container: Checking application population..."
+echo "SuiteCRM container: Checking application population..."
 
 if [ ! -d "/var/suitecrm/www/html/" ] || [ -z "$(ls -A /var/suitecrm/www/html/)" ]; then
   echo "Error: /var/suitecrm/www/html/ is not populated. Exiting..."
@@ -255,6 +255,11 @@ if [ -f "$OAUTH_DIR/public.key" ]; then
     chown root:www-data "$OAUTH_DIR/public.key"
     echo "Set permissions on $OAUTH_DIR/public.key: $(stat -c '%a %U:%G' "$OAUTH_DIR/public.key")"
 fi
+
+# create the supervisor log directory
+mkdir -p /var/log/supervisor
+chmod 755 /var/log/supervisor
+chown root:www-data /var/log/supervisor
 
 exec "$@"
 
