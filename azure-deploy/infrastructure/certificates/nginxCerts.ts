@@ -2,6 +2,7 @@ import * as pulumi from "@pulumi/pulumi";
 import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 //import * as azure from "@pulumi/azure";
 import * as command from "@pulumi/command";
+import { type CloudflareDNSEntries } from "../dns/customDomains";
 
 const config = new pulumi.Config();
 const resourceGroupName = config.require("resourceGroupName");
@@ -15,7 +16,9 @@ const crmSubdomain = config.get("crmSubdomain") || "crm";
 export function nginxCerts(
     nginxApp: azure_app.ContainerApp, 
     strapiApp: azure_app.ContainerApp, 
-    environment: azure_app.ManagedEnvironment
+    environment: azure_app.ManagedEnvironment,
+    cloudflareDNSentries: CloudflareDNSEntries | undefined,
+    
 ) {
     const crmCert = new azure_app.ManagedCertificate("crmCert", {
         resourceGroupName: resourceGroupName,
@@ -25,7 +28,7 @@ export function nginxCerts(
             domainControlValidation: "CNAME",
             subjectName: `${crmSubdomain}.${domain}`,
         },
-    }, { dependsOn: [nginxApp] });
+    }, { dependsOn: cloudflareDNSentries?.crmCNAME ? [nginxApp, cloudflareDNSentries.crmCNAME] : [nginxApp] });
             
     const cmsCert = new azure_app.ManagedCertificate("cmsCert", {
         resourceGroupName: resourceGroupName,
@@ -35,7 +38,7 @@ export function nginxCerts(
             domainControlValidation: "CNAME",
             subjectName: `${cmsSubdomain}.${domain}`,
         },
-    }, { dependsOn: [strapiApp] });
+    }, { dependsOn: cloudflareDNSentries?.cmsCNAME ? [strapiApp, cloudflareDNSentries.cmsCNAME] : [strapiApp] });
         
     const mapCert = new azure_app.ManagedCertificate("mapCert", {
         resourceGroupName: resourceGroupName,
@@ -45,7 +48,7 @@ export function nginxCerts(
             domainControlValidation: "CNAME",
             subjectName: `${mapSubdomain}.${domain}`,
         },
-    }, { dependsOn: [nginxApp] });   
+    }, { dependsOn: cloudflareDNSentries?.mapCNAME ? [nginxApp, cloudflareDNSentries.mapCNAME] : [nginxApp] });   
 
         // Use azure-native to bind custom domains with the managed certificates
     const bindCmsCommand = new command.local.Command("bind-cms-custom-domain", {
@@ -54,7 +57,7 @@ export function nginxCerts(
         -g ${resourceGroupName} -n ${strapiApp.name} \
         --environment ${environment.name} \
         --validation-method CNAME`,
-        triggers: [cmsCert.systemData.lastModifiedAt,nginxApp.systemData.lastModifiedAt],
+        triggers: [cmsCert.systemData.lastModifiedAt, strapiApp.systemData.lastModifiedAt],
     }, { dependsOn: [cmsCert, strapiApp, environment] });
 
     const bindMapCommand = new command.local.Command("bind-map-custom-domain", {

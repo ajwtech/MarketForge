@@ -46,7 +46,7 @@ export const marketing_mysql = new azure_mysqldb.Server(mysqlServerName, {
     serverName: mysqlServerName, 
     sku: {
         name: mysqlSkuName, 
-        tier: mysqlSkuTier, // Ensure tier is correctly set from config
+        tier: mysqlSkuTier, 
     },
     storage: {
         autoGrow: azure_mysqldb.EnableStatusEnum.Enabled,
