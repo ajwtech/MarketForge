@@ -1,20 +1,20 @@
 # Creating multi-stage build for production
-FROM node:18-alpine as build
-RUN apk update && apk add --no-cache build-base gcc autoconf automake zlib-dev libpng-dev vips-dev > /dev/null 2>&1
+FROM node:20-alpine as build
+RUN apk update && apk add --no-cache build-base gcc autoconf automake zlib-dev libpng-dev nasm bash vips-dev git curl > /dev/null 2>&1
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 
 WORKDIR /opt/
 COPY package.json package-lock.json ./
-RUN npm config set fetch-retry-maxtimeout 600000 -g && npm install --only=production
+RUN npm config set fetch-retry-maxtimeout 600000 -g && npm install
 ENV PATH /opt/node_modules/.bin:$PATH
 WORKDIR /opt/app
 COPY . .
 RUN npm run build
 
 # Creating final production image
-FROM node:18-alpine
-RUN apk add --no-cache vips-dev curl
+FROM node:20-alpine
+RUN apk add --no-cache nasm bash vips-dev curl
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 WORKDIR /opt/
@@ -23,8 +23,16 @@ WORKDIR /opt/app
 COPY --from=build /opt/app ./
 ENV PATH /opt/node_modules/.bin:$PATH
 
-
 RUN chown -R node:node /opt/app
+
+# Backup the default config files
+RUN mkdir -p /opt/app/config-backup && cp -r /opt/app/config/* /opt/app/config-backup/
+
+# Copy the entrypoint script and set permissions
+COPY entrypoint.sh /opt/app/entrypoint.sh
+RUN chmod +x /opt/app/entrypoint.sh
+
 USER node
 EXPOSE 1337
+ENTRYPOINT ["/opt/app/entrypoint.sh"]
 CMD ["npm", "run", "start"]
