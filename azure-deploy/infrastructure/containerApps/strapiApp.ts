@@ -87,23 +87,23 @@ export function strapiApp(args: {
                         value: storageAccountKey,
                     },
                     {
-                        name: "DB_HOST",
+                        name: "DATABASE_HOST",
                         value: args.dbHost, 
                     },
                     {
-                        name: "DB_PORT",
+                        name: "DATABASE_PORT",
                         value: args.dbPort, 
                     },
                     {
-                        name: "DB_NAME",
+                        name: "DATABASE_NAME",
                         value: args.dbName, 
                     },
                     {
-                        name: "DB_USER",
+                        name: "DATABASE_USERNAME",
                         value: args.dbUser, 
                     },
                     {
-                        name: "DB_PASSWORD",
+                        name: "DATABASE_PASSWORD",
                         value: args.dbPassword, 
                     },
                     {

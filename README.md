@@ -6,7 +6,7 @@ This repository contains the infrastructure code for deploying MarketForge using
 
 MarketForge is meant to be a turnkey marketing and sales platform comprised of OSS's. Currently we use Hubspot features as the target so that we don't require any significant market research. Being turnkey and low complexity requires opinions, and this stack has a lot of them. If you don't like them, feel free to submit issues to change it. If we decide not to accept the change, then fork this repo and build something better. 
 
-## Known Issues
+## Known Issues and manual steps needed
 
 * Cloudflare DNS entries need manual intervention and are not being made at the right time. it should be after the containers and before the certs and binding so that the containers are created with the a disabled sub domain, the dns entries get made in cloudflare then the certs are created validated and assigned to the container.
 
@@ -16,6 +16,8 @@ MarketForge is meant to be a turnkey marketing and sales platform comprised of O
   * Then I have to remove the entries in cloudflare and let the code update it. I'm sure this is all dependencies and timing. I just havent dug in yet.
   * `Pulumi up --target` is likely a better solution to this, I just have not yet tried it.
 * Availability zone for the mysqlServer in "mysqlServer.ts" is set to `""` because, if not, then the lowest tier subscription is a lot more limited in regions it can be deployed in.
+* database admin and user need a clearer separation. To start you can set the same password to get it all to install then change the password after it is setup.
+* Mautic's config files still seem to have some issues. the persistant config files are being created as directories because they are not pre-existing in the azure storage. for now you have to delete them and start mautic without them mounted. Let mautic create the files and then move them to storage. Then you can add the mount back and restart.
 
 ## Prerequisites
  <!--- TODO: change versions to update automatically. Create a readme template and then use the sed github action to update the readme. --->

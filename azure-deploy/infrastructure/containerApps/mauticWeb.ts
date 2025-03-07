@@ -110,22 +110,22 @@ export function mauticWeb(args: {
                         subPath: "config/local.php",
 
                     },
-                    {
-                        mountPath: "/var/www/html/config/config_production.php",
-                        volumeName: "config",
-                        subPath: "config/config_production.php",
+                    // {
+                    //     mountPath: "/var/www/html/config/config_production.php",
+                    //     volumeName: "config",
+                    //     subPath: "config/config_production.php",
 
+                    // },
+                    {
+                        mountPath: "/var/www/html/var/logs",
+                        volumeName: "log",
+                        subPath: "log/web",
                     },
                     {
                         mountPath: "/var/log",
                         volumeName: "log",
-                        subPath: "log/web",
+                        subPath: "log/mautic/var",
                     },
-                    // {
-                    //     mountPath: "var/www/html/var/logs",
-                    //     volumeName: "log",
-                    //     subPath: "log/mautic/var",
-                    // },
                     {
                         mountPath: "/var/www/html/docroot/media/files",  // Path where Nginx expects media files
                         volumeName: "files",
