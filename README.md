@@ -12,10 +12,10 @@ graph TD
     User[End User / Visitor] -->|HTTPS| NGINX[NGINX Reverse Proxy Container]
     
     %% Static Assets %%
-    NGINX -->|Static Content| RemixStatic[RemixEpic Static Assets (prerendered)]
+    NGINX -->|Static Content| RemixStatic[RemixEpic Static Assets]
 
     %% Dynamic SSR via Azure Functions %%
-    NGINX -->|Dynamic Requests| AzureFn[Azure Functions - Remix SSR]
+    NGINX -->|Dynamic Requests| AzureFn[Azure Functions SSR]
 
     %% Backend APIs %%
     AzureFn -->|CMS API| Strapi[Strapi CMS Container]
@@ -28,7 +28,7 @@ graph TD
     SuiteCRM --> MySQLAzure
 
     %% CI/CD Deployment %%
-    GitHub[GitHub Repos: MarketForge & Epic Submodule] -->|Triggers on Commit| CI[GitHub Actions & Pulumi]
+    GitHub[GitHub Repos: MarketForge and Epic Submodule] -->|Triggers on Commit| CI[GitHub Actions and Pulumi]
     CI -->|Deploys| NGINX
     CI -->|Deploys| AzureFn
     CI -->|Deploys| Strapi
