@@ -12,48 +12,31 @@ graph TD
     User[End User / Visitor] -->|HTTPS| NGINX[NGINX Reverse Proxy Container]
     
     %% Static Assets %%
-    NGINX -->|Static Content| RemixStatic[Remix/Epic Static Assets<br/>(pre-rendered HTML/CSS/JS)]
+    NGINX -->|Static Content| RemixStatic[Remix/Epic Static Assets (pre-rendered)]
 
     %% Dynamic SSR via Azure Functions %%
-    NGINX -->|Dynamic Requests| AzureFn[Azure Functions<br/>(Remix SSR & API)]
+    NGINX -->|Dynamic Requests| AzureFn[Azure Functions - Remix SSR]
 
-    %% MarketForge Backend Stack %%
-    AzureFn -->|REST/GraphQL API| Strapi[Strapi CMS Container]
-    AzureFn -->|Forms API| Mautic[Mautic Automation Container]
+    %% Backend APIs %%
+    AzureFn -->|CMS API| Strapi[Strapi CMS Container]
+    AzureFn -->|Marketing API| Mautic[Mautic Marketing Automation Container]
     AzureFn -->|CRM API| SuiteCRM[SuiteCRM Container]
 
-    %% Data Layer %%
+    %% Shared Data Layer %%
     Strapi --> MySQLAzure[Azure MySQL Database]
     Mautic --> MySQLAzure
     SuiteCRM --> MySQLAzure
 
-    %% Deployment Layer %%
-    subgraph Azure Container Apps Environment
-        direction TB
-        NGINX
-        Strapi
-        Mautic
-        SuiteCRM
-    end
-
-    subgraph Azure Serverless Layer
-        AzureFn
-    end
-
-    subgraph Azure Data Layer
-        MySQLAzure
-    end
-
-    %% Development & CI/CD Layer %%
-    GitHub[GitHub Repos:<br/>MarketForge<br/>Epic Web Stack Submodule] -->|Triggers on Commit| CI[CI/CD: GitHub Actions & Pulumi]
+    %% CI/CD Deployment %%
+    GitHub[GitHub Repos: MarketForge & Epic Submodule] -->|Triggers on Commit| CI[GitHub Actions & Pulumi]
     CI -->|Deploys| NGINX
     CI -->|Deploys| AzureFn
     CI -->|Deploys| Strapi
     CI -->|Deploys| Mautic
     CI -->|Deploys| SuiteCRM
 
-    %% Monitoring & Logging %%
-    NGINX --> Logs[Azure Logging/Monitoring]
+    %% Logging & Monitoring %%
+    NGINX --> Logs[Azure Monitoring]
     AzureFn --> Logs
     Strapi --> Logs
     Mautic --> Logs
