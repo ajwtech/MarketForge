@@ -12,7 +12,7 @@ graph TD
     User[End User / Visitor] -->|HTTPS| NGINX[NGINX Reverse Proxy Container]
     
     %% Static Assets %%
-    NGINX -->|Static Content| RemixStatic[Remix/Epic Static Assets (pre-rendered)]
+    NGINX -->|Static Content| RemixStatic[Remix-Epic Static Assets (pre-rendered)]
 
     %% Dynamic SSR via Azure Functions %%
     NGINX -->|Dynamic Requests| AzureFn[Azure Functions - Remix SSR]
