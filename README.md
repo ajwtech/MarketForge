@@ -4,7 +4,61 @@ This repo is used to produce production environments. This readme likely still h
 
 This repository contains the infrastructure code for deploying MarketForge using Pulumi and Azure.
 
-MarketForge is meant to be a turnkey marketing and sales platform comprised of OSS's. Currently we use Hubspot features as the target so that we don't require any significant market research. Being turnkey and low complexity requires opinions, and this stack has a lot of them. If you don't like them, feel free to submit issues to change it. If we decide not to accept the change, then fork this repo and build something better. 
+MarketForge is meant to be a turnkey marketing and sales platform comprised of OSS's. Currently we use Hubspot features as the target so that we don't require any significant market research. Being turnkey and low complexity requires opinions, and this stack has a lot of them. If you don't like them, feel free to submit issues to change it. If we decide not to accept the change, then fork this repo and build something better.
+
+```mermaid
+graph TD
+    %% Frontend Layer %%
+    User[End User / Visitor] -->|HTTPS| NGINX[NGINX Reverse Proxy Container]
+    
+    %% Static Assets %%
+    NGINX -->|Static Content| RemixStatic[Remix/Epic Static Assets<br/>(pre-rendered HTML/CSS/JS)]
+
+    %% Dynamic SSR via Azure Functions %%
+    NGINX -->|Dynamic Requests| AzureFn[Azure Functions<br/>(Remix SSR & API)]
+
+    %% MarketForge Backend Stack %%
+    AzureFn -->|REST/GraphQL API| Strapi[Strapi CMS Container]
+    AzureFn -->|Forms API| Mautic[Mautic Automation Container]
+    AzureFn -->|CRM API| SuiteCRM[SuiteCRM Container]
+
+    %% Data Layer %%
+    Strapi --> MySQLAzure[Azure MySQL Database]
+    Mautic --> MySQLAzure
+    SuiteCRM --> MySQLAzure
+
+    %% Deployment Layer %%
+    subgraph Azure Container Apps Environment
+        direction TB
+        NGINX
+        Strapi
+        Mautic
+        SuiteCRM
+    end
+
+    subgraph Azure Serverless Layer
+        AzureFn
+    end
+
+    subgraph Azure Data Layer
+        MySQLAzure
+    end
+
+    %% Development & CI/CD Layer %%
+    GitHub[GitHub Repos:<br/>MarketForge<br/>Epic Web Stack Submodule] -->|Triggers on Commit| CI[CI/CD: GitHub Actions & Pulumi]
+    CI -->|Deploys| NGINX
+    CI -->|Deploys| AzureFn
+    CI -->|Deploys| Strapi
+    CI -->|Deploys| Mautic
+    CI -->|Deploys| SuiteCRM
+
+    %% Monitoring & Logging %%
+    NGINX --> Logs[Azure Logging/Monitoring]
+    AzureFn --> Logs
+    Strapi --> Logs
+    Mautic --> Logs
+    SuiteCRM --> Logs
+```
 
 ## Known Issues and manual steps needed
 
