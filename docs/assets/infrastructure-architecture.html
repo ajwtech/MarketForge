@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MarketForge Infrastructure Architecture</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mermaid-js/mermaid-cli/lib/elk.bundled.js"></script>
+  <style>
+    body {
+      background-color: #0d1117;
+      color: #c9d1d9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 {
+      border-bottom: 1px solid #30363d;
+      padding-bottom: 10px;
+    }
+    #diagram {
+      background-color: #161b22;
+      padding: 20px;
+      border-radius: 6px;
+      overflow: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>MarketForge Infrastructure Architecture</h1>
+  <div id="diagram">
+    <pre class="mermaid">
+%%{
+  init: {
+    'theme': 'neo-dark',
+    'themeVariables': {
+      'fontFamily': 'monaco, menlo, consolas',
+      'fontSize': '14px'
+    },
+    'flowchart': {
+      'useMaxWidth': false,
+      'htmlLabels': true
+    }
+  }
+}%%
+flowchart TB
+  subgraph Storage["Azure Storage"]
+    MauticFiles["Mautic Files"]
+    StrapiFiles["Strapi Files"]
+    SuiteCRMFiles["SuiteCRM Files"]
+    FrontendFiles["Frontend Files"]
+    JumpboxFiles["Jumpbox Files"]
+  end
+  subgraph NginxConfig["NGINX Configs"]
+    DefaultConf["default.conf"]
+    StrapiConf["strapi.conf"]
+    SuiteCRMConf["suitecrm.conf"]
+    FrontendConf["frontend.conf"]
+  end
+  subgraph Containers["Container Applications"]
+    NGINX["NGINX Container\nWeb & API Gateway"]
+    Mautic["Mautic Container\nMarketing Automation"]
+    Strapi["Strapi Container\nHeadless CMS"]
+    SuiteCRM["SuiteCRM Container\nCRM Platform"]
+    NginxConfig
+  end
+  subgraph ContainerApps["Azure Container Apps"]
+    AzureFn["Azure Functions"]
+    Containers
+  end
+  subgraph Azure["Azure Cloud"]
+    Storage
+    MySQL["Azure MySQL"]
+    ACR["Azure Container Registry"]
+    Logs["Azure Monitoring"]
+    ManagedEnv["Container Apps\nManaged Environment"]
+    Certs["TLS Certificates"]
+    ContainerApps
+  end
+  Github["GitHub Repository"] -- Triggers CI/CD or Pulumi up --> CICD["GitHub Actions & Pulumi"]
+  CICD -- Builds & Pushes\nImages --> ACR
+  CICD -- Provisions --> ManagedEnv & MySQL & Storage
+  CICD -- Configures --> Cloudflare["Cloudflare DNS"]
+  ManagedEnv -- Issues --> Certs
+  ManagedEnv -- Hosts --> ContainerApps
+  ACR -- Provides Images --> Containers
+  Certs -- Secure --> Containers
+  MauticFiles -- Mounted to --> NGINX & Mautic
+  StrapiFiles -- Mounted to --> Strapi
+  SuiteCRMFiles -- Mounted to --> SuiteCRM & NGINX
+  FrontendFiles -- Mounted to --> NGINX
+  Mautic -- Stores Data --> MySQL
+  Strapi -- Stores Data --> MySQL
+  SuiteCRM -- Stores Data --> MySQL
+  AzureFn -- Provides Dynamic Content --> NGINX
+  NginxConfig -- Configures --> NGINX
+  FrontendConf -- Routes to --> AzureFn
+  NGINX -- Internet Traffic --> Cloudflare
+  Strapi -- Direct Internet Traffic --> Cloudflare
+  Containers -- Send Logs --> Logs
+  MySQL -- Send Metrics --> Logs
+  AzureFn -- Send Logs --> Logs
+  Cloudflare -- Provides DNS records --> ManagedEnv
+  MauticFiles:::storage
+  StrapiFiles:::storage
+  SuiteCRMFiles:::storage
+  FrontendFiles:::storage
+  JumpboxFiles:::storage
+  DefaultConf:::config
+  StrapiConf:::config
+  SuiteCRMConf:::config
+  FrontendConf:::config
+  NGINX:::nginx
+  Mautic:::mautic
+  Strapi:::strapi
+  SuiteCRM:::suitecrm
+  NginxConfig:::config
+  Containers:::container
+  Storage:::storage
+  MySQL:::azure
+  AzureFn:::azureFn
+  ACR:::azure
+  Logs:::azure
+  ManagedEnv:::azure
+  Certs:::azure
+  ContainerApps:::containerApps
+  Github:::github
+  CICD:::cicd
+  Cloudflare:::cloudflare
+  classDef azure fill:#0072C6,color:white,stroke:#0072C6,stroke-width:2px
+  classDef storage fill:#3e95cd,color:white,stroke:#3e95cd,stroke-width:2px
+  classDef container fill:#326CE5,color:white,stroke:#326CE5,stroke-width:2px
+  classDef nginx fill:#009639,color:white
+  classDef strapi fill:#8E75FF,color:white
+  classDef mautic fill:#4E5E9E,color:white
+  classDef suitecrm fill:#30AC2F,color:white
+  classDef github fill:#333,color:white
+  classDef cicd fill:#FF9900,color:white
+  classDef cloudflare fill:#F48120,color:white
+  classDef config fill:#E2B93D,color:#333
+  classDef azureFn fill:#0062AD,color:white,stroke:#FFB900,stroke-width:2px
+  classDef containerApps fill:#0E46AF,color:white,stroke:#D180FF,stroke-width:2px
+    </pre>
+  </div>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'dark',
+      logLevel: 'debug',
+      flowchart: {
+        useMaxWidth: false,
+        htmlLabels: true,
+        curve: 'basis'
+      },
+      themeVariables: {
+        darkMode: true
+      },
+      er: { useMaxWidth: false },
+      gantt: { useMaxWidth: false },
+      sequence: { useMaxWidth: false },
+      journey: { useMaxWidth: false }
+    });
+    // Load elk.js for advanced layouts
+    mermaid.flowchartConfig = {
+      useMaxWidth: false,
+      htmlLabels: true,
+      curve: 'basis'
+    };
+  </script>
+</body>
+</html>
