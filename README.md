@@ -12,6 +12,10 @@ WIP
 
 ### Infrastructure Architecture
 
+> **Note**: This diagram uses the ELK layout which may not render correctly on GitHub. For best viewing:
+>
+> - View the [live diagram](https://mermaid.live/edit#pako:eNqNV1tP6zgQ_itWVuKpZdN7m4cjlV6AFUUsRdrV2e6DSdzWIrGrxDnQg_jvZ3xLnDSUwwuZmW_GnpnPY_fdC3lEvMBrt9sbFnK2pbtgwxCK8ZHnIkAkfpGi2JOEBIgR3o5wqlQx5y9Ks2HKeRvz13CPU4GersCe5c-7FB_2aC14infkv403_ZmnxMob738ZRf-tcC5ouKQxyQCnJaTECmwtICK1MC01wXIqyOxxVQCN3ABdppwJwiILtXID9K88OTzzN4s0YgUIjm7m9zvK3maqpuBwf317_y_SYjXynGxxHgtpAlykpUvZjIbsDSpTQgPI5GphUgzT5BRoMzXArRFdYC0dQApMGUll-oWApodDTEMsKGfVtFTCbuLaYbNh_5BndIGmD7foGgvyio8NZCh54HqugHxEULZD01zwRK3aUKSSHa7zDcERNCtDs9W6sWguV1xHKT_EWGx5mlRTLDt8rmBQoqzgf6Vy1YopwJIV0GXOwtO6ln0odQ2rqxDlqjHPo1ql9Dks635c_31XOCipurvZY0MSj2RHgYzVFt7xXZnwijMKa0HTam1msHy0YD_qdMpUo5UVgZkCNRPCRLUIJBVyiae7tfqmW8lB8kmlVNCiRPB3TcU-fwZ_-LjJnyGLA8_kLmUeqN1GTynd7aDEaHb752yOeIoe8jhPKMoPYP4G6tm8dJ_qNgGpNarYhYTJcFc5jSNtz_ZEJnibQH6ZigWFraIfUv6DZiqitJeVggCqL_C_0j7rqKkIRdeOqunbGCselAKa35f8d4JDgNssy62zrHAT5oZnwkDq9VUkKTKIIJKTZp23agEJXpNQ8qQJ41wMErniOUypCAmu0HqyXBiU9nDuiAYPbTVI95powtpRcKEX0l6VG-OzPbmbVxlCswA9xwLrjqrD5ez3K5DdynmYmR-VBsyPDCdmisIhqu_RmWANBGrIWyIk8hGeB4AyWZuVTUzVFskm8EgZgRdBirdbVQqXlPUCzGlKQvF7XiVRNIPgypZDR2Hlh-mAOiwWsCIipWEd4xTtszDO0amU9n6NYMc8jern1Iwgh71BEGSVgevw9NTmMvPEWmHgidV9ppwYnZcG2MLi4qq8Lk4szpOibnNZUbcpGoCSSYpVKgLKxDmyZm212_J4FutKvXnG2MglaeuLlrzQFnOHM_fKOymLoglosaSC0RlaWK3lthxwNaTkSU1VMqFmUDOvrnOnqLvrcqqa-wqMO_VhPWHsSwcaRlZTMFXqa2cmjHGWAQWQWh1taRwHf_j-qDsbtkIe8zR43UOdW9AF_kIKkxbbrzQS-6B7eKsFM6U04XpkMgijxnDG9EW4InsbsDucLQbNAbXpi4CKfkWyk2Fv4gY7SUYNI40eL0aD5fIMWpPYoPuLwWKyOBfbkNgm5k9n3XPRdastutc7A5UMMMDlcjLx_XPYcpgZj_640z3roa8HjV50rya9uUHLbTVxC8apLfiwO503dm-5vJIb_V06yMNggy76w-myMei8M_ahZadBvZaXkDTBNIIfu-9ykY2nftRuvAA-1Y9ab8M-AAdN5esjC71ApDlpeSnPd3sv2OI4Ayk_RPDOnFMMr-zEQg6YfefcFb3g3Xvzgv7wstfzB-Nupz8a-b3RuOUdvaA3vByP-qNJdzTud7q9fv-j5f1U_p3L_nA09ocdv-uPe4NBf_LxC_mACMA) in Mermaid Live Editor
+
 ```mermaid
 ---
 config:
@@ -41,12 +45,13 @@ flowchart TB
         NginxConfig
   end
  subgraph ContainerApps["Azure Container Apps"]
+        AzureFn["Azure Functions"]
         Containers
+        
   end
  subgraph Azure["Azure Cloud"]
         Storage
         MySQL["Azure MySQL"]
-        AzureFn["Azure Functions"]
         ACR["Azure Container Registry"]
         Logs["Azure Monitoring"]
         ManagedEnv["Container Apps\nManaged Environment"]
@@ -94,12 +99,12 @@ flowchart TB
      Containers:::container
      Storage:::storage
      MySQL:::azure
-     AzureFn:::azure
+     AzureFn:::azureFn
      ACR:::azure
      Logs:::azure
      ManagedEnv:::azure
      Certs:::azure
-     ContainerApps:::azure
+     ContainerApps:::containerApps
      Github:::github
      CICD:::cicd
      Cloudflare:::cloudflare
@@ -114,6 +119,8 @@ flowchart TB
     classDef cicd fill:#FF9900,color:white
     classDef cloudflare fill:#F48120,color:white
     classDef config fill:#E2B93D,color:#333
+    classDef azureFn fill:#0062AD,color:white,stroke:#FFB900,stroke-width:2px
+    classDef containerApps fill:#0E46AF,color:white,stroke:#D180FF,stroke-width:2px
 
 ```
 
