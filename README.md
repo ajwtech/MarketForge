@@ -6,41 +6,216 @@ This repository contains the infrastructure code for deploying MarketForge using
 
 MarketForge is meant to be a turnkey marketing and sales platform comprised of OSS's. Currently we use Hubspot features as the target so that we don't require any significant market research. Being turnkey and low complexity requires opinions, and this stack has a lot of them. If you don't like them, feel free to submit issues to change it. If we decide not to accept the change, then fork this repo and build something better.
 
+WIP
+
+## Architecture
+
+### Infrastructure Architecture
+
 ```mermaid
-graph TD
-    %% Frontend Layer %%
-    User[End User / Visitor] -->|HTTPS| NGINX[NGINX Reverse Proxy Container]
+---
+config:
+  layout: elk
+  theme: neo-dark
+  look: neo
+---
+flowchart TB
+ subgraph Storage["Azure Storage"]
+        MauticFiles["Mautic Files"]
+        StrapiFiles["Strapi Files"]
+        SuiteCRMFiles["SuiteCRM Files"]
+        FrontendFiles["Frontend Files"]
+        JumpboxFiles["Jumpbox Files"]
+  end
+ subgraph NginxConfig["NGINX Configs"]
+        DefaultConf["default.conf"]
+        StrapiConf["strapi.conf"]
+        SuiteCRMConf["suitecrm.conf"]
+        FrontendConf["frontend.conf"]
+  end
+ subgraph Containers["Container Applications"]
+        NGINX["NGINX Container\nWeb & API Gateway"]
+        Mautic["Mautic Container\nMarketing Automation"]
+        Strapi["Strapi Container\nHeadless CMS"]
+        SuiteCRM["SuiteCRM Container\nCRM Platform"]
+        NginxConfig
+  end
+ subgraph ContainerApps["Azure Container Apps"]
+        Containers
+  end
+ subgraph Azure["Azure Cloud"]
+        Storage
+        MySQL["Azure MySQL"]
+        AzureFn["Azure Functions"]
+        ACR["Azure Container Registry"]
+        Logs["Azure Monitoring"]
+        ManagedEnv["Container Apps\nManaged Environment"]
+        Certs["TLS Certificates"]
+        ContainerApps
+  end
+    Github["GitHub Repository"] -- Triggers CI/CD or Pulumi up --> CICD["GitHub Actions & Pulumi"]
+    CICD -- Builds & Pushes\nImages --> ACR
+    CICD -- Provisions --> ManagedEnv & MySQL & Storage
+    CICD -- Configures --> Cloudflare["Cloudflare DNS"]
+    ManagedEnv -- Issues --> Certs
+    ManagedEnv -- Hosts --> ContainerApps
+    ACR -- Provides Images --> Containers
+    Certs -- Secure --> Containers
+    MauticFiles -- Mounted to --> NGINX & Mautic
+    StrapiFiles -- Mounted to --> Strapi
+    SuiteCRMFiles -- Mounted to --> SuiteCRM & NGINX
+    FrontendFiles -- Mounted to --> NGINX
+    Mautic -- Stores Data --> MySQL
+    Strapi -- Stores Data --> MySQL
+    SuiteCRM -- Stores Data --> MySQL
+    AzureFn -- Provides Dynamic Content --> NGINX
+    NginxConfig -- Configures --> NGINX
+    FrontendConf -- Routes to --> AzureFn
+    NGINX -- Internet Traffic --> Cloudflare
+    Strapi -- Direct Internet Traffic --> Cloudflare
+    Containers -- Send Logs --> Logs
+    MySQL -- Send Metrics --> Logs
+    AzureFn -- Send Logs --> Logs
+    Cloudflare -- Provides DNS records --> ManagedEnv
+     MauticFiles:::storage
+     StrapiFiles:::storage
+     SuiteCRMFiles:::storage
+     FrontendFiles:::storage
+     JumpboxFiles:::storage
+     DefaultConf:::config
+     StrapiConf:::config
+     SuiteCRMConf:::config
+     FrontendConf:::config
+     NGINX:::nginx
+     Mautic:::mautic
+     Strapi:::strapi
+     SuiteCRM:::suitecrm
+     NginxConfig:::config
+     Containers:::container
+     Storage:::storage
+     MySQL:::azure
+     AzureFn:::azure
+     ACR:::azure
+     Logs:::azure
+     ManagedEnv:::azure
+     Certs:::azure
+     ContainerApps:::azure
+     Github:::github
+     CICD:::cicd
+     Cloudflare:::cloudflare
+    classDef azure fill:#0072C6,color:white,stroke:#0072C6,stroke-width:2px
+    classDef storage fill:#3e95cd,color:white,stroke:#3e95cd,stroke-width:2px
+    classDef container fill:#326CE5,color:white,stroke:#326CE5,stroke-width:2px
+    classDef nginx fill:#009639,color:white
+    classDef strapi fill:#8E75FF,color:white
+    classDef mautic fill:#4E5E9E,color:white
+    classDef suitecrm fill:#30AC2F,color:white
+    classDef github fill:#333,color:white
+    classDef cicd fill:#FF9900,color:white
+    classDef cloudflare fill:#F48120,color:white
+    classDef config fill:#E2B93D,color:#333
+
+```
+
+### Process and Data Flow (Sequence Diagram)
+```mermaid
+sequenceDiagram
+    actor Customer as Customer/Prospect
+    actor Marketer as Marketing Team
+    actor Sales as Sales Team
+    participant Strategy as Planning Phase
+    participant CMS as Strapi CMS
+    participant Web as EpicWebStack
+    participant Marketing as Mautic
+    participant CRM as SuiteCRM
     
-    %% Static Assets %%
-    NGINX -->|Static Content| RemixStatic[RemixEpic Static Assets]
+    %% Planning and Strategy Phase
+    Marketer ->> Strategy: Define marketing strategy
+    Marketer ->> Strategy: Create campaign plans
+    Marketer ->> Strategy: Set goals & KPIs
+    
+    %% Content Creation Phase
+    Marketer ->> CMS: Create website content
+    Marketer ->> CMS: Design landing pages
+    Marketer ->> CMS: Develop marketing assets
+    CMS ->> Web: Publish content & assets
+    
+    %% Marketing Campaign Setup
+    Marketer ->> Marketing: Configure lead scoring
+    Marketer ->> Marketing: Build email templates
+    Marketer ->> Marketing: Set up automation workflows
+    Marketer ->> Marketing: Define segments
+    
+    %% Customer Acquisition Phase
+    Customer ->> Web: Discover website (organic/ads)
+    Customer ->> Web: Browse product pages
+    Web ->> Marketing: Track behavior & engagement
+    Customer ->> Web: Download resources
+    Web ->> Marketing: Capture lead information
+    
+    %% Lead Nurturing
+    Marketing ->> Marketing: Score leads
+    Marketing ->> Marketing: Segment contacts
+    Marketing ->> Customer: Send targeted emails
+    Customer ->> Web: Re-engage with website
+    Web ->> Marketing: Update lead activity
+    Marketing ->> Marketing: Qualify leads
+    
+    %% Marketing to Sales Handoff
+    Marketing ->> CRM: Transfer qualified leads
+    Marketing ->> Sales: Alert about hot leads
+    
+    %% Sales Process
+    Sales ->> CRM: Review lead information
+    Sales ->> Customer: Initial outreach
+    Customer ->> Sales: Schedule meeting
+    Sales ->> CRM: Record interactions
+    Sales ->> CRM: Update opportunity status
+    Sales ->> Customer: Deliver presentation
+    Sales ->> CRM: Generate quote/proposal
+    Customer ->> Sales: Request modifications
+    Sales ->> CRM: Update quote
+    
+    %% Deal Closing
+    Customer ->> Sales: Accept proposal
+    Sales ->> CRM: Mark opportunity as won
+    Sales ->> CRM: Process contract
+    Sales ->> Customer: Welcome kit & onboarding
+    
+    %% Post-Sale Activities
+    Sales ->> Marketing: Add to customer segment
+    Marketing ->> Customer: Send nurturing content
+    Sales ->> CRM: Schedule follow-ups
+    
+    %% Analytics
+    Web -->> Marketing: Analytics data
+    Marketing -->> Marketer: Campaign performance reports
+    CRM -->> Sales: Sales pipeline metrics
+    Marketing -->> CRM: Attribution data
+    CRM -->> Marketer: Customer acquisition metrics
+```
 
-    %% Dynamic SSR via Azure Functions %%
-    NGINX -->|Dynamic Requests| AzureFn[Azure Functions SSR]
-
-    %% Backend APIs %%
-    AzureFn -->|CMS API| Strapi[Strapi CMS Container]
-    AzureFn -->|Marketing API| Mautic[Mautic Marketing Automation Container]
-    AzureFn -->|CRM API| SuiteCRM[SuiteCRM Container]
-
-    %% Shared Data Layer %%
-    Strapi --> MySQLAzure[Azure MySQL Database]
-    Mautic --> MySQLAzure
-    SuiteCRM --> MySQLAzure
-
-    %% CI/CD Deployment %%
-    GitHub[GitHub Repos: MarketForge and Epic Submodule] -->|Triggers on Commit| CI[GitHub Actions and Pulumi]
-    CI -->|Deploys| NGINX
-    CI -->|Deploys| AzureFn
-    CI -->|Deploys| Strapi
-    CI -->|Deploys| Mautic
-    CI -->|Deploys| SuiteCRM
-
-    %% Logging & Monitoring %%
-    NGINX --> Logs[Azure Monitoring]
-    AzureFn --> Logs
-    Strapi --> Logs
-    Mautic --> Logs
-    SuiteCRM --> Logs
+### User Journey (Journey Diagram)
+```mermaid
+journey
+    title Customer Journey Through MarketForge
+    section Website Visit
+        Browse product pages: 5: Customer
+        Read blog content: 4: Customer
+        Download resources: 3: Customer
+    section Form Submission
+        Complete contact form: 3: Customer
+        Schedule demo: 2: Customer
+        Live chat question: 3: Customer
+    section Marketing Nurturing
+        Receive emails: 3: Customer
+        Open emails: 2: Customer
+        Click links: 2: Customer 
+    section Sales Conversion
+        Sales call: 5: Sales
+        Product demo: 4: Sales
+        Receive quote: 3: Sales, Customer
+        Purchase decision: 1: Customer
 ```
 
 ## Known Issues and manual steps needed

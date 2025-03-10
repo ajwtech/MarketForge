@@ -6,7 +6,15 @@ import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 
 // import resources to manage
 import { ResourceGroup } from "./infrastructure/resourceGroup";
-import { storageAccount, storageAccountKey, mauticAppFilesStorage, suiteCrmAppFilesStorage, strapiAppFilesStorage, jumpboxFilesStorage } from "./infrastructure/storage/storageAccount";
+import { 
+    storageAccount, 
+    storageAccountKey, 
+    mauticAppFilesStorage, 
+    suiteCrmAppFilesStorage, 
+    strapiAppFilesStorage, 
+    jumpboxFilesStorage,
+    frontendFilesStorage 
+} from "./infrastructure/storage/storageAccount";
 import { marketing_mysql } from "./infrastructure/database/mysqlServer";
 import { acrUsername, acrPassword, registryUrl } from "./infrastructure/registries/acrRegistry";
 import { mauticWeb, mauticNginx } from "./infrastructure/containerApps/mauticApps";
@@ -40,6 +48,9 @@ const crmSubdomain = config.get("crmSubdomain") || "crm";
 const mapSubdomain = config.get("mapSubdomain") || "map";
 const BoolSubdomains = config.getBoolean("createSubdomains") || false;
 let createSubdomains: pulumi.Output<boolean> = pulumi.output(false).apply(unwrapped => unwrapped);  //do not change this value it always needs to be false for the initial deployment
+
+// Define Azure Function URL for frontend dynamic content
+const azureFunctionUrl = config.get("azureFunctionUrl") || "your-azure-function-url";
 
 // Create storage configuration in the managed environment for Mautic (uses marketingstacksa)
 const mauticStorage = new azure_app.ManagedEnvironmentsStorage("mautic-app-files-storage", {
@@ -100,6 +111,20 @@ const jumpboxStorage = new azure_app.ManagedEnvironmentsStorage("jumpbox-files-s
     },
 }, { protect: false, dependsOn: [jumpboxFilesStorage] });
 
+// Create dedicated storage for frontend files
+const frontendStorage = new azure_app.ManagedEnvironmentsStorage("frontend-files-storage", {
+    environmentName: marketing_env.name,
+    resourceGroupName: ResourceGroup.name,
+    properties: {
+        azureFile: {
+            accountName: storageAccountName,
+            shareName: frontendFilesStorage.name,
+            accessMode: "ReadWrite",
+            accountKey: storageAccountKey,
+        },
+    },
+}, { protect: false, dependsOn: [frontendFilesStorage] });
+
 // Make imageTag configurable
 const imageTag = config.get("imageTag") || "latest"; 
 
@@ -118,11 +143,13 @@ export const mauticNginxApp = mauticNginx({
     managedEnvironmentId: marketing_env.id,
     storageName: mauticStorage.name,
     suiteCrmStorageName: suitecrmStorage.name,
+    frontendStorageName: frontendStorage.name, 
     dbHost: dbHost,
     dbPort: dbPort,
     dbName: dbName,
     resourceGroupName: ResourceGroup.name,
     createSubdomains: createSubdomains, // Set to false for initial deployment
+    azureFunctionUrl: azureFunctionUrl, 
 });
 
 const siteFQDN = mauticNginxApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost");

@@ -24,14 +24,134 @@ export function mauticNginx(args: {
     managedEnvironmentId: pulumi.Input<string>;
     storageName: pulumi.Input<string>;
     suiteCrmStorageName: pulumi.Input<string>;
+    frontendStorageName?: pulumi.Input<string>; // Add frontend storage name (optional)
     dbHost: pulumi.Input<string>;
     dbPort: pulumi.Input<string>;
     dbName: pulumi.Input<string>;
     resourceGroupName: pulumi.Input<string>;
     createSubdomains: pulumi.Input<boolean>;
+    azureFunctionUrl?: pulumi.Input<string>; // Add Azure Function URL (optional)
 }) {
    
     const imageDigest = imageBuilds["marketing-nginx"].digest; // Ensure correct image reference
+
+    // Get environment variables including the new Azure Function URL
+    const envVars = [
+        {
+            name: "MAUTIC_WEB_URL",
+            value: mauticWebUrl,
+        },
+        {
+            name: "STRAPI_APP_URL", 
+            value: strapiAppUrl,
+        },
+        {
+            name: "SUITECRM_APP_URL", 
+            value: suiteCrmAppUrl,
+        },
+        {
+            name: "MAUTIC_SERVER_NAME",
+            value: nginxServerName,
+        },
+        {
+            name: "STORAGE_ACCOUNT_NAME",
+            value: storageAccountName,
+        },
+        {
+            name: "STORAGE_ACCOUNT_KEY",
+            value: storageAccountKey,
+        },
+        {
+            name: "DB_HOST",
+            value: args.dbHost, 
+        },
+        {
+            name: "DB_PORT",
+            value: args.dbPort, 
+        },
+        {
+            name: "DB_NAME",
+            value: args.dbName, 
+        },
+        {
+            name: "DEPLOY_TRIGGER",
+            value: imageDigest,
+        }
+    ];
+
+    // Add Azure Function URL environment variable if provided
+    if (args.azureFunctionUrl) {
+        envVars.push({
+            name: "AZURE_FUNCTION_URL",
+            value: args.azureFunctionUrl,
+        });
+    }
+
+    // Prepare volume mounts
+    const volumeMounts = [
+        {
+            mountPath: "/var/log",   // Nginx writes logs here
+            volumeName: "log",
+            subPath: "log/nginx",            // Maps to /log/nginx in the file share
+        },
+        {
+            mountPath: "/var/www/html/docroot/media/files",  // Path where Nginx expects media files
+            volumeName: "files",
+            subPath: "media/files",   // Maps to /media in the Azure File Share root
+        },
+        {
+            mountPath: "/var/www/html/docroot/media/images",  // Path where Nginx expects media files
+            volumeName: "images",
+            subPath: "media/images",   // Maps to /media in the Azure File Share root
+        },
+        {
+            mountPath: "/var/suitecrm/www/html/public/legacy/cache",
+            volumeName: "suitecrm-app-cache",
+            subPath: "cache",
+        }
+    ];
+
+    // Add frontend mount if storage is provided
+    if (args.frontendStorageName) {
+        volumeMounts.push({
+            mountPath: "/var/www/marketingSite",
+            volumeName: "frontend-files",
+            subPath: "marketingSite",
+        });
+    }
+
+    // Prepare volumes
+    const volumes = [
+        {
+            name: "log",
+            storageName: args.storageName,
+            storageType: azure_app.StorageType.AzureFile,
+        },
+        {
+            name: "files",
+            storageName: args.storageName,
+            storageType: azure_app.StorageType.AzureFile,
+        }, 
+        {
+            name: "images",
+            storageName: args.storageName,
+            storageType: azure_app.StorageType.AzureFile,
+        },
+        {
+            name: "suitecrm-app-cache",
+            storageName: args.suiteCrmStorageName,
+            storageType: azure_app.StorageType.AzureFile
+        }
+    ];
+
+    // Add frontend volume if storage is provided
+    if (args.frontendStorageName) {
+        volumes.push({
+            name: "frontend-files",
+            storageName: args.frontendStorageName,
+            storageType: azure_app.StorageType.AzureFile
+        });
+    }
 
     return new azure_app.ContainerApp("mautic-nginx", {
 
@@ -78,78 +198,14 @@ export function mauticNginx(args: {
         resourceGroupName: args.resourceGroupName, 
         template: {
             containers: [{
-                env: [
-                    {
-                        name: "MAUTIC_WEB_URL",
-                        value: mauticWebUrl,
-                    },
-                    {
-                        name: "STRAPI_APP_URL", 
-                        value: strapiAppUrl,
-                    },
-                    {
-                        name: "SUITECRM_APP_URL", 
-                        value: suiteCrmAppUrl,
-                    },
-                    {
-                        name: "MAUTIC_SERVER_NAME",
-                        value: nginxServerName,
-                    },
-                    {
-                        name: "STORAGE_ACCOUNT_NAME",
-                        value: storageAccountName,
-                    },
-                    {
-                        name: "STORAGE_ACCOUNT_KEY",
-                        value: storageAccountKey,
-                    },
-                    {
-                        name: "DB_HOST",
-                        value: args.dbHost, 
-                    },
-                    {
-                        name: "DB_PORT",
-                        value: args.dbPort, 
-                    },
-                    {
-                        name: "DB_NAME",
-                        value: args.dbName, 
-                    },
-                    // Use a dummy variable to force revision updates when the image changes.
-                    {
-                        name: "DEPLOY_TRIGGER",
-                        value: imageDigest,
-                    },
-                ],
+                env: envVars,
                 image: args.image, // Use the passed-in image parameter
                 name: "mautic-nginx",
                 resources: {
                     cpu: 0.75,
                     memory: "1.5Gi",
                 },
-                volumeMounts: [
-                    {
-                        mountPath: "/var/log",   // Nginx writes logs here
-                        volumeName: "log",
-                        subPath: "log/nginx",            // Maps to /log/nginx in the file share
-                    },
-                    {
-                        mountPath: "/var/www/html/docroot/media/files",  // Path where Nginx expects media files
-                        volumeName: "files",
-                        subPath: "media/files",   // Maps to /media in the Azure File Share root
-                    },
-                    {
-                        mountPath: "/var/www/html/docroot/media/images",  // Path where Nginx expects media files
-                        volumeName: "images",
-                        subPath: "media/images",   // Maps to /media in the Azure File Share root
-                    },
-                    {
-                        mountPath: "/var/suitecrm/www/html/public/legacy/cache",
-                        volumeName: "suitecrm-app-cache",
-                        subPath: "cache",
-                    },
-
-                ],
+                volumeMounts: volumeMounts,
             }],
             scale: {
                 maxReplicas: 3, 
@@ -163,28 +219,7 @@ export function mauticNginx(args: {
                     },
                 }],
             },
-            volumes: [
-                {
-                    name: "log",
-                    storageName: args.storageName,
-                    storageType: azure_app.StorageType.AzureFile,
-                },
-                {
-                    name: "files",
-                    storageName: args.storageName,
-                    storageType: azure_app.StorageType.AzureFile,
-                }, 
-                {
-                    name: "images",
-                    storageName: args.storageName,
-                    storageType: azure_app.StorageType.AzureFile,
-                },
-                {
-                    name: "suitecrm-app-cache",
-                    storageName: args.suiteCrmStorageName,
-                    storageType: azure_app.StorageType.AzureFile
-                }             
-            ],
+            volumes: volumes,
         },
         
     },{
