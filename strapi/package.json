@@ -16,12 +16,14 @@
     "@strapi/plugin-users-permissions": "5.11.0",
     "@strapi/strapi": "5.11.0",
     "mysql": "^2.18.1",
-    "mysql2": "3.9.4",
+    "mysql2": "3.13.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-router-dom": "^6.0.0",
     "strapi-plugin-navigation": "^3.0.8",
-    "styled-components": "^6.0.0"
+    "@strapi/provider-upload-aws-s3": "^4.14.0",
+    "styled-components": "^6.0.0",
+    "aws-sdk": "^2.1531.0"
   },
   "devDependencies": {
     "@types/node": "^20",
@@ -32,5 +34,14 @@
   "engines": {
     "node": ">=18.0.0 <=20.x.x",
     "npm": ">=6.0.0"
+  },
+  "resolutions": {
+    "glob": "^8.1.0",
+    "semver": "^7.5.4",
+    "rimraf": "^4.4.1"
+  },
+  "overrides": {
+    "glob": "^8.1.0",
+    "semver": "^7.5.4"
   }
 }
