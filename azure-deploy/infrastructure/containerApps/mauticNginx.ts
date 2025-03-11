@@ -49,6 +49,10 @@ export function mauticNginx(args: {
             name: "SUITECRM_APP_URL", 
             value: suiteCrmAppUrl,
         },
+        // {
+        //     name: "FRONTEND_APP_URL",
+        //     value: args.azureFunctionUrl,
+        // },
         {
             name: "MAUTIC_SERVER_NAME",
             value: nginxServerName,
@@ -78,14 +82,6 @@ export function mauticNginx(args: {
             value: imageDigest,
         }
     ];
-
-    // Add Azure Function URL environment variable if provided
-    if (args.azureFunctionUrl) {
-        envVars.push({
-            name: "AZURE_FUNCTION_URL",
-            value: args.azureFunctionUrl,
-        });
-    }
 
     // Prepare volume mounts
     const volumeMounts = [

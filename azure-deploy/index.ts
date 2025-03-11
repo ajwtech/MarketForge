@@ -49,8 +49,8 @@ const mapSubdomain = config.get("mapSubdomain") || "map";
 const BoolSubdomains = config.getBoolean("createSubdomains") || false;
 let createSubdomains: pulumi.Output<boolean> = pulumi.output(false).apply(unwrapped => unwrapped);  //do not change this value it always needs to be false for the initial deployment
 
-// Define Azure Function URL for frontend dynamic content
-const azureFunctionUrl = config.get("azureFunctionUrl") || "your-azure-function-url";
+// // Define Azure Function URL for frontend dynamic content
+// const azureFunctionUrl = config.get("azureFunctionUrl") || "frontend-app";
 
 // Create storage configuration in the managed environment for Mautic (uses marketingstacksa)
 const mauticStorage = new azure_app.ManagedEnvironmentsStorage("mautic-app-files-storage", {
@@ -149,7 +149,7 @@ export const mauticNginxApp = mauticNginx({
     dbName: dbName,
     resourceGroupName: ResourceGroup.name,
     createSubdomains: createSubdomains, // Set to false for initial deployment
-    azureFunctionUrl: azureFunctionUrl, 
+    // azureFunctionUrl: azureFunctionUrl, 
 });
 
 const siteFQDN = mauticNginxApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost");
