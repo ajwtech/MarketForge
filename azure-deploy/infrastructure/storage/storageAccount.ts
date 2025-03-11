@@ -14,7 +14,7 @@ export const storageAccount = new azure_native.storage.StorageAccount(configStor
     accountName: configStorageAccountName, 
     allowCrossTenantReplication: false,
     kind: azure_native.storage.Kind.StorageV2,
-    
+    allowBlobPublicAccess: true, 
     minimumTlsVersion: azure_native.storage.MinimumTlsVersion.TLS1_2,
     networkRuleSet: ipAddressOrRange ? {
         bypass: azure_native.storage.Bypass.AzureServices,
@@ -82,6 +82,21 @@ export const frontendFilesStorage = new azure_native.storage.FileShare("frontend
     resourceGroupName: ResourceGroup.name,
     shareName: "frontend-files",
 });
+
+export const strapiPublicAssetsContainer = new azure_native.storage.BlobContainer("assets", {
+    accountName: storageAccount.name,
+    containerName: "assets",
+    resourceGroupName: ResourceGroup.name,
+    publicAccess: azure_native.storage.PublicAccess.Container, // Make it publicly accessible
+});
+
+export const strapiPrivateAssetsContainer = new azure_native.storage.BlobContainer("private-assets", {
+    accountName: storageAccount.name,
+    containerName: "private-assets",
+    resourceGroupName: ResourceGroup.name,
+    publicAccess: azure_native.storage.PublicAccess.None, // Keep it private
+});
+
 
 // Add creation of the base "config" directory for SuiteCRM
 const createSuiteCrmBaseConfigDirectory = new command.local.Command("CreateSuiteCrmBaseConfigDirectory", {
