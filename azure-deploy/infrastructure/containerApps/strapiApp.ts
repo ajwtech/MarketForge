@@ -135,14 +135,6 @@ export function strapiApp(args: {
                         name: "DEPLOY_TRIGGER",
                         value: imageDigest,
                     },
-                    {
-                        name: "AWS_REGION", 
-                        value: "us-east-1", // Required by S3 provider
-                    },
-                    {
-                        name: "S3_FORCE_PATH_STYLE",
-                        value: "true",
-                    },
                 ],
                 image: args.image,
                 name: strapiAppUrl,
