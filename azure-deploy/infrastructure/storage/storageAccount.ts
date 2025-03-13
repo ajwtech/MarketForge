@@ -8,6 +8,11 @@ import * as command from "@pulumi/command";
 const config = new pulumi.Config();
 const configStorageAccountName = config.require("storageAccountName"); 
 const ipAddressOrRange = config.get("ipAddressOrRange");
+const domain = config.require("domain");
+const cmsSubdomain = config.get("cmsSubdomain") || "cms";
+const crmSubdomain = config.get("crmSubdomain") || "crm";
+const allowedOrigins = [`https://${cmsSubdomain}.${domain}`];
+const suiteCrmSiteUrl = `${crmSubdomain}.${domain}`;
 
 export const storageAccount = new azure_native.storage.StorageAccount(configStorageAccountName, {
     accessTier: azure_native.storage.AccessTier.Hot,
@@ -41,6 +46,26 @@ export const storageAccount = new azure_native.storage.StorageAccount(configStor
 }, {
     ignoreChanges: ["networkRuleSet"],
     protect: false,
+});
+
+export const blobServiceProperties = new azure_native.storage.BlobServiceProperties("blob-service-properties", {
+    accountName: storageAccount.name,
+    resourceGroupName: ResourceGroup.name,  
+    blobServicesName: "default",
+    cors: {
+        corsRules: [
+            {
+                allowedOrigins: allowedOrigins,
+                allowedMethods: ["GET", "HEAD", "OPTIONS"],
+                allowedHeaders: ["*"],
+                exposedHeaders: ["Content-Length", "Content-Type", "Content-Disposition", "Content-MD5"],
+                maxAgeInSeconds: 3600
+            }
+        ]
+    },
+}, 
+{
+    dependsOn: [storageAccount],
 });
 
 // Export the storage account key
@@ -173,10 +198,7 @@ export const configFilePlaceholder = new command.local.Command("uploadFile", {
 const suiteCrmOverrideFileName = "config_override.php";
 const suiteCrmLocalOverrideFilePath = path.join(__dirname, suiteCrmOverrideFileName);
 
-// Get domain and subdomain from config
-const domain = config.require("domain");
-const crmSubdomain = config.get("crmSubdomain") || "crm";
-const suiteCrmSiteUrl = `${crmSubdomain}.${domain}`;
+
 
 // Create config_override.php with dynamic content
 const suiteCrmOverrideContent = `<?php
