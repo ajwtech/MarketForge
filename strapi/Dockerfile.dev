@@ -1,7 +1,7 @@
-# Creating multi-stage build for production
+# Creating multi-stage build for development
 FROM node:20-alpine AS build
 RUN apk update && apk add --no-cache build-base gcc autoconf automake zlib-dev libpng-dev nasm bash vips-dev git curl > /dev/null 2>&1
-ARG NODE_ENV=production
+ARG NODE_ENV=development
 ENV NODE_ENV=${NODE_ENV}
 
 WORKDIR /opt/
@@ -15,8 +15,8 @@ RUN npm run build
 # Creating final production image
 FROM node:20-alpine
 RUN apk add --no-cache nasm bash vips-dev curl
-ARG NODE_ENV=production
-WORKDIR /opt/
+ARG NODE_ENV=development
+ENV NODE_ENV=${NODE_ENV}
 COPY --from=build /opt/node_modules ./node_modules
 WORKDIR /opt/app
 COPY --from=build /opt/app ./
@@ -32,7 +32,7 @@ COPY entrypoint.sh /opt/app/entrypoint.sh
 RUN chmod +x /opt/app/entrypoint.sh
 
 USER node
-EXPOSE 1337
+EXPOSE 1337 5173
 ENTRYPOINT ["/opt/app/entrypoint.sh"]
 
-CMD ["npm", "run", "start"]
+CMD ["npm", "run", "develop"]

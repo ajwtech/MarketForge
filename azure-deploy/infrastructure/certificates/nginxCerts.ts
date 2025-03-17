@@ -4,6 +4,7 @@ import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 import * as command from "@pulumi/command";
 import { type CloudflareDNSEntries } from "../dns/customDomains";
 
+
 const config = new pulumi.Config();
 const resourceGroupName = config.require("resourceGroupName");
 const domain = config.require("domain");
@@ -16,10 +17,19 @@ const crmSubdomain = config.get("crmSubdomain") || "crm";
 export function nginxCerts(
     nginxApp: azure_app.ContainerApp, 
     strapiApp: azure_app.ContainerApp, 
+    devStrapiApp: azure_app.ContainerApp,
     environment: azure_app.ManagedEnvironment,
     cloudflareDNSentries: CloudflareDNSEntries | undefined,
     
+    
 ) {
+
+    // Early return if no cloudflareDNSentries provided
+    if (!cloudflareDNSentries) {
+        console.log("No Cloudflare DNS entries provided, skipping certificate creation");
+        return [];
+    }
+
     const crmCert = new azure_app.ManagedCertificate("crmCert", {
         resourceGroupName: resourceGroupName,
         environmentName: environment.name,
@@ -28,7 +38,7 @@ export function nginxCerts(
             domainControlValidation: "CNAME",
             subjectName: `${crmSubdomain}.${domain}`,
         },
-    }, { dependsOn: cloudflareDNSentries?.crmCNAME ? [nginxApp, cloudflareDNSentries.crmCNAME] : [nginxApp] });
+    }, { dependsOn: [nginxApp, cloudflareDNSentries.crmCNAME, cloudflareDNSentries.crmTXT]});
             
     const cmsCert = new azure_app.ManagedCertificate("cmsCert", {
         resourceGroupName: resourceGroupName,
@@ -38,8 +48,18 @@ export function nginxCerts(
             domainControlValidation: "CNAME",
             subjectName: `${cmsSubdomain}.${domain}`,
         },
-    }, { dependsOn: cloudflareDNSentries?.cmsCNAME ? [strapiApp, cloudflareDNSentries.cmsCNAME] : [strapiApp] });
-        
+    }, { dependsOn: [strapiApp, cloudflareDNSentries.cmsCNAME, cloudflareDNSentries.cmsTXT]});
+    
+    const devCmsCert = new azure_app.ManagedCertificate("devCmsCert", {
+        resourceGroupName: resourceGroupName,
+        environmentName: environment.name,
+        managedCertificateName: `dev-${cmsSubdomain}`,
+        properties: {
+            domainControlValidation: "CNAME",
+            subjectName: `dev.${cmsSubdomain}.${domain}`,
+        },
+    }, { dependsOn: [nginxApp, cloudflareDNSentries.devCmsCNAME, cloudflareDNSentries.devCmsTXT] });
+
     const mapCert = new azure_app.ManagedCertificate("mapCert", {
         resourceGroupName: resourceGroupName,
         environmentName: environment.name,
@@ -48,8 +68,7 @@ export function nginxCerts(
             domainControlValidation: "CNAME",
             subjectName: `${mapSubdomain}.${domain}`,
         },
-    }, { dependsOn: cloudflareDNSentries?.mapCNAME ? [nginxApp, cloudflareDNSentries.mapCNAME] : [nginxApp] });   
-
+    }, { dependsOn: [nginxApp, cloudflareDNSentries.mapCNAME, cloudflareDNSentries.mapTXT] });   
         // Use azure-native to bind custom domains with the managed certificates
     const bindCmsCommand = new command.local.Command("bind-cms-custom-domain", {
         create: pulumi.interpolate `az containerapp hostname bind \
@@ -58,7 +77,16 @@ export function nginxCerts(
         --environment ${environment.name} \
         --validation-method CNAME`,
         triggers: [cmsCert.systemData.lastModifiedAt, strapiApp.systemData.lastModifiedAt],
-    }, { dependsOn: [cmsCert, strapiApp, environment] });
+    }, { dependsOn: [cmsCert, strapiApp, environment, cloudflareDNSentries.cmsCNAME, cloudflareDNSentries.cmsTXT] });
+    
+    const bindDevCmsCommand = new command.local.Command("bind-dev-cms-custom-domain", {
+        create: pulumi.interpolate `az containerapp hostname bind \
+        --hostname dev.${cmsSubdomain}.${domain} \
+        -g ${resourceGroupName} -n ${nginxApp.name} \
+        --environment ${environment.name} \
+        --validation-method CNAME`,
+        triggers: [devCmsCert.systemData.lastModifiedAt, nginxApp.systemData.lastModifiedAt],
+    }, { dependsOn: [devCmsCert, nginxApp, environment, cloudflareDNSentries.devCmsCNAME, cloudflareDNSentries.devCmsTXT] });
 
     const bindMapCommand = new command.local.Command("bind-map-custom-domain", {
         create: pulumi.interpolate `az containerapp hostname bind \
@@ -67,7 +95,7 @@ export function nginxCerts(
         --environment ${environment.name} \
         --validation-method CNAME`,
         triggers: [mapCert.systemData.lastModifiedAt, nginxApp.systemData.lastModifiedAt],
-    }, { dependsOn: [mapCert, nginxApp, environment, bindCmsCommand] });
+    }, { dependsOn: [mapCert, nginxApp, environment, bindDevCmsCommand, cloudflareDNSentries.mapCNAME, cloudflareDNSentries.mapTXT] });
 
     const bindCrmCommand = new command.local.Command("bind-crm-custom-domain", {
         create: pulumi.interpolate `az containerapp hostname bind \
@@ -76,9 +104,9 @@ export function nginxCerts(
         --environment ${environment.name} \
         --validation-method CNAME`,
         triggers: [crmCert.systemData.lastModifiedAt, nginxApp.systemData.lastModifiedAt],
-    }, { dependsOn: [crmCert, nginxApp, environment, bindCmsCommand, bindMapCommand] });
+    }, { dependsOn: [crmCert, nginxApp, environment, bindDevCmsCommand, bindMapCommand, cloudflareDNSentries.crmCNAME, cloudflareDNSentries.crmTXT] });
        
-    return [crmCert, cmsCert, mapCert ];
+    return [crmCert, cmsCert, devCmsCert, mapCert ];
 
 
 

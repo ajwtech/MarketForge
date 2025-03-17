@@ -12,6 +12,8 @@ export interface CloudflareDNSEntries {
     crmTXT: cloudflare.Record;
     mapCNAME: cloudflare.Record;
     mapTXT: cloudflare.Record;
+    devCmsCNAME: cloudflare.Record;
+    devCmsTXT: cloudflare.Record;
 }
 
 
@@ -27,11 +29,19 @@ export interface CustomDomainProps {
     strapiFQDN: pulumi.Output<string>;
     suiteCrmApp: azure_app.ContainerApp;
     suiteCrmFQDN: pulumi.Output<string>;
+    devStrapiApp: azure_app.ContainerApp;
+    devStrapiFQDN: pulumi.Output<string>;
 }
 
 export function setupDns(props: CustomDomainProps) {
     // Look up the Cloudflare zone for the domain
     const zone = cloudflare.getZone({ name: props.domain });
+    // Add options to prevent errors if records exist
+    const dnsOptions = {
+        deleteBeforeCreate: true,
+        replaceOnChanges: ["content", "type", "ttl"],
+        retainOnDelete: false
+    };
 
     // Create DNS records for CMS
     const cmsCNAME = new cloudflare.Record(props.cmsSubdomain, {
@@ -40,7 +50,9 @@ export function setupDns(props: CustomDomainProps) {
         type: "CNAME",
         content: props.strapiFQDN,
         ttl: 3600,
-    },{dependsOn: [marketing_env, props.strapiApp ]});
+    },{
+        ...dnsOptions,
+        dependsOn: [marketing_env, props.mauticNginxApp ]});
 
     const cmsTXT = new cloudflare.Record(`asuid.${props.cmsSubdomain}`, {
         zoneId: zone.then((z: cloudflare.GetZoneResult) => z.id),
@@ -48,8 +60,30 @@ export function setupDns(props: CustomDomainProps) {
         type: "TXT",
         content: props.nginxCvid,
         ttl: 3600,
-    },{dependsOn: [marketing_env, props.strapiApp ]});
+    },{
+        ...dnsOptions,
+        dependsOn: [marketing_env, props.mauticNginxApp, cmsCNAME ]});
 
+    const devCmsCNAME = new cloudflare.Record(`dev.${props.cmsSubdomain}`, {
+        zoneId: zone.then((z: cloudflare.GetZoneResult) => z.id),
+        name: `dev.${props.cmsSubdomain}`,
+        type: "CNAME",
+        content: props.siteFQDN,
+        ttl: 3600,
+    },{
+        ...dnsOptions,
+        dependsOn: [marketing_env, props.mauticNginxApp ]});
+
+    const devCmsTXT = new cloudflare.Record(`asuid.dev.${props.cmsSubdomain}`, {
+        zoneId: zone.then((z: cloudflare.GetZoneResult) => z.id),
+        name: `asuid.dev.${props.cmsSubdomain}`,
+        type: "TXT",
+        content: props.nginxCvid,
+        ttl: 3600,
+    },{
+        ...dnsOptions,
+        dependsOn: [marketing_env, props.mauticNginxApp,devCmsCNAME]
+    });
     // Create DNS records for CRM
     const crmCNAME = new cloudflare.Record(props.crmSubdomain, {
         zoneId: zone.then((z: cloudflare.GetZoneResult) => z.id),
@@ -58,8 +92,8 @@ export function setupDns(props: CustomDomainProps) {
         content: props.siteFQDN,
         ttl: 3600,
     },{
-        
-        dependsOn: [marketing_env, props.mauticNginxApp, props.suiteCrmApp ]});
+        ...dnsOptions,
+        dependsOn: [marketing_env, props.mauticNginxApp,  ]});
 
     const crmTXT = new cloudflare.Record(`asuid.${props.crmSubdomain}`, {
         zoneId: zone.then((z: cloudflare.GetZoneResult) => z.id),
@@ -67,7 +101,9 @@ export function setupDns(props: CustomDomainProps) {
         type: "TXT",
         content: props.nginxCvid,
         ttl: 3600,
-    },{dependsOn: [marketing_env, props.mauticNginxApp, props.suiteCrmApp ]});
+    },{
+        ...dnsOptions,
+        dependsOn: [marketing_env, props.mauticNginxApp,crmCNAME ]});
 
     // Create DNS records for MAP
     const mapCNAME = new cloudflare.Record(props.mapSubdomain, {
@@ -76,7 +112,9 @@ export function setupDns(props: CustomDomainProps) {
         type: "CNAME",
         content: props.siteFQDN,
         ttl: 3600,
-    },{dependsOn: [marketing_env, props.mauticNginxApp ]});
+    },{
+        ...dnsOptions,
+        dependsOn: [marketing_env, props.mauticNginxApp ]});
 
     const mapTXT = new cloudflare.Record(`asuid.${props.mapSubdomain}`, {
         zoneId: zone.then((z: cloudflare.GetZoneResult) => z.id),
@@ -84,7 +122,9 @@ export function setupDns(props: CustomDomainProps) {
         type: "TXT",
         content: props.nginxCvid,
         ttl: 3600,
-    },{dependsOn: [marketing_env, props.mauticNginxApp ]});
+    },{
+        ...dnsOptions,
+        dependsOn: [marketing_env, props.mauticNginxApp,mapCNAME ]});
     
     const dnsentries: CloudflareDNSEntries = {
         cmsCNAME: cmsCNAME,
@@ -93,6 +133,9 @@ export function setupDns(props: CustomDomainProps) {
         crmTXT: crmTXT,
         mapCNAME: mapCNAME,
         mapTXT: mapTXT,
+        devCmsCNAME: devCmsCNAME,
+        devCmsTXT: devCmsTXT,
+
     };
 
     return   dnsentries;
