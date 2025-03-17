@@ -5,23 +5,26 @@ import { marketingcr, acrUsername, acrPassword, registryUrl } from './registries
 const config = new pulumi.Config();
 const imageTag = config.get('imageTag') || 'latest';
 const mauticAppVersion = config.get('appVersion') || '5.2.2';
+
 const imageNames = [
   'marketing-nginx',
   'marketing-mautic-app',
   'marketing-strapi-app',
-  'marketing-suitecrm-app', // Added new image
+  'marketing-dev-strapi-app',
+  'marketing-suitecrm-app',
 ];
 const imageBuilds: { [key: string]: dockerbuild.Image } = {};
+
 
 const imageConfigs: { [key: string]: { context: string, dockerfile: string } } = {
   'marketing-nginx': { context: '../', dockerfile: '../mautic/marketing-nginx.dockerfile' },
   'marketing-mautic-app': { context: '../mautic', dockerfile: '../mautic/marketing-mautic-app.dockerfile' },
   'marketing-strapi-app': { context: '../strapi', dockerfile: '../strapi/Dockerfile.prod' },
+  'marketing-dev-strapi-app': { context: '../strapi', dockerfile: '../strapi/Dockerfile.dev' },
   'marketing-suitecrm-app': { context: '../suitecrm', dockerfile: '../suiteCrm/marketing-suitecrm-app.dockerfile' },
 };
 
 // Wait for the ACR to be created before proceeding
-
 const registry = registryUrl.apply(registry => registry);
 
 for (const imageName of imageNames) {

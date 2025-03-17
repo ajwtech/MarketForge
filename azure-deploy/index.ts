@@ -11,7 +11,8 @@ import {
     storageAccountKey, 
     mauticAppFilesStorage, 
     suiteCrmAppFilesStorage, 
-    strapiAppFilesStorage, 
+    strapiAppFilesStorage,
+    devStrapiAppFilesStorage, 
     jumpboxFilesStorage,
     frontendFilesStorage 
 } from "./infrastructure/storage/storageAccount";
@@ -20,7 +21,7 @@ import { acrUsername, acrPassword, registryUrl } from "./infrastructure/registri
 import { mauticWeb, mauticNginx } from "./infrastructure/containerApps/mauticApps";
 import { marketing_env } from "./infrastructure/managedEnvironment/managedEnvironment"; // Import from managedEnvironment.ts
 import { imageBuilds } from "./infrastructure/dockerImages"; // Ensure correct import
-import { strapiApp } from "./infrastructure/containerApps/strapiApp"; // Import strapiApp
+import { strapiApp, devStrapiApp } from "./infrastructure/containerApps/strapiApp"; // Import strapiApp
 import { suitecrmApp } from "./infrastructure/containerApps/suiteCrmApp"; // Import suitecrmApp
 import { setupDns } from "./infrastructure/dns/customDomains";
 import { nginxCerts } from "./infrastructure/certificates/nginxCerts";
@@ -37,6 +38,7 @@ const dbType = config.get("dbType") || "mysqli";
 const dbVersion = config.get("dbVersion") || "8.0";
 const dbCharset = config.get("dbCharset") || "utf8mb4";
 const strapiDbName = config.get("strapiDbName") || "strapi";
+const devStrapiDbName = config.get("devStrapiDbName") || "dev-strapi";
 const suitecrmDbName = config.get("suitecrmDbName") || "suitecrm";
 const dbUser = config.get("dbUser") || config.get("mysqlAdminUser") || "mySqlAdmin";
 const dbPassword = config.requireSecret("dbPassword");
@@ -47,6 +49,7 @@ const cmsSubdomain = config.get("cmsSubdomain") || "cms";
 const crmSubdomain = config.get("crmSubdomain") || "crm";
 const mapSubdomain = config.get("mapSubdomain") || "map";
 const BoolSubdomains = config.getBoolean("createSubdomains") || false;
+const imageTag = config.get("imageTag") || "latest"; 
 let createSubdomains: pulumi.Output<boolean> = pulumi.output(false).apply(unwrapped => unwrapped);  //do not change this value it always needs to be false for the initial deployment
 
 // // Define Azure Function URL for frontend dynamic content
@@ -82,6 +85,20 @@ const strapiStorage = new azure_app.ManagedEnvironmentsStorage("strapi-app-files
         },
     },
 }, { protect: false, dependsOn: [strapiAppFilesStorage] });
+
+// Create dedicated storage for Strapi dev
+const devStrapiStorage = new azure_app.ManagedEnvironmentsStorage("dev-strapi-app-files-storage", {
+    environmentName: marketing_env.name,
+    resourceGroupName: ResourceGroup.name,
+    properties: {
+        azureFile: {
+            accountName: storageAccountName,
+            shareName: devStrapiAppFilesStorage.name,
+            accessMode: "ReadWrite",
+            accountKey: storageAccountKey,
+        },
+    },
+}, { protect: false, dependsOn: [devStrapiAppFilesStorage] });
 
 // Create dedicated storage for SuiteCRM (also in marketingstacksa)
 const suitecrmStorage = new azure_app.ManagedEnvironmentsStorage("suitecrm-app-files-storage", {
@@ -125,8 +142,6 @@ const frontendStorage = new azure_app.ManagedEnvironmentsStorage("frontend-files
     },
 }, { protect: false, dependsOn: [frontendFilesStorage] });
 
-// Make imageTag configurable
-const imageTag = config.get("imageTag") || "latest"; 
 
 // Function to get the image name from imageBuilds or return the existing image name
 function getImageName(imageBuilds: { [key: string]: dockerbuild.Image }, imageName: string): pulumi.Output<string> {
@@ -196,6 +211,33 @@ export const deployedStrapiApp = strapiApp({
     nodeEnv: config.require("nodeEnv"),
     resourceGroupName: ResourceGroup.name,
     apiToken: config.require("apiToken"),
+    transferTokenSalt: config.require("transferTokenSalt"),
+    cmsUrl: pulumi.interpolate`https://${cmsSubdomain}.${domain}/`,
+});
+
+// Deploy the Strapi App using the dedicated strapi storage mount
+export const devDeployedStrapiApp = devStrapiApp({
+    env: "development",
+    image: getImageName(imageBuilds, "marketing-dev-strapi-app"),
+    registryUrl: registryUrl,
+    registryUsername: acrUsername,
+    registryPassword: acrPassword,
+    managedEnvironmentId: marketing_env.id,
+    storageName: devStrapiStorage.name, // Use the new Strapi storage mount
+    dbHost: dbHost,
+    dbPort: dbPort,
+    dbName: devStrapiDbName,
+    dbUser: dbUser,
+    dbPassword: dbPassword,
+    dbClient: config.require("dbClient"),
+    jwtSecret: config.require("jwtSecret"),
+    adminJwtSecret: config.require("adminJwtSecret"),
+    appKeys: config.require("appKeys"),
+    nodeEnv: "development",
+    resourceGroupName: ResourceGroup.name,
+    apiToken: config.require("apiToken"),
+    transferTokenSalt: config.require("transferTokenSalt"),
+    cmsUrl: pulumi.interpolate`https://dev.${cmsSubdomain}.${domain}/`,
 });
 
 // Deploy the suitecrm App
@@ -236,10 +278,12 @@ export const cloudflareDNSentries = BoolSubdomains ? setupDns({
     strapiFQDN: deployedStrapiApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
     suiteCrmApp: deployedSuitecrmApp,
     suiteCrmFQDN: deployedSuitecrmApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
+    devStrapiApp: devDeployedStrapiApp,
+    devStrapiFQDN: devDeployedStrapiApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
 }) : undefined ; // Set to undefined if BoolSubdomains is false
 
 // Update mauticNginxApp to use the cloudflareDNSentries as the customDomains
-export const customDomains = nginxCerts(mauticNginxApp, deployedStrapiApp,  marketing_env, cloudflareDNSentries);
+export const customDomains = nginxCerts(mauticNginxApp, deployedStrapiApp, devDeployedStrapiApp, marketing_env, cloudflareDNSentries);
 
 // // Deploy the Jumpbox container app
 // export const jumpboxApp = jumpbox({

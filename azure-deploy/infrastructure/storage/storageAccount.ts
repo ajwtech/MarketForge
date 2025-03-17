@@ -11,7 +11,7 @@ const ipAddressOrRange = config.get("ipAddressOrRange");
 const domain = config.require("domain");
 const cmsSubdomain = config.get("cmsSubdomain") || "cms";
 const crmSubdomain = config.get("crmSubdomain") || "crm";
-const allowedOrigins = [`https://${cmsSubdomain}.${domain}`];
+const allowedOrigins = [`https://${cmsSubdomain}.${domain}`, `https://dev.${cmsSubdomain}.${domain}`];
 const suiteCrmSiteUrl = `${crmSubdomain}.${domain}`;
 
 export const storageAccount = new azure_native.storage.StorageAccount(configStorageAccountName, {
@@ -86,6 +86,12 @@ export const strapiAppFilesStorage = new azure_native.storage.FileShare("strapi-
     accountName: storageAccount.name,
     resourceGroupName: ResourceGroup.name,
     shareName: "strapi-app-files",
+});
+
+export const devStrapiAppFilesStorage = new azure_native.storage.FileShare("dev-strapi-app-files", {
+    accountName: storageAccount.name,
+    resourceGroupName: ResourceGroup.name,
+    shareName: "dev-strapi-app-files",
 });
 
 export const suiteCrmAppFilesStorage = new azure_native.storage.FileShare("suitecrm-app-files", {
