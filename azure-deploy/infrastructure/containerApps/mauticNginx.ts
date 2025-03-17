@@ -212,7 +212,7 @@ export function mauticNginx(args: {
             }],
             scale: {
                 maxReplicas: 3, 
-                minReplicas: 0,
+                minReplicas: 1,
                 rules: [{
                     name: "http-scaler", 
                     http: { 

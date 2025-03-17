@@ -246,7 +246,7 @@ export function devStrapiApp(args: {
                         exposedPort: 5173,
                     },
                 ],
-                transport: "http", 
+                transport: "tcp", 
             },
             maxInactiveRevisions: 100,
             registries: [{
@@ -377,7 +377,7 @@ export function devStrapiApp(args: {
             }],
             scale: {
                 maxReplicas: 3, 
-                minReplicas: 0,
+                minReplicas: 1,
                 rules: [{
                     name: "http-scaler", 
                     http: { 

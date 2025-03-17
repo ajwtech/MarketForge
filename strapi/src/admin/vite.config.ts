@@ -10,7 +10,7 @@ export default (config: UserConfig) => {
         host: '0.0.0.0',
         allowedHosts: [CUSTOM_DOMAIN, HOSTNAME],
         hmr: {
-          clientPort: 443,
+          clientPort: 5173,
           host: CUSTOM_DOMAIN,
           protocol: 'wss',
         },
