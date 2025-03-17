@@ -9,11 +9,11 @@ export default (config: UserConfig) => {
       server: {
         host: '0.0.0.0',
         allowedHosts: [CUSTOM_DOMAIN, HOSTNAME],
-        // hmr: {
-        //   clientPort: 5173,
-        //   host: CUSTOM_DOMAIN,
-        //   protocol: 'ws',
-        // },
+        hmr: {
+          clientPort: 443,
+          host: CUSTOM_DOMAIN,
+          protocol: 'wss',
+        },
       },
       // optimizeDeps: {
       //   exclude: [
