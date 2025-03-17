@@ -246,7 +246,7 @@ export function devStrapiApp(args: {
                         exposedPort: 5173,
                     },
                 ],
-                transport: "TCP", 
+                transport: "http", 
             },
             maxInactiveRevisions: 100,
             registries: [{
