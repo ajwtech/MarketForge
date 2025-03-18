@@ -114,8 +114,15 @@ FROM nginx:mainline-alpine3.20-slim
 
 ARG ${APP_VERSION:-'5.2.2'}
 
-# Install envsubst
+# Install envsubst and environment variable support
 RUN apk update && apk add gettext
+
+# Set default environment variables for logging
+ENV NGINX_LOGGING_ENABLED=off \
+    NGINX_ACCESS_LOG_ENABLED= \
+    NGINX_ERROR_LOG_ENABLED= \
+    NGINX_DEBUG_LOG_ENABLED= \
+    NGINX_STATIC_LOG_ENABLED=
 
 # Create Mautic docroot directory
 RUN addgroup -g 82 -S www-data || true && adduser -u 82 -S www-data -G www-data || true && \
@@ -133,6 +140,7 @@ COPY ./mautic/nginx.configd/fastcgi-params.conf /etc/nginx/utils.d/fastcgi-param
 COPY ./mautic/nginx.configd/options-gzip-nginx.conf /etc/nginx/utils.d/options-gzip-nginx.conf
 COPY ./mautic/nginx.configd/options-ssl-nginx.conf /etc/nginx/utils.d/options-ssl-nginx.conf
 COPY ./mautic/nginx.configd/fastcgi-php-nginx.conf /etc/nginx/utils.d/fastcgi-php-nginx.conf 
+ 
 
 #server configs
 COPY ./mautic/nginx.configd/mauticdemo.nginx.conf /etc/nginx/conf.d/default.conf
@@ -141,6 +149,7 @@ COPY ./mautic/nginx.configd/suitecrm.conf /etc/nginx/conf.d/suitecrm.conf
 
 #configs with templates
 COPY ./mautic/nginx.configd/nginx.conf /etc/nginx/templates/nginx.conf.template
+COPY ./mautic/nginx.configd/logging.conf /etc/nginx/templates/logging.conf.template
 
 # Copy startup script
 COPY ./mautic/entrypoint_nginx.sh /entrypoint_nginx.sh
