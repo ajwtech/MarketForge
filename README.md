@@ -326,6 +326,99 @@ journey
 2. **Verify deployment**:
     After the deployment is complete, verify your resources in the Azure portal and check that Cloudflare DNS records have been created correctly.
 
+## Nginx Logging Configuration
+
+The Nginx container includes a flexible, centralized logging system that can be controlled through environment variables without rebuilding images or changing configuration files.
+
+### Logging Overview
+
+The logging system defines several types of logs:
+
+- **Access logs**: HTTP request activity
+- **Error logs**: Nginx errors and warnings
+- **Debug logs**: Detailed debugging information
+- **Static content logs**: Access logs for static files (can be high volume)
+
+Each component in the system (Mautic, SuiteCRM, Strapi, etc.) has its own dedicated log files when logging is enabled.
+
+### Controlling Logging
+
+#### Environment Variables
+
+Logging is controlled through these environment variables:
+
+| Environment Variable | Description | Values |
+|---------------------|-------------|--------|
+| `NGINX_LOGGING_ENABLED` | Master switch for all logging | `off` (default), `on`, `debug`, `full` |
+| `NGINX_ACCESS_LOG_ENABLED` | Control access logs | `off`, `on`, or empty (follow master switch) |
+| `NGINX_ERROR_LOG_ENABLED` | Control error logs | `off`, `on`, or empty (follow master switch) |
+| `NGINX_DEBUG_LOG_ENABLED` | Control debug logs | `off`, `on`, or empty (follow master switch) |
+| `NGINX_STATIC_LOG_ENABLED` | Control static content logs | `off` (default), `on` |
+
+#### Log Levels
+
+- **off**: All logging disabled
+- **on**: Normal logging (access and error logs)
+- **debug**: Includes detailed debug logs
+- **full**: All logs enabled, including static content
+
+#### Usage Examples
+
+1. **Production environment** (minimal logging):
+   ```
+   NGINX_LOGGING_ENABLED=off
+   ```
+
+2. **Normal monitoring**:
+   ```
+   NGINX_LOGGING_ENABLED=on
+   ```
+
+3. **Troubleshooting an issue**:
+   ```
+   NGINX_LOGGING_ENABLED=debug
+   ```
+
+4. **Debugging static content issues**:
+   ```
+   NGINX_LOGGING_ENABLED=on
+   NGINX_STATIC_LOG_ENABLED=on
+   ```
+
+### Configuring in Pulumi
+
+The Pulumi infrastructure automatically sets sensible defaults based on environment:
+
+- Development environments use `debug` level
+- Production environments use `off` to minimize log storage
+
+To change logging settings:
+
+1. Edit the `mauticNginx.ts` file to modify the environment variables
+2. Or update your Pulumi config file:
+   ```sh
+   pulumi config set --path 'marketforge:loggingEnabled' 'on'
+   ```
+
+### Viewing Logs
+
+Log files are stored in the shared volume at `/var/log/nginx/` and include:
+
+- General logs: `access.log`, `error.log`, `debug.log`
+- Application-specific logs: `mautic_access.log`, `strapi_debug.log`, etc.
+
+You can view logs using Azure Portal's storage explorer or by connecting to the container:
+
+```sh
+az containerapp exec -n mautic-nginx -g <resource-group> --command "cat /var/log/nginx/access.log"
+```
+
+For continuous monitoring:
+
+```sh
+az containerapp exec -n mautic-nginx -g <resource-group> --command "tail -f /var/log/nginx/error.log"
+```
+
 ## Cleanup
 
 To clean up the resources created by Pulumi, run:

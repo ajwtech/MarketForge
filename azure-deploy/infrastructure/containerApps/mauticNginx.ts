@@ -16,6 +16,7 @@ const domain = config.require("domain");
 const crmSubdomain = config.get("crmSubdomain") || "crm";
 const mapSubdomain = config.get("mapSubdomain") || "map";
 const cmsSubdomain = config.get("cmsSubdomain") || "cms";
+const loggingEnabled = config.get("nginxLoggingEnabled") || "off"; // Default to false if not set
 
 export function mauticNginx(args: {
     env: string;
@@ -37,7 +38,7 @@ export function mauticNginx(args: {
    
     const imageDigest = imageBuilds["marketing-nginx"].digest; // Ensure correct image reference
 
-    // Get environment variables including the new Azure Function URL
+    // Get environment variables including logging controls
     const envVars = [
         {
             name: "MAUTIC_WEB_URL",
@@ -82,6 +83,27 @@ export function mauticNginx(args: {
         {
             name: "DB_NAME",
             value: args.dbName, 
+        },
+        // Logging environment variables
+        {
+            name: "NGINX_LOGGING_ENABLED",
+            value: loggingEnabled,
+        },
+        {
+            name: "NGINX_ACCESS_LOG_ENABLED",
+            value: "",  // Use default
+        },
+        {
+            name: "NGINX_ERROR_LOG_ENABLED", 
+            value: "",  // Use default
+        },
+        {
+            name: "NGINX_DEBUG_LOG_ENABLED",
+            value: "",  // Use default
+        },
+        {
+            name: "NGINX_STATIC_LOG_ENABLED",
+            value: "off",  // Always off for static content
         },
         {
             name: "DEPLOY_TRIGGER",
