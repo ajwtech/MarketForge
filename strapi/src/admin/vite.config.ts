@@ -8,9 +8,10 @@ export default (config: UserConfig) => {
     return mergeConfig(config, {
       server: {
         host: '0.0.0.0',
-        allowedHosts: [CUSTOM_DOMAIN, HOSTNAME],
+        // allowedHosts: [CUSTOM_DOMAIN, HOSTNAME],
+        allowedHosts: 'all',
         hmr: {
-          clientPort: 443, // <-- Must match the EXTERNAL ACA port (443), NOT 5173 externally
+          clientPort: 443, 
           host: CUSTOM_DOMAIN,
           protocol: 'wss', // Browser needs WSS because it's over HTTPS externally
         },

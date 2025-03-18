@@ -233,19 +233,12 @@ export function devStrapiApp(args: {
         configuration: {
             activeRevisionsMode: azure_app.ActiveRevisionsMode.Single,
             ingress: {
-                external: true,
-                targetPort: 80,
+                external: false,
+                targetPort: 1337,
                 traffic: [{
                     latestRevision: true, 
                     weight: 100,
                 }],
-                additionalPortMappings: [
-                    {
-                        external: true,
-                        targetPort: 5173,
-                        exposedPort: 443,
-                    },
-                ],
                 transport: "auto", 
             },
             maxInactiveRevisions: 100,
