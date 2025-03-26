@@ -186,6 +186,10 @@ export function mauticNginx(args: {
                 clientCertificateMode: "Ignore",
                 external: true,
                 targetPort: 80,
+                additionalPortMappings: [{
+                    targetPort: 5173,
+                    external: true,
+                }],
                 traffic: [{
                     latestRevision: true, 
                     weight: 100,
@@ -234,7 +238,7 @@ export function mauticNginx(args: {
             }],
             scale: {
                 maxReplicas: 3, 
-                minReplicas: 1,
+                minReplicas: 0,
                 rules: [{
                     name: "http-scaler", 
                     http: { 
