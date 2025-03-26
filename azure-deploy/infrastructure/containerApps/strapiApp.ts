@@ -167,7 +167,7 @@ export function strapiApp(args: {
                 ],
             }],
             scale: {
-                maxReplicas: 3, 
+                maxReplicas: 2, 
                 minReplicas: 0,
                 rules: [{
                     name: "http-scaler", 
@@ -239,7 +239,11 @@ export function devStrapiApp(args: {
                     latestRevision: true, 
                     weight: 100,
                 }],
-                transport: "auto", 
+                transport: "TCP", 
+                additionalPortMappings: [{
+                    external: false,
+                    targetPort: 5173,
+                }],
             },
             maxInactiveRevisions: 100,
             registries: [{
@@ -341,8 +345,8 @@ export function devStrapiApp(args: {
                 image: args.image,
                 name: devStrapiAppUrl,
                 resources: {
-                    cpu: 0.75,
-                    memory: "1.5Gi",
+                    cpu: 1.5,
+                    memory: "3.0Gi",
                 },
                 volumeMounts: [
                     // {

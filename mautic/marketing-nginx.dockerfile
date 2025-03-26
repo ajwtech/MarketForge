@@ -181,7 +181,7 @@ ENV  SSH_PASSWD="root:Docker!"
 RUN echo "$SSH_PASSWD" | chpasswd 
 
 # Expose port
-EXPOSE 80
+EXPOSE 80 5173
 
 # Set entrypoint
 ENTRYPOINT ["/entrypoint_nginx.sh"]
