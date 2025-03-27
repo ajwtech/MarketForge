@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        stack: ["esc"]  # just the variable name
+        stack: ["esc"]
     permissions:
       contents: read
       id-token: write
@@ -20,11 +20,20 @@ jobs:
       - name: "Set up Pulumi"
         uses: pulumi/actions@v6
         with: 
-          pulumi-version: 3.157.0
+          pulumi-version: 3.158.0
+
       - name: Install Pulumi ESC CLI
         run: |
           curl -fsSL https://get.pulumi.com/esc/install.sh | sh
           echo "$HOME/.pulumi/bin" >> $GITHUB_PATH
+
+      - name: Generate Pulumi ESC Environment Config
+        run: |
+          mkdir -p config
+          cat <<EOF > config/pulumi.env.yaml
+          environment:  ${{ vars[matrix.stack] }}
+          EOF
+
       - name: Run Pulumi using ESC
         working-directory: ./azure-deploy
         run: |
@@ -39,6 +48,7 @@ jobs:
           echo "file_share_name=$(pulumi stack output devStrapiAppFilesStorage)" >> $GITHUB_OUTPUT
           echo "storage_account_name=$(pulumi stack output storageAccount.name)" >> $GITHUB_OUTPUT
           echo "resourceGroupName=$(pulumi stack output resourceGroup.name)" >> $GITHUB_OUTPUT
+
       - name: Get storage key
         id: get-storage-key
         run: |
