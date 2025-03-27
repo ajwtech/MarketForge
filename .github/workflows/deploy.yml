@@ -11,10 +11,10 @@ jobs:
       id-token: write
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: "Set up Pulumi"
-        uses: pulumi/actions@v4
+        uses: pulumi/actions@v6
         with:
           command: up
           stack-name: esc://marketforge
@@ -48,7 +48,7 @@ jobs:
     needs: pulumi-up
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Upload Strapi files to Azure File Share
         run: |
