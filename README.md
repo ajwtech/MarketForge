@@ -434,3 +434,18 @@ pulumi stack rm
 - **Environment Specific Configs**: Use the corresponding config file (e.g., `Pulumi.test.yaml`) for different environments.
 
 For more detailed information, refer to the Pulumi and Azure documentation.
+
+✅ Ensure Pulumi.dev.yaml or your stack YAML doesn’t include plain secrets — right now, you're good.
+
+✅ In your GitHub repo settings, store your PULUMI_ACCESS_TOKEN (one-time setup).
+
+✅ In pulumi.yaml, double-check this line is present:
+
+```yaml
+cli:
+  cloud-url: https://api.pulumi.com
+```
+
+✅ Add pulumi login and pulumi stack select in your workflow only if you're not using ESC. If you are, use pulumi up --yes --stack esc://marketforge.
+
+🔄 Add sync-app-files step before pulumi up, so that the Azure File Share has the updated files for Strapi/Vite.
