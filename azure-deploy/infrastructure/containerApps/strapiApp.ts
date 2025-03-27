@@ -349,20 +349,25 @@ export function devStrapiApp(args: {
                     memory: "3.0Gi",
                 },
                 volumeMounts: [
-                    // {
-                    //     mountPath: "/opt/app/config",   
-                    //     volumeName: "config",
-                    //     subPath: "config/strapi",            
-                    // },
-                    // {
-                    //     mountPath: "/opt/app/src",  
-                    //     volumeName: "src",
-                    //     subPath: "src",   
-                    // },
                     {
-                        mountPath: "/home/node/.npm/_logs/",  
-                        volumeName: "log",
-                        subPath: "log",   
+                        mountPath: "/opt/app/config",   
+                        volumeName: "config",
+                        subPath: "app/config",            
+                    },
+                    {
+                        mountPath: "/opt/app/package.json",  
+                        volumeName: "app",
+                        subPath: "app/package.json",   
+                    },
+                    {
+                        mountPath: "/opt/app/package-lock.json",  
+                        volumeName: "app",
+                        subPath: "app/package-lock.json",   
+                    },
+                    {
+                        mountPath: "/opt/app/src",  
+                        volumeName: "app",
+                        subPath: "app/src",   
                     },
                     {
                         mountPath: "/opt/app/public/uploads",  
@@ -391,7 +396,7 @@ export function devStrapiApp(args: {
                     storageType: azure_app.StorageType.AzureFile,
                 },
                 {
-                    name: "src",
+                    name: "app",
                     storageName: args.storageName,
                     storageType: azure_app.StorageType.AzureFile,
                 }, 

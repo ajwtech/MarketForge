@@ -20,16 +20,16 @@
     "@strapi/strapi": "5.11.3",
     "mysql2": "3.13.0",
     "react": "^18.0.0",
+    "react-dom": "^18.0.0",
     "react-router-dom": "^6.0.0",
     "strapi-plugin-navigation": "^3.0.8",
-    "strapi-provider-upload-azure-storage": "^3.4.0"
+    "strapi-provider-upload-azure-storage": "^3.4.0",
+    "styled-components": "^6.1.15"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "esbuild": "^0.25.1",
-    "styled-components": "^6.1.15",
     "typescript": "^5"
   },
   "engines": {
