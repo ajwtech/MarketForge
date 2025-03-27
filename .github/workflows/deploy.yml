@@ -26,31 +26,19 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Pulumi ESC CLI
-        run: |
-          curl -fsSL https://get.pulumi.com/esc/install.sh | sh
-          echo "$HOME/.pulumi/bin" >> $GITHUB_PATH
-
-      - name: Generate Pulumi ESC Environment Config
-        run: |
-          mkdir -p config
-          cat <<EOF > config/pulumi.env.yaml
-          environment:  ${{ vars[matrix.stack] }}
-          EOF
+        uses: pulumi/esc-action@v1
+        with:
+          environment: ${{ vars[matrix.stack] }} 
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
       - name: Run Pulumi using ESC
         working-directory: ./azure-deploy
         run: |
           FULL_STACK="${{ vars[matrix.stack] }}"
           TRIMMED_STACK="${FULL_STACK#*/}"
-          echo "stack=$TRIMMED_STACK" >> $GITHUB_OUTPUT
           pulumi login
-          echo "Trimmed stack name: $TRIMMED_STACK"
-          pulumi stack select $TRIMMED_STACK
-          pulumi install
-          pulumi env run ${{ vars[matrix.stack] }} -- pulumi up --yes
-          
-        env:
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          esc run "${{ vars[matrix.stack] }}" -- pulumi up --yes --stack $TRIMMED_STACK
 
       - name: Get Pulumi stack outputs
         id: pulumi
