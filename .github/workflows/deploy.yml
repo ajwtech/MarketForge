@@ -19,9 +19,13 @@ jobs:
 
       - name: "Set up Pulumi"
         uses: pulumi/actions@v6
-        with:
-          command: up
-          stack-name: ${{ vars[matrix.stack] }}
+        with: 
+          pulumi-version: 3.157.0
+      - name: Run Pulumi using ESC
+        run: |
+          pulumi login
+          pulumi stack select esc://marketforge/scouten
+          pulumi up --yes
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
@@ -57,17 +61,18 @@ jobs:
       - name: Upload Strapi files to Azure File Share
         run: |
           upload() {
-          az storage file upload-batch \
-            --account-name "$1" \
-            --account-key "$2" \
-            --source "$3" \
-            --destination "$4" \
-            --destination-path "$5" } 
+            az storage file upload-batch \
+              --account-name "$1" \
+              --account-key "$2" \
+              --source "$3" \
+              --destination "$4" \
+              --destination-path "$5" 
+          } 
             
-            ACCOUNT_NAME="${{ needs.pulumi-up.outputs.storage_account_name }}"
-            ACCOUNT_KEY="${{ needs.pulumi-up.outputs.storage_key }}"
-            SHARE_NAME="${{ needs.pulumi-up.outputs.file_share_name }}"
+          ACCOUNT_NAME="${{ needs.pulumi-up.outputs.storage_account_name }}"
+          ACCOUNT_KEY="${{ needs.pulumi-up.outputs.storage_key }}"
+          SHARE_NAME="${{ needs.pulumi-up.outputs.file_share_name }}"
 
-            upload "$ACCOUNT_NAME" "$ACCOUNT_KEY" "./src" "$SHARE_NAME" "app/src"
-            upload "$ACCOUNT_NAME" "$ACCOUNT_KEY" "./config" "$SHARE_NAME" "app/config"
-            upload "$ACCOUNT_NAME" "$ACCOUNT_KEY" "./public/uploads" "$SHARE_NAME" "uploads"
+          upload "$ACCOUNT_NAME" "$ACCOUNT_KEY" "./src" "$SHARE_NAME" "app/src"
+          upload "$ACCOUNT_NAME" "$ACCOUNT_KEY" "./config" "$SHARE_NAME" "app/config"
+          upload "$ACCOUNT_NAME" "$ACCOUNT_KEY" "./public/uploads" "$SHARE_NAME" "uploads"
