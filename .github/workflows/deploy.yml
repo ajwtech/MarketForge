@@ -46,7 +46,8 @@ jobs:
           pulumi login
           echo "Trimmed stack name: $TRIMMED_STACK"
           pulumi stack select $stack
-          esc run ${{ vars[matrix.stack] }} -- pulumi up --yes
+          pulumi env run ${{ vars[matrix.stack] }} -- pulumi up --yes
+          
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
