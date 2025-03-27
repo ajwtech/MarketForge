@@ -26,6 +26,7 @@ jobs:
           curl -fsSL https://get.pulumi.com/esc/install.sh | sh
           echo "$HOME/.pulumi/bin" >> $GITHUB_PATH
       - name: Run Pulumi using ESC
+        working-directory: ./azure-deploy
         run: |
           pulumi login
           esc run ${{ vars[matrix.stack] }} -- pulumi up --yes
