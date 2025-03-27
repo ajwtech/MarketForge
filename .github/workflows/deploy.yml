@@ -28,7 +28,7 @@ jobs:
       - name: Run Pulumi using ESC
         run: |
           pulumi login
-          pulumi-esc run ${{ vars[matrix.stack] }} -- pulumi up --yes
+          esc run ${{ vars[matrix.stack] }} -- pulumi up --yes
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
