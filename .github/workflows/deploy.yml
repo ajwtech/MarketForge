@@ -2,7 +2,7 @@ name: Deploy Strapi and Upload Files
 on:
   push:
     branches:
-      - main
+      - master
 jobs:
   pulumi-up:
     runs-on: ubuntu-latest
