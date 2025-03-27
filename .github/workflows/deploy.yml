@@ -21,11 +21,14 @@ jobs:
         uses: pulumi/actions@v6
         with: 
           pulumi-version: 3.157.0
+      - name: Install Pulumi ESC CLI
+        run: |
+          curl -fsSL https://get.pulumi.com/esc/install.sh | sh
+          echo "$HOME/.pulumi/bin" >> $GITHUB_PATH
       - name: Run Pulumi using ESC
         run: |
           pulumi login
-          pulumi esc run ${{ vars[matrix.stack] }}
-          pulumi up --yes
+          pulumi-esc run ${{ vars[matrix.stack] }} -- pulumi up --yes
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
