@@ -5,7 +5,11 @@ on:
       - master
 jobs:
   pulumi-up:
+    environment: pulumi_environments
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        stack: ["esc"]  # just the variable name
     permissions:
       contents: read
       id-token: write
@@ -17,7 +21,7 @@ jobs:
         uses: pulumi/actions@v6
         with:
           command: up
-          stack-name: esc://ajwtech/esc/marketforge/scouten
+          stack-name: ${{ vars[matrix.stack] }}
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
