@@ -41,6 +41,7 @@ jobs:
         working-directory: ./azure-deploy
         run: |
           pulumi login
+          pulumi stack select ${{ vars[matrix.stack] }}
           esc run ${{ vars[matrix.stack] }} -- pulumi up --yes
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
