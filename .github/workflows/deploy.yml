@@ -45,7 +45,7 @@ jobs:
           echo "stack=$TRIMMED_STACK" >> $GITHUB_OUTPUT
           pulumi login
           echo "Trimmed stack name: $TRIMMED_STACK"
-          pulumi stack select $stack
+          pulumi stack select $TRIMMED_STACK
           pulumi env run ${{ vars[matrix.stack] }} -- pulumi up --yes
           
         env:
