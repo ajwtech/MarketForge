@@ -35,7 +35,7 @@ jobs:
         id: get-storage-key
         run: |
           STORAGE_KEY=$(az storage account keys list \
-            --resource-group ${{ steps.pulumi.outputs.AZURE_RESOURCE_GROUP }} \
+            --resource-group ${{ steps.pulumi.outputs.resourceGroupName }} \
             --account-name ${{ steps.pulumi.outputs.storage_account_name }} \
             --query "[0].value" --output tsv)
           echo "::add-mask::$STORAGE_KEY"
@@ -44,7 +44,7 @@ jobs:
     outputs:
       file_share_name: ${{ steps.pulumi.outputs.fileShareName  }}
       storage_account_name: ${{ steps.pulumi.outputs.storage_account_name }}
-      AZURE_RESOURCE_GROUP: ${{ steps.pulumi.outputs.resourceGroupName }}
+      resourceGroupName: ${{ steps.pulumi.outputs.resourceGroupName }}
       storage_key: ${{ steps.get-storage-key.outputs.storage_key }}
   
   sync-files:
@@ -56,23 +56,18 @@ jobs:
 
       - name: Upload Strapi files to Azure File Share
         run: |
+          upload() {
           az storage file upload-batch \
-          --account-name ${{ needs.pulumi-up.outputs.storage_account_name }} \
-          --account-key ${{ needs.pulumi-up.outputs.storage_key }} \
-          --source ./src \
-          --destination ${{ needs.pulumi-up.outputs.file_share_name }} \
-          --destination-path app/src
+            --account-name "$1" \
+            --account-key "$2" \
+            --source "$3" \
+            --destination "$4" \
+            --destination-path "$5" } 
+            
+            ACCOUNT_NAME="${{ needs.pulumi-up.outputs.storage_account_name }}"
+            ACCOUNT_KEY="${{ needs.pulumi-up.outputs.storage_key }}"
+            SHARE_NAME="${{ needs.pulumi-up.outputs.file_share_name }}"
 
-          az storage file upload-batch \
-          --account-name ${{ needs.pulumi-up.outputs.storage_account_name }} \
-          --account-key ${{ needs.pulumi-up.outputs.storage_key }} \
-          --source ./config \
-          --destination ${{ needs.pulumi-up.outputs.file_share_name }} \
-          --destination-path app/config
-
-          az storage file upload-batch \
-          --account-name ${{ needs.pulumi-up.outputs.storage_account_name }} \
-          --account-key ${{ needs.pulumi-up.outputs.storage_key }} \
-          --source ./public/uploads \
-          --destination ${{ needs.pulumi-up.outputs.file_share_name }} \
-          --destination-path uploads
+            upload "$ACCOUNT_NAME" "$ACCOUNT_KEY" "./src" "$SHARE_NAME" "app/src"
+            upload "$ACCOUNT_NAME" "$ACCOUNT_KEY" "./config" "$SHARE_NAME" "app/config"
+            upload "$ACCOUNT_NAME" "$ACCOUNT_KEY" "./public/uploads" "$SHARE_NAME" "uploads"
