@@ -40,8 +40,11 @@ jobs:
       - name: Run Pulumi using ESC
         working-directory: ./azure-deploy
         run: |
+          FULL_STACK="${{ vars[matrix.stack] }}"
+          TRIMMED_STACK="${FULL_STACK#*/}"
+          echo "stack=$TRIMMED_STACK" >> $GITHUB_OUTPUT
           pulumi login
-          pulumi stack select ${{ vars[matrix.stack] }}
+          pulumi stack select $stack
           esc run ${{ vars[matrix.stack] }} -- pulumi up --yes
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
