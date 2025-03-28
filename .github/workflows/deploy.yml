@@ -18,7 +18,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           cache: npm
-          node-version-file: package.json
+          node-version-file: ./azure-deploy/package.json
       - run: npm install
       - name: "Set up Pulumi"
         uses: pulumi/actions@v6
