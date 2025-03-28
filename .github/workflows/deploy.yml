@@ -15,11 +15,13 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           cache: npm
           node-version-file: ./azure-deploy/package.json
           cache-dependency-path: ./azure-deploy/package-lock.json
+
       - run: npm install
         working-directory: ./azure-deploy
 
@@ -42,24 +44,24 @@ jobs:
         uses: pulumi/actions@v6
         with: 
           pulumi-version: 3.158.0
-          stack-name: ajwtech/${{ vars[matrix.stack] }}
-          work-dir: ./azure-deploy
-          command: up
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
-      # - name: Install Pulumi ESC CLI
-      
-      #   uses: pulumi/esc-action@v1
-      #   with:
-      #     environment: ajwtech/${{ vars[matrix.stack] }} 
-      #   env:
-      #     PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+      - name: Install Pulumi ESC CLI
+        uses: pulumi/esc-action@v1
+        with:
+          environment: ajwtech/${{ matrix.stack }}
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
-      # - name: Run Pulumi using ESC
-      #   working-directory: ./azure-deploy
-      #   run: |
-      #     esc run "ajwtech/${FULL_STACK}" -- bash -c 'pulumi install && pulumi stack select "$0" && pulumi up --yes' "$TRIMMED_STACK"
+      - name: Run Pulumi inside ESC environment
+        working-directory: ./azure-deploy
+        run: |
+          esc run ajwtech/${FULL_STACK} -- bash -c '
+            pulumi install && \
+            pulumi stack select "$1" && \
+            pulumi up --yes
+          ' dummy "${TRIMMED_STACK}"
 
       - name: Get Pulumi stack outputs
         id: pulumi
