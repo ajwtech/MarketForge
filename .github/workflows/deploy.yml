@@ -38,8 +38,8 @@ jobs:
           FULL_STACK="${{ vars[matrix.stack] }}"
           TRIMMED_STACK="${FULL_STACK#*/}"
           pulumi login
-          esc run "${{ vars[matrix.stack] }}" -- pulumi install
-          esc run "${FULL_STACK}" -- pulumi up --yes --stack "ajwtech/${FULL_STACK}"
+          esc run "ajwtech/${FULL_STACK}" -- pulumi install
+          esc run "ajwtech/${FULL_STACK}" -- pulumi up --yes --stack "ajwtech/${FULL_STACK}"
       - name: Get Pulumi stack outputs
         id: pulumi
         run: | 
