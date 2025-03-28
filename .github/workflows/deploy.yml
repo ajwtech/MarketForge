@@ -50,7 +50,7 @@ jobs:
       - name: Install Pulumi ESC CLI
         uses: pulumi/esc-action@v1
         with:
-          environment: ajwtech/${{ matrix.stack }}
+          environment: ajwtech/${FULL_STACK}
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
