@@ -40,7 +40,7 @@ jobs:
           pulumi login
           esc open "ajwtech/${FULL_STACK}"
           esc run "ajwtech/${FULL_STACK}" -- pulumi install
-          esc run "ajwtech/${FULL_STACK}" -- pulumi up --yes --stack "ajwtech/${FULL_STACK}"
+          esc run "ajwtech/${FULL_STACK}" -- pulumi up --yes --stack "$TRIMMED_STACK"
       - name: Get Pulumi stack outputs
         id: pulumi
         run: | 
