@@ -57,7 +57,7 @@ jobs:
       - name: Run Pulumi inside ESC environment
         working-directory: ./azure-deploy
         run: |
-          esc run ajwtech/${FULL_STACK} -- bash -c '
+          esc run ajwtech/${{ vars[matrix.stack] }} -- bash -c '
             pulumi install && \
             pulumi stack select "$1" && \
             pulumi up --yes
