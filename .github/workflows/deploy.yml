@@ -20,6 +20,8 @@ jobs:
           cache: npm
           node-version-file: ./azure-deploy/package.json
       - run: npm install
+        working-directory: ./azure-deploy
+
       - name: "Set up Pulumi"
         uses: pulumi/actions@v6
         with: 
