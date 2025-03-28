@@ -1,4 +1,4 @@
-name: Deploy Strapi and Upload Files
+name: Deploy 
 on:
   push:
     branches:
@@ -41,6 +41,7 @@ jobs:
           
           esc run "ajwtech/${FULL_STACK}" -- env PULUMI_STACK="$TRIMMED_STACK" pulumi install
           esc run "ajwtech/${FULL_STACK}" -- env PULUMI_STACK="$TRIMMED_STACK" pulumi up --yes --stack "$TRIMMED_STACK"
+
       - name: Get Pulumi stack outputs
         id: pulumi
         run: | 
