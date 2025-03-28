@@ -45,9 +45,7 @@ jobs:
         run: |
           FULL_STACK="${{ vars[matrix.stack] }}"
           TRIMMED_STACK="${FULL_STACK#*/}"
-          esc run "ajwtech/${FULL_STACK}" -- pulumi install
-          esc run "ajwtech/${FULL_STACK}" -- pulumi stack select "$TRIMMED_STACK"
-          esc run "ajwtech/${FULL_STACK}" -- pulumi up --yes
+          esc run "ajwtech/${FULL_STACK}" -- bash -c 'pulumi install && pulumi stack select "$0" && pulumi up --yes' "$TRIMMED_STACK"
 
       - name: Get Pulumi stack outputs
         id: pulumi
