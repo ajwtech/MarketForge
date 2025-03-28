@@ -18,7 +18,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           cache: npm
-          node-version-file: ./azure-deploy/package.json
+          node-version-file: package.json
       - run: npm install
         working-directory: ./azure-deploy
 
