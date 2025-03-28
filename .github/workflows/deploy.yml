@@ -38,8 +38,8 @@ jobs:
           FULL_STACK="${{ vars[matrix.stack] }}"
           TRIMMED_STACK="${FULL_STACK#*/}"
           pulumi login
-          
-          esc run "ajwtech/${FULL_STACK}" -- env PULUMI_STACK="$TRIMMED_STACK" pulumi install
+          esc open "ajwtech/${FULL_STACK}"
+          esc run "ajwtech/${FULL_STACK}" -- pulumi install
           esc run "ajwtech/${FULL_STACK}" -- env PULUMI_STACK="$TRIMMED_STACK" pulumi up --yes --stack "$TRIMMED_STACK"
 
       - name: Get Pulumi stack outputs
