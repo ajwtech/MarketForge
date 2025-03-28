@@ -14,16 +14,19 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - name: "Checkout code"
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          cache: npm
+          node-version-file: package.json
+      - run: npm install
       - name: "Set up Pulumi"
         uses: pulumi/actions@v6
         with: 
           pulumi-version: 3.158.0
-          stack-name: ${{ vars[matrix.stack] }}
+          stack-name: ajwtech/${{ vars[matrix.stack] }}
           work-dir: ./azure-deploy
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          command: "up"
 
       - name: Install Pulumi ESC CLI
         uses: pulumi/esc-action@v1
@@ -37,8 +40,6 @@ jobs:
         run: |
           FULL_STACK="${{ vars[matrix.stack] }}"
           TRIMMED_STACK="${FULL_STACK#*/}"
-          pulumi login
-          esc open "ajwtech/${FULL_STACK}"
           esc run "ajwtech/${FULL_STACK}" -- pulumi install
           esc run "ajwtech/${FULL_STACK}" -- env PULUMI_STACK="$TRIMMED_STACK" pulumi up --yes --stack "$TRIMMED_STACK"
 
