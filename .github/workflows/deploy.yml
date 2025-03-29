@@ -37,7 +37,7 @@ jobs:
           mkdir -p ./azure-deploy/config
           cat <<EOF > ./azure-deploy/config/Pulumi.${TRIMMED_STACK}.yaml
           environment:
-            - ${TRIMMED_STACK}
+            - ${FULL_STACK}
           EOF
 
       - name: Set up Pulumi
