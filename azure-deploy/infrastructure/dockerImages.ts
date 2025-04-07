@@ -21,7 +21,7 @@ const imageConfigs: { [key: string]: { context: string, dockerfile: string } } =
   'marketing-mautic-app': { context: '../mautic', dockerfile: '../mautic/marketing-mautic-app.dockerfile' },
   'marketing-strapi-app': { context: '../strapi', dockerfile: '../strapi/Dockerfile.prod' },
   'marketing-dev-strapi-app': { context: '../strapi', dockerfile: '../strapi/Dockerfile.dev' },
-  'marketing-suitecrm-app': { context: '../suitecrm', dockerfile: '../suiteCrm/marketing-suitecrm-app.dockerfile' },
+  'marketing-suitecrm-app': { context: '../suitecrm', dockerfile: '../suitecrm/marketing-suitecrm-app.dockerfile' },
 };
 
 // Wait for the ACR to be created before proceeding
