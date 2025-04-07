@@ -87,7 +87,7 @@ jobs:
         id: pulumi
         working-directory: ./azure-deploy
         run: | 
-          echo "file_share_name=$(pulumi stack output frontend-files-storage)" >> $GITHUB_OUTPUT
+          echo "file_share_name=$(pulumi stack output frontendStorage)" >> $GITHUB_OUTPUT
           echo "storage_account_name=$(pulumi stack output storageAccountName)" >> $GITHUB_OUTPUT
           echo "resourceGroupName=$(pulumi stack output resourceGroupName)" >> $GITHUB_OUTPUT
         
