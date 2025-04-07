@@ -85,10 +85,12 @@ jobs:
 
       - name: Get Pulumi stack outputs
         id: pulumi
+        working-directory: ./azure-deploy
         run: | 
           echo "file_share_name=$(pulumi stack output devStrapiAppFilesStorage)" >> $GITHUB_OUTPUT
           echo "storage_account_name=$(pulumi stack output storageAccount.name)" >> $GITHUB_OUTPUT
           echo "resourceGroupName=$(pulumi stack output resourceGroup.name)" >> $GITHUB_OUTPUT
+        
 
       - name: Get storage key
         id: get-storage-key
