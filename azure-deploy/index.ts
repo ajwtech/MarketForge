@@ -43,7 +43,6 @@ const suitecrmDbName = config.get("suitecrmDbName") || "suitecrm";
 const dbUser = config.get("dbUser") || config.get("mysqlAdminUser") || "mySqlAdmin";
 const dbPassword = config.requireSecret("dbPassword");
 const appSecret = config.get("appSecret") || new random.RandomPassword("appSecret", {length: 32, special: true,}).result;
-const storageAccountName = config.require("storageAccountName");
 const domain = config.require("domain");
 const cmsSubdomain = config.get("cmsSubdomain") || "cms";
 const crmSubdomain = config.get("crmSubdomain") || "crm";
@@ -52,13 +51,17 @@ const BoolSubdomains = config.getBoolean("createSubdomains") || false;
 const imageTag = config.get("imageTag") || "latest"; 
 let createSubdomains: pulumi.Output<boolean> = pulumi.output(false).apply(unwrapped => unwrapped);  //do not change this value it always needs to be false for the initial deployment
 
+// While these are used in this file, they were only exported for the github actions to use
+export const storageAccountName = config.require("storageAccountName");
+export const resourceGroupName = ResourceGroup.name;
+
 // // Define Azure Function URL for frontend dynamic content
 // const azureFunctionUrl = config.get("azureFunctionUrl") || "frontend-app";
 
 // Create storage configuration in the managed environment for Mautic (uses marketingstacksa)
 const mauticStorage = new azure_app.ManagedEnvironmentsStorage("mautic-app-files-storage", {
     environmentName: marketing_env.name,
-    resourceGroupName: ResourceGroup.name,
+    resourceGroupName: resourceGroupName,
     properties: {
         azureFile: {
             accountName: storageAccountName,
@@ -75,7 +78,7 @@ const mauticStorage = new azure_app.ManagedEnvironmentsStorage("mautic-app-files
 // Create dedicated storage for Strapi
 const strapiStorage = new azure_app.ManagedEnvironmentsStorage("strapi-app-files-storage", {
     environmentName: marketing_env.name,
-    resourceGroupName: ResourceGroup.name,
+    resourceGroupName: resourceGroupName,
     properties: {
         azureFile: {
             accountName: storageAccountName,
@@ -89,7 +92,7 @@ const strapiStorage = new azure_app.ManagedEnvironmentsStorage("strapi-app-files
 // Create dedicated storage for Strapi dev
 const devStrapiStorage = new azure_app.ManagedEnvironmentsStorage("dev-strapi-app-files-storage", {
     environmentName: marketing_env.name,
-    resourceGroupName: ResourceGroup.name,
+    resourceGroupName: resourceGroupName,
     properties: {
         azureFile: {
             accountName: storageAccountName,
@@ -103,7 +106,7 @@ const devStrapiStorage = new azure_app.ManagedEnvironmentsStorage("dev-strapi-ap
 // Create dedicated storage for SuiteCRM (also in marketingstacksa)
 const suitecrmStorage = new azure_app.ManagedEnvironmentsStorage("suitecrm-app-files-storage", {
     environmentName: marketing_env.name,
-    resourceGroupName: ResourceGroup.name,
+    resourceGroupName: resourceGroupName,
     properties: {
         azureFile: {
             accountName: storageAccountName,
@@ -117,7 +120,7 @@ const suitecrmStorage = new azure_app.ManagedEnvironmentsStorage("suitecrm-app-f
 // Create dedicated storage for Jumpbox
 const jumpboxStorage = new azure_app.ManagedEnvironmentsStorage("jumpbox-files-storage", {
     environmentName: marketing_env.name,
-    resourceGroupName: ResourceGroup.name,
+    resourceGroupName: resourceGroupName,
     properties: {
         azureFile: {
             accountName: storageAccountName,
@@ -131,7 +134,7 @@ const jumpboxStorage = new azure_app.ManagedEnvironmentsStorage("jumpbox-files-s
 // Create dedicated storage for frontend files
 const frontendStorage = new azure_app.ManagedEnvironmentsStorage("frontend-files-storage", {
     environmentName: marketing_env.name,
-    resourceGroupName: ResourceGroup.name,
+    resourceGroupName: resourceGroupName,
     properties: {
         azureFile: {
             accountName: storageAccountName,
@@ -162,7 +165,7 @@ export const mauticNginxApp = mauticNginx({
     dbHost: dbHost,
     dbPort: dbPort,
     dbName: dbName,
-    resourceGroupName: ResourceGroup.name,
+    resourceGroupName: resourceGroupName,
     createSubdomains: createSubdomains, // Set to false for initial deployment
     // azureFunctionUrl: azureFunctionUrl, 
 });
@@ -185,7 +188,7 @@ export const mauticWebApp = mauticWeb({
     dbUser: dbUser,
     dbPassword: dbPassword,
     appSecret: appSecret,
-    resourceGroupName: ResourceGroup.name, 
+    resourceGroupName: resourceGroupName, 
     siteFQDN: siteFQDN,
     siteUrl: pulumi.interpolate`https://${mapSubdomain}.${domain}/`,
 });
@@ -209,7 +212,7 @@ export const deployedStrapiApp = strapiApp({
     adminJwtSecret: config.require("adminJwtSecret"),
     appKeys: config.require("appKeys"),
     nodeEnv: config.require("nodeEnv"),
-    resourceGroupName: ResourceGroup.name,
+    resourceGroupName: resourceGroupName,
     apiToken: config.require("apiToken"),
     transferTokenSalt: config.require("transferTokenSalt"),
     cmsUrl: pulumi.interpolate`https://${cmsSubdomain}.${domain}/`,
@@ -234,7 +237,7 @@ export const devDeployedStrapiApp = devStrapiApp({
     adminJwtSecret: config.require("adminJwtSecret"),
     appKeys: config.require("appKeys"),
     nodeEnv: "development",
-    resourceGroupName: ResourceGroup.name,
+    resourceGroupName: resourceGroupName,
     apiToken: config.require("apiToken"),
     transferTokenSalt: config.require("transferTokenSalt"),
     cmsUrl: pulumi.interpolate`https://dev.${cmsSubdomain}.${domain}/`,
@@ -259,7 +262,7 @@ export const deployedSuitecrmApp = suitecrmApp({
     dbType: dbType,
     dbVersion: dbVersion,
     dbCharset: dbCharset,
-    resourceGroupName: ResourceGroup.name,
+    resourceGroupName: resourceGroupName,
     siteUrl: pulumi.interpolate`https://${crmSubdomain}.${domain}/`,
     crmSubdomain: crmSubdomain,
     domain: domain,
@@ -292,7 +295,7 @@ export const customDomains = nginxCerts(mauticNginxApp, deployedStrapiApp, devDe
 //     storageName: jumpboxStorage.name,  // Updated to use jumpbox storage
 //     dbHost: dbHost,
 //     dbPort: dbPort,
-//     resourceGroupName: ResourceGroup.name,
+//     resourceGroupName: resourceGroupName,
 // });
 
 
