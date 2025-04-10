@@ -27,26 +27,46 @@ jobs:
 
       - name: Set stack variables
         run: |
-          FULL_STACK="${{ vars[matrix.stack] }}"
-          TRIMMED_STACK="${FULL_STACK#*/}"
+          if [ -n "${{ env.ESC }}" ]; then
+            # When running locally with act, or when ESC is not provided,
+            # use the matrix.stack value
+            FULL_STACK="${{ env.ESC }}"
+            echo "Using ESC value: ${FULL_STACK}"
+          else
+            FULL_STACK="${{ matrix.stack }}"
+            echo "Using matrix stack: ${FULL_STACK}"
+          fi
+          TRIMMED_STACK="${FULL_STACK##*/}"
+          ESC_ENVIRONMENT="${FULL_STACK#*/}"
           echo "TRIMMED_STACK=${TRIMMED_STACK}" >> $GITHUB_ENV
           echo "FULL_STACK=${FULL_STACK}" >> $GITHUB_ENV
+          echo "ESC_ENVIRONMENT=${ESC_ENVIRONMENT}" >> $GITHUB_ENV
+          echo "TRIMMED_STACK: ${TRIMMED_STACK}"
+          echo "FULL_STACK: ${FULL_STACK}" 
+          echo "ESC_ENVIRONMENT: ${ESC_ENVIRONMENT}"
           echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
-
+          
       - name: Set ARM environment variables
         run: |
-          echo "ARM_CLIENT_ID=${{ secrets.ARM_CLIENT_ID }}" >> $GITHUB_ENV
-          echo "ARM_CLIENT_SECRET=${{ secrets.ARM_CLIENT_SECRET }}" >> $GITHUB_ENV
-          echo "ARM_TENANT_ID=${{ secrets.ARM_TENANT_ID }}" >> $GITHUB_ENV
-          echo "ARM_SUBSCRIPTION_ID=${{ secrets.ARM_SUBSCRIPTION_ID }}" >> $GITHUB_ENV
+          echo "ARM_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}" >> $GITHUB_ENV
+          echo "ARM_CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }}" >> $GITHUB_ENV
+          echo "ARM_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}" >> $GITHUB_ENV
+          echo "ARM_SUBSCRIPTION_ID=${{ secrets.AZURE_SUBSCRIPTION_ID }}" >> $GITHUB_ENV
       
       - name: Create Pulumi configuration file
+        working-directory: ./azure-deploy
         run: |
-          mkdir -p ./azure-deploy/config
-          cat <<EOF > ./azure-deploy/config/Pulumi.${TRIMMED_STACK}.yaml
-          environment:
-            - ${FULL_STACK}
+          mkdir -p ./config
+          cat <<EOF > ./config/Pulumi.${TRIMMED_STACK}.yaml
+            environment: 
+              - ${ESC_ENVIRONMENT}
           EOF
+
+      - name: Verify Pulumi configuration file
+        working-directory: ./azure-deploy
+        run: |
+          echo "Pulumi configuration file content:"
+          cat ./config/Pulumi.${TRIMMED_STACK}.yaml
 
       - name: Set up Pulumi
         uses: pulumi/actions@v6
@@ -58,36 +78,37 @@ jobs:
       - name: Install Pulumi ESC CLI
         uses: pulumi/esc-action@v1
         with:
-          environment: ${{ vars[matrix.stack] }}
+          environment: ${{ env.FULL_STACK }}
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-          
-      - name: Azure CLI Login
+      
+      - name: Install Azure CLI
         run: |
-          az login --service-principal \
-          --username "${{ secrets.ARM_CLIENT_ID }}" \
-          --password "${{ secrets.ARM_CLIENT_SECRET }}" \
-          --tenant "${{ secrets.ARM_TENANT_ID }}"
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+            
+      - name: Azure CLI Login
+        uses: azure/login@v2
+        with:
+          creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.AZURE_TENANT_ID }}"}'
 
       - name: Run Pulumi inside ESC environment
         working-directory: ./azure-deploy
         env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         run: |
-          esc run ${{ vars[matrix.stack] }} -- bash -c '
-            pulumi install && \
-            pulumi stack select "$1" && \
+          esc run ${FULL_STACK} -- bash -c "
+            pulumi stack select ${TRIMMED_STACK} &&
             pulumi up --yes
-          ' dummy "${TRIMMED_STACK}"
+            "
 
       - name: Get Pulumi stack outputs
         id: pulumi
         working-directory: ./azure-deploy
         run: | 
-          echo "file_share_name=$(pulumi stack output frontendStorage)" >> $GITHUB_OUTPUT
+          echo "file_share_name=$(pulumi stack output frontendStorageName)" >> $GITHUB_OUTPUT
           echo "storage_account_name=$(pulumi stack output storageAccountName)" >> $GITHUB_OUTPUT
           echo "resourceGroupName=$(pulumi stack output resourceGroupName)" >> $GITHUB_OUTPUT
         
@@ -103,7 +124,7 @@ jobs:
           echo "storage_key=$STORAGE_KEY" >> $GITHUB_OUTPUT
 
     outputs:
-      file_share_name: ${{ steps.pulumi.outputs.fileShareName  }}
+      file_share_name: ${{ steps.pulumi.outputs.file_share_name  }}
       storage_account_name: ${{ steps.pulumi.outputs.storage_account_name }}
       resourceGroupName: ${{ steps.pulumi.outputs.resourceGroupName }}
       storage_key: ${{ steps.get-storage-key.outputs.storage_key }}
@@ -112,24 +133,45 @@ jobs:
     runs-on: ubuntu-latest
     needs: pulumi-up
     steps:
+      - name: Install Azure CLI
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+          
+      - name: Azure CLI Login
+        uses: azure/login@v2
+        with:
+          creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.AZURE_TENANT_ID }}"}'
+
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Upload Strapi files to Azure File Share
         run: |
           upload() {
-            az storage file upload-batch \
-              --account-name "$1" \
-              --account-key "$2" \
-              --source "$3" \
-              --destination "$4" \
-              --destination-path "$5" 
+            if [ -d "$3" ]; then
+              echo "Uploading from $3 to $4/$5"
+              az storage file upload-batch \
+                --account-name "$1" \
+                --account-key "$2" \
+                --source "$3" \
+                --destination "$4" \
+                --destination-path "$5"
+            else
+              echo "Source directory $3 does not exist. Skipping."
+              ls -la $(dirname "$3")
+            fi
           } 
             
           ACCOUNT_NAME="${{ needs.pulumi-up.outputs.storage_account_name }}"
           ACCOUNT_KEY="${{ needs.pulumi-up.outputs.storage_key }}"
           SHARE_NAME="${{ needs.pulumi-up.outputs.file_share_name }}"
-
-          upload "$ACCOUNT_NAME" "$ACCOUNT_KEY" "./src" "$SHARE_NAME" "app/src"
-          upload "$ACCOUNT_NAME" "$ACCOUNT_KEY" "./config" "$SHARE_NAME" "app/config"
-          upload "$ACCOUNT_NAME" "$ACCOUNT_KEY" "./public/uploads" "$SHARE_NAME" "uploads"
+          
+          # Check current directory
+          echo "Current working directory:"
+          pwd
+          ls -la
+          
+          # Use the correct paths to Strapi files
+          upload "$ACCOUNT_NAME" "$ACCOUNT_KEY" "./strapi/src" "$SHARE_NAME" "app/src"
+          upload "$ACCOUNT_NAME" "$ACCOUNT_KEY" "./strapi/config" "$SHARE_NAME" "app/config"
+          upload "$ACCOUNT_NAME" "$ACCOUNT_KEY" "./strapi/public/uploads" "$SHARE_NAME" "uploads"
