@@ -54,6 +54,7 @@ let createSubdomains: pulumi.Output<boolean> = pulumi.output(false).apply(unwrap
 // While these are used in this file, they were only exported for the github actions to use
 export const storageAccountName = config.require("storageAccountName");
 export const resourceGroupName = ResourceGroup.name;
+export const frontendStorageName = frontendFilesStorage.name;
 
 // // Define Azure Function URL for frontend dynamic content
 // const azureFunctionUrl = config.get("azureFunctionUrl") || "frontend-app";
