@@ -18,11 +18,22 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          cache: npm
           node-version-file: ./azure-deploy/package.json
-          cache-dependency-path: ./azure-deploy/package-lock.json
+          
+      - name: Cache Node Modules
+        uses: actions/cache@v4
+        id: npm-cache
+        with:
+          path: |
+            **/node_modules
+            ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
 
-      - run: npm install
+      - name: Install Dependencies
+        if: steps.npm-cache.outputs.cache-hit != 'true'
+        run: npm install
         working-directory: ./azure-deploy
 
       - name: Set stack variables
@@ -52,7 +63,7 @@ jobs:
           echo "ARM_CLIENT_SECRET=${{ secrets.ARM_CLIENT_SECRET }}" >> $GITHUB_ENV
           echo "ARM_TENANT_ID=${{ secrets.ARM_TENANT_ID }}" >> $GITHUB_ENV
           echo "ARM_SUBSCRIPTION_ID=${{ secrets.ARM_SUBSCRIPTION_ID }}" >> $GITHUB_ENV
-      
+          
       - name: Create Pulumi configuration file
         working-directory: ./azure-deploy
         run: |
@@ -85,7 +96,7 @@ jobs:
       - name: Install Azure CLI
         run: |
           curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-            
+          
       - name: Azure CLI Login
         uses: azure/login@v2
         with:
@@ -111,8 +122,7 @@ jobs:
           echo "file_share_name=$(pulumi stack output frontendStorageName)" >> $GITHUB_OUTPUT
           echo "storage_account_name=$(pulumi stack output storageAccountName)" >> $GITHUB_OUTPUT
           echo "resourceGroupName=$(pulumi stack output resourceGroupName)" >> $GITHUB_OUTPUT
-        
-
+          
       - name: Get storage key
         id: get-storage-key
         run: |
@@ -133,7 +143,19 @@ jobs:
     runs-on: ubuntu-latest
     needs: pulumi-up
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      # Adding Azure CLI cache to avoid repeated installations
+      - name: Azure CLI Cache
+        id: cli-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.azure/cli
+          key: ${{ runner.os }}-az-cli-${{ hashFiles('**/.github/workflows/deploy.yml') }}
+          
       - name: Install Azure CLI
+        if: steps.cli-cache.outputs.cache-hit != 'true'
         run: |
           curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
           
@@ -142,25 +164,25 @@ jobs:
         with:
           creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","subscriptionId":"${{ secrets.ARM_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
 
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Upload Strapi files to Azure File Share
         run: |
-          upload() {
+          # Using parallel uploads for improved performance
+          upload_parallel() {
             if [ -d "$3" ]; then
               echo "Uploading from $3 to $4/$5"
+              # Use azcopy for faster transfers with parallelism
               az storage file upload-batch \
                 --account-name "$1" \
                 --account-key "$2" \
                 --source "$3" \
                 --destination "$4" \
-                --destination-path "$5"
+                --destination-path "$5" \
+                --max-connections 10
             else
               echo "Source directory $3 does not exist. Skipping."
               ls -la $(dirname "$3")
             fi
-          } 
+          }
             
           ACCOUNT_NAME="${{ needs.pulumi-up.outputs.storage_account_name }}"
           ACCOUNT_KEY="${{ needs.pulumi-up.outputs.storage_key }}"
@@ -171,7 +193,7 @@ jobs:
           pwd
           ls -la
           
-          # Use the correct paths to Strapi files
-          upload "$ACCOUNT_NAME" "$ACCOUNT_KEY" "./strapi/src" "$SHARE_NAME" "app/src"
-          upload "$ACCOUNT_NAME" "$ACCOUNT_KEY" "./strapi/config" "$SHARE_NAME" "app/config"
-          upload "$ACCOUNT_NAME" "$ACCOUNT_KEY" "./strapi/public/uploads" "$SHARE_NAME" "uploads"
+          # Use parallel uploads for better performance
+          upload_parallel "$ACCOUNT_NAME" "$ACCOUNT_KEY" "./strapi/src" "$SHARE_NAME" "app/src"
+          upload_parallel "$ACCOUNT_NAME" "$ACCOUNT_KEY" "./strapi/config" "$SHARE_NAME" "app/config"
+          upload_parallel "$ACCOUNT_NAME" "$ACCOUNT_KEY" "./strapi/public/uploads" "$SHARE_NAME" "uploads"
