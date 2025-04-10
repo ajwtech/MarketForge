@@ -29,11 +29,11 @@ jobs:
         run: |
           if [ -n "${{ env.ESC }}" ]; then
             # When running locally with act, or when ESC is not provided,
-            # use the matrix.stack value
+            # use the env.ESC value
             FULL_STACK="${{ env.ESC }}"
             echo "Using ESC value: ${FULL_STACK}"
           else
-            FULL_STACK="${{ matrix.stack }}"
+            FULL_STACK="${{ vars[matrix.stack]}}"
             echo "Using matrix stack: ${FULL_STACK}"
           fi
           TRIMMED_STACK="${FULL_STACK##*/}"
