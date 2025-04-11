@@ -251,7 +251,6 @@ export const devStrapiFiles = new command.local.Command("UploadDevStrapiFiles", 
                 --account-name ${storageAccount.name} \
                 --source "../strapi/**" \
                 --destination ${devStrapiAppFilesStorage.name} \
-                --auth-mode key \
                 --account-key ${storageAccountKey} \
                 --destination-path "app" \
                 --max-connections 10`
@@ -265,7 +264,6 @@ export const strapiFiles = new command.local.Command("UploadStrapiFiles", {
                 --account-name ${storageAccount.name} \
                 --source "../strapi/**" \
                 --destination ${strapiAppFilesStorage.name} \
-                --auth-mode key \
                 --account-key ${storageAccountKey} \
                 --destination-path "app" \
                 --max-connections 10`
