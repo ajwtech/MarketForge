@@ -243,5 +243,36 @@ export const suiteCrmOverrideFilePlaceholder = new command.local.Command("Upload
     dependsOn: [suiteCrmAppFilesStorage, createSuiteCrmConfigSubDirectory, suiteCrmOverrideFileExists],
 });
 
+
+
+// Upload the devstrapi files 
+export const devStrapiFiles = new command.local.Command("UploadDevStrapiFiles", {
+    create: pulumi.interpolate`az storage file upload-batch \
+                --account-name ${storageAccount.name} \
+                --source "../strapi/**" \
+                --destination ${devStrapiAppFilesStorage.name} \
+                --auth-mode key \
+                --account-key ${storageAccountKey} \
+                --destination-path "app" \
+                --max-connections 10`
+}, {
+    dependsOn: [devStrapiAppFilesStorage],
+});
+
+// Upload the strapi files 
+export const strapiFiles = new command.local.Command("UploadStrapiFiles", {
+    create: pulumi.interpolate`az storage file upload-batch \
+                --account-name ${storageAccount.name} \
+                --source "../strapi/**" \
+                --destination ${strapiAppFilesStorage.name} \
+                --auth-mode key \
+                --account-key ${storageAccountKey} \
+                --destination-path "app" \
+                --max-connections 10`
+}, {
+    dependsOn: [strapiAppFilesStorage],
+});
+
+
 export const storageAccountName = storageAccount.name;
 
