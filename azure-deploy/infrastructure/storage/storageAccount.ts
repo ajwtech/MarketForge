@@ -243,13 +243,14 @@ export const suiteCrmOverrideFilePlaceholder = new command.local.Command("Upload
     dependsOn: [suiteCrmAppFilesStorage, createSuiteCrmConfigSubDirectory, suiteCrmOverrideFileExists],
 });
 
-
+// Resolve the path to the Strapi directory
+const strapiDirectoryPath = path.resolve(__dirname, "../../../strapi");
 
 // Upload the devstrapi files 
 export const devStrapiFiles = new command.local.Command("UploadDevStrapiFiles", {
     create: pulumi.interpolate`az storage file upload-batch \
                 --account-name ${storageAccount.name} \
-                --source "../strapi/**" \
+                --source ${strapiDirectoryPath} \
                 --destination ${devStrapiAppFilesStorage.name} \
                 --account-key ${storageAccountKey} \
                 --destination-path "app" \
@@ -260,9 +261,10 @@ export const devStrapiFiles = new command.local.Command("UploadDevStrapiFiles", 
 
 // Upload the strapi files 
 export const strapiFiles = new command.local.Command("UploadStrapiFiles", {
+    
     create: pulumi.interpolate`az storage file upload-batch \
                 --account-name ${storageAccount.name} \
-                --source "../strapi/**" \
+                --source ${strapiDirectoryPath} \
                 --destination ${strapiAppFilesStorage.name} \
                 --account-key ${storageAccountKey} \
                 --destination-path "app" \
