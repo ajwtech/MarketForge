@@ -54,7 +54,7 @@ export function strapiApp(args: {
                 ],
                 transport: "Auto", 
             },
-            maxInactiveRevisions: 100,
+            maxInactiveRevisions: 50,
             registries: [{
                 identity: "",
                 passwordSecretRef: "registry-password",
@@ -245,7 +245,7 @@ export function devStrapiApp(args: {
                     targetPort: 5173,
                 }],
             },
-            maxInactiveRevisions: 100,
+            maxInactiveRevisions: 10,
             registries: [{
                 identity: "",
                 passwordSecretRef: "registry-password",
@@ -354,16 +354,7 @@ export function devStrapiApp(args: {
                         volumeName: "config",
                         subPath: "app/config",            
                     },
-                    {
-                        mountPath: "/opt/app/package.json",  
-                        volumeName: "app",
-                        subPath: "app/package.json",   
-                    },
-                    {
-                        mountPath: "/opt/app/package-lock.json",  
-                        volumeName: "app",
-                        subPath: "app/package-lock.json",   
-                    },
+
                     {
                         mountPath: "/opt/app/src",  
                         volumeName: "app",
@@ -376,6 +367,7 @@ export function devStrapiApp(args: {
                     },
 
                 ],
+                
             }],
             scale: {
                 maxReplicas: 3, 
@@ -384,7 +376,7 @@ export function devStrapiApp(args: {
                     name: "http-scaler", 
                     http: { 
                         metadata: {
-                            concurrentRequests: "100", 
+                            concurrentRequests: "50", 
                         },
                     },
                 }],
