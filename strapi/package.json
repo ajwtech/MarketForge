@@ -8,7 +8,7 @@
     "deploy": "strapi deploy",
     "develop": "strapi develop",
     "develop:api": "node --max-old-space-size=2048 node_modules/.bin/strapi develop --no-watch-admin",
-    "develop:admin": "strapi develop",
+    "develop:admin": "node --loader ts-node/esm ./src/admin/vite.config.mts",
     "start": "strapi start",
     "strapi": "strapi"
   },
@@ -24,13 +24,13 @@
     "react-router-dom": "^6.0.0",
     "strapi-plugin-navigation": "^3.0.8",
     "strapi-provider-upload-azure-storage": "^3.4.0",
-    "styled-components": "^6.1.15",
-    "ts-node": "^10.9.2"
+    "styled-components": "^6.1.15"
   },
   "devDependencies": {
     "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "esbuild": "^0.25.1",
     "typescript": "^5",
     "ts-node": "^10.9.2"
   },
