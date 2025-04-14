@@ -1,5 +1,5 @@
 # Creating multi-stage build for production
-FROM node:20-alpine AS build
+FROM node:slim AS build
 RUN apk update && apk add --no-cache build-base gcc autoconf automake zlib-dev libpng-dev nasm bash vips-dev git curl > /dev/null 2>&1
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
@@ -13,7 +13,7 @@ COPY . .
 RUN npm run build
 
 # Creating final production image
-FROM node:20-alpine
+FROM node:slim
 RUN apk add --no-cache nasm bash vips-dev curl
 ARG NODE_ENV=production
 WORKDIR /opt/

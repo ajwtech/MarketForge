@@ -1,6 +1,6 @@
 # nginx.dockerfile
 #Stage 0: Base
-FROM node:lts-alpine3.20 AS node
+FROM node:slim AS node
 # Stage 1: Composer
 FROM composer/composer:2.8-bin AS composer
 # Stage 2: Builder
