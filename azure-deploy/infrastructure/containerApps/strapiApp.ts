@@ -148,16 +148,16 @@ export function strapiApp(args: {
                     memory: "1.5Gi",
                 },
                 volumeMounts: [
-                    // {
-                    //     mountPath: "/opt/app/config",   
-                    //     volumeName: "config",
-                    //     subPath: "config/strapi",            
-                    // },
-                    // {
-                    //     mountPath: "/opt/app/src",  
-                    //     volumeName: "src",
-                    //     subPath: "src",   
-                    // },
+                    {
+                        mountPath: "/opt/app/config",   
+                        volumeName: "config",
+                        subPath: "app/config",            
+                    },
+                    {
+                        mountPath: "/opt/app/src",  
+                        volumeName: "src",
+                        subPath: "app/src",   
+                    },
                     {
                         mountPath: "/opt/app/public/uploads",  
                         volumeName: "uploads",
