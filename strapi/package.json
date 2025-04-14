@@ -8,7 +8,7 @@
     "deploy": "strapi deploy",
     "develop": "strapi develop",
     "develop:api": "node --max-old-space-size=2048 node_modules/.bin/strapi develop --no-watch-admin",
-    "develop:admin": "node --loader ts-node/esm ./src/admin/vite.config.ts",
+    "develop:admin": "strapi develop --watch-admin",
     "start": "strapi start",
     "strapi": "strapi"
   },
@@ -28,13 +28,13 @@
     "ts-node": "^10.9.2"
   },
   "devDependencies": {
-    "@types/node": "^20",
+    "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "typescript": "^5"
   },
   "engines": {
-    "node": ">=18.0.0 <=20.x.x",
+    "node": ">=18.0.0 <=22.x.x",
     "npm": ">=6.0.0"
   },
   "resolutions": {
