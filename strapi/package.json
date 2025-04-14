@@ -16,8 +16,8 @@
     "@_sh/strapi-plugin-ckeditor": "^5.0.1",
     "@strapi/logger": "^5.11.2",
     "@strapi/plugin-seo": "^2.0.8",
-    "@strapi/plugin-users-permissions": "5.11.3",
-    "@strapi/strapi": "5.11.3",
+    "@strapi/plugin-users-permissions": "5.12.4",
+    "@strapi/strapi": "5.12.4",
     "mysql2": "3.13.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
@@ -31,7 +31,8 @@
     "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "typescript": "^5"
+    "typescript": "^5",
+    "ts-node": "^10.9.2"
   },
   "engines": {
     "node": ">=18.0.0 <=22.x.x",
