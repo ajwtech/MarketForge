@@ -7,7 +7,7 @@ RUN apk update && apk add --no-cache \
 ARG NODE_ENV=development
 ENV NODE_ENV=${NODE_ENV}
 
-# Install node modules explicitly as the correct user already
+# Install node modules 
 RUN npm install -g node-gyp && \
     npm config set fetch-retry-maxtimeout 600000 -g
 # Create application directory and set ownership early
@@ -22,7 +22,7 @@ WORKDIR /opt/app
 # Copy package files (small, quick)
 COPY --chown=node:node package.json package-lock.json ./
 
-RUN npm install
+RUN npm ci
 
 # Update PATH explicitly
 ENV PATH /opt/app/node_modules/.bin:$PATH

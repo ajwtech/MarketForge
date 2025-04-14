@@ -246,6 +246,33 @@ export const suiteCrmOverrideFilePlaceholder = new command.local.Command("Upload
 // Resolve the path to the Strapi directory
 const strapiDirectoryPath = path.resolve(__dirname, "../../../strapi");
 
+// Helper function to hash all files in a directory recursively, excluding certain folders
+function hashDirectory(dir: string, excludeDirs: string[] = []): string {
+    const crypto = require("crypto");
+    const fs = require("fs");
+    const path = require("path");
+    let hash = crypto.createHash("md5");
+    function walk(currentPath: string) {
+        const files = fs.readdirSync(currentPath);
+        files.forEach((file: string) => {
+            const filePath = path.join(currentPath, file);
+            const stat = fs.statSync(filePath);
+            if (stat.isDirectory()) {
+                if (!excludeDirs.includes(file)) {
+                    walk(filePath);
+                }
+            } else {
+                hash.update(fs.readFileSync(filePath));
+                hash.update(filePath); // include file path in hash
+            }
+        });
+    }
+    walk(dir);
+    return hash.digest("hex");
+}
+
+const devStrapiDirHash = hashDirectory(strapiDirectoryPath, [".strapi", ".tmp", "dist", "node_modules"]);
+
 // Upload the devstrapi files 
 export const devStrapiFiles = new command.local.Command("UploadDevStrapiFiles", {
     create: pulumi.interpolate`az storage file upload-batch \
@@ -254,10 +281,14 @@ export const devStrapiFiles = new command.local.Command("UploadDevStrapiFiles", 
                 --destination ${devStrapiAppFilesStorage.name} \
                 --account-key ${storageAccountKey} \
                 --destination-path "app" \
-                --max-connections 10`
+                --max-connections 10`,
+    triggers: [devStrapiDirHash],
 }, {
     dependsOn: [devStrapiAppFilesStorage],
 });
+
+
+const strapiDirHash = hashDirectory(strapiDirectoryPath, [".strapi", ".tmp", "dist", "node_modules"]);
 
 // Upload the strapi files 
 export const strapiFiles = new command.local.Command("UploadStrapiFiles", {
@@ -268,7 +299,8 @@ export const strapiFiles = new command.local.Command("UploadStrapiFiles", {
                 --destination ${strapiAppFilesStorage.name} \
                 --account-key ${storageAccountKey} \
                 --destination-path "app" \
-                --max-connections 10`
+                --max-connections 10`,
+    triggers: [devStrapiDirHash],
 }, {
     dependsOn: [strapiAppFilesStorage],
 });
