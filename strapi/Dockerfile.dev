@@ -1,4 +1,4 @@
-FROM node:slim AS build
+FROM node:lts-alpine3.20 AS build
 
 RUN apk update && apk add --no-cache \
     build-base gcc autoconf automake zlib-dev libpng-dev nasm bash \
