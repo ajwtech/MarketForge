@@ -19,21 +19,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: ./azure-deploy/package.json
+          cache: 'npm'
+          cache-dependency-path: './azure-deploy/package-lock.json'
           
-      - name: Cache Node Modules
-        uses: actions/cache@v4
-        id: npm-cache
-        with:
-          path: |
-            **/node_modules
-            ~/.npm
-          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-
-
       - name: Install Dependencies
-        if: steps.npm-cache.outputs.cache-hit != 'true'
-        run: npm install
+        run: npm ci
         working-directory: ./azure-deploy
 
       - name: Set stack variables
@@ -93,14 +83,17 @@ jobs:
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
       
-      - name: Install Azure CLI
-        run: |
-          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-          
       - name: Azure CLI Login
         uses: azure/login@v2
         with:
           creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","subscriptionId":"${{ secrets.ARM_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
+
+      - name: Azure CLI script
+        uses: azure/cli@v2
+        with:
+          azcliversion: latest
+          inlineScript: |
+            az account show
 
       - name: Run Pulumi inside ESC environment
         working-directory: ./azure-deploy
