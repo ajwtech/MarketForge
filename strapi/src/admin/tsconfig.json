@@ -16,5 +16,5 @@
     "jsx": "react-jsx"
   },
   "include": ["../plugins/**/admin/src/**/*", "./"],
-  "exclude": ["node_modules/", "build/", "dist/", "**/*.test.ts"]
+  "exclude": ["node_modules/", "build/", "dist/", "**/*.test.ts", "types/generated/**"]
 }
