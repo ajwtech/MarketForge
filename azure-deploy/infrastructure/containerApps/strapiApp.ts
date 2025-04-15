@@ -185,6 +185,11 @@ export function strapiApp(args: {
             },
             volumes: [
                 {
+                    name: "app",
+                    storageName: args.storageName,
+                    storageType: azure_app.StorageType.AzureFile,
+                },
+                {
                     name: "config",
                     storageName: args.storageName,
                     storageType: azure_app.StorageType.AzureFile,
