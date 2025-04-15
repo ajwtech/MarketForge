@@ -275,7 +275,7 @@ const devStrapiDirHash = hashDirectory(strapiDirectoryPath, [".strapi", ".tmp", 
 
 // Upload the devstrapi files 
 export const devStrapiFiles = new command.local.Command("UploadDevStrapiFiles", {
-    create: pulumi.interpolate`az storage file upload-batch \
+    create: pulumi.interpolate`az storage file upload-batch --debug \
                 --account-name ${storageAccount.name} \
                 --source ${strapiDirectoryPath} \
                 --destination ${devStrapiAppFilesStorage.name} \
