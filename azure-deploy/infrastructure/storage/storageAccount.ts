@@ -275,7 +275,7 @@ function hashDirectory(dir: string, excludeDirs: string[] = []): string {
 const excludeDirsAndFiles = [".strapi", ".tmp", "dist", "node_modules", ".git"];
 const stagingDir = path.join(strapiDirectoryPath, "../strapi-staging");
 const stageStrapiFiles = new command.local.Command("StageStrapiFiles", {
-    create: `mkdir -p <parent-of-stagingDir> && rsync -av --delete ... <source>/ <destination>/`,
+    create: `rsync --mkpath -av --delete ${excludeDirsAndFiles.map(dir => `--exclude='${dir}'`).join(" ")} ${strapiDirectoryPath}/ ${stagingDir}/`,
 }, {});
 
 // Step 2: Hash the staging directory
