@@ -1,8 +1,10 @@
 .tmp/
 .cache/
 .git/
+.strapi/
 build/
 node_modules/
 .env
-data/
+.env.secrets
 backup/
+dist/
