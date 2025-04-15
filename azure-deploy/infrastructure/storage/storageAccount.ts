@@ -270,41 +270,46 @@ function hashDirectory(dir: string, excludeDirs: string[] = []): string {
     walk(dir);
     return hash.digest("hex");
 }
+const excludeDirsAndFiles = [".strapi", ".tmp", "dist", "node_modules", ".git"];
+const stagingDir = path.join(strapiDirectoryPath, "../strapi-staging");
 
-const devStrapiDirHash = hashDirectory(strapiDirectoryPath, [".strapi", ".tmp", "dist", "node_modules"]);
+// Step 1: Stage files using rsync
+const stageStrapiFiles = new command.local.Command("StageStrapiFiles", {
+    create: `rsync -av --delete ${excludeDirsAndFiles.map(dir => `--exclude='${dir}'`).join(" ")} ${strapiDirectoryPath}/ ${stagingDir}/`,
+}, {});
+
+// Step 2: Hash the staging directory (optional but recommended)
+const stagedStrapiDirHash = hashDirectory(stagingDir);
 
 // Upload the devstrapi files 
 export const devStrapiFiles = new command.local.Command("UploadDevStrapiFiles", {
     create: pulumi.interpolate`az storage file upload-batch --debug \
                 --account-name ${storageAccount.name} \
-                --source ${strapiDirectoryPath} \
+                --source ${stagingDir} \
                 --destination ${devStrapiAppFilesStorage.name} \
                 --account-key ${storageAccountKey} \
                 --destination-path "app" \
                 --max-connections 10`,
-    triggers: [devStrapiDirHash],
+    triggers: [stagedStrapiDirHash],
 }, {
-    dependsOn: [devStrapiAppFilesStorage],
+    dependsOn: [devStrapiAppFilesStorage, stageStrapiFiles],
 });
 
-
-const strapiDirHash = hashDirectory(strapiDirectoryPath, [".strapi", ".tmp", "dist", "node_modules"]);
 
 // Upload the strapi files 
 export const strapiFiles = new command.local.Command("UploadStrapiFiles", {
     
     create: pulumi.interpolate`az storage file upload-batch \
                 --account-name ${storageAccount.name} \
-                --source ${strapiDirectoryPath} \
+                --source ${stagingDir} \
                 --destination ${strapiAppFilesStorage.name} \
                 --account-key ${storageAccountKey} \
                 --destination-path "app" \
                 --max-connections 10`,
-    triggers: [devStrapiDirHash],
+    triggers: [stagedStrapiDirHash],
 }, {
-    dependsOn: [strapiAppFilesStorage],
+    dependsOn: [strapiAppFilesStorage, stageStrapiFiles],
 });
-
 
 export const storageAccountName = storageAccount.name;
 
