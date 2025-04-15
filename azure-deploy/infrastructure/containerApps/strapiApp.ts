@@ -157,6 +157,11 @@ export function strapiApp(args: {
                         mountPath: "/opt/app/src",  
                         volumeName: "src",
                         subPath: "app/src",   
+                    },                    
+                    {
+                        mountPath: "/opt/app/data",  
+                        volumeName: "app",
+                        subPath: "app/data",
                     },
                     {
                         mountPath: "/opt/app/public/uploads",  
@@ -359,6 +364,11 @@ export function devStrapiApp(args: {
                         mountPath: "/opt/app/src",  
                         volumeName: "app",
                         subPath: "app/src",   
+                    },
+                    {
+                        mountPath: "/opt/app/data",  
+                        volumeName: "app",
+                        subPath: "app/data",
                     },
                     {
                         mountPath: "/opt/app/public/uploads",  
