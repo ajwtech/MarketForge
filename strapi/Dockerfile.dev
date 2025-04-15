@@ -24,13 +24,15 @@ COPY --chown=node:node package.json package-lock.json ./
 
 RUN npm ci
 
-# Update PATH explicitly
+# Update PATH adding node_module/.bin to avoid using global node_modules
+# This is important for running strapi commands
+# and for running the app in development mode
 ENV PATH /opt/app/node_modules/.bin:$PATH
 
-# Copy app files explicitly (owned by node immediately)
+# Copy app files 
 COPY --chown=node:node . .
 
-# Backup config explicitly
+# Backup config 
 RUN mkdir -p /opt/app/config-backup && cp -r /opt/app/config/* /opt/app/config-backup/
 
 # Supervisor config
