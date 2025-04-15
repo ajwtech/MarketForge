@@ -270,16 +270,22 @@ function hashDirectory(dir: string, excludeDirs: string[] = []): string {
     walk(dir);
     return hash.digest("hex");
 }
-const excludeDirsAndFiles = [".strapi", ".tmp", "dist", "node_modules", ".git"];
-const stagingDir = path.join(strapiDirectoryPath, "../strapi-staging");
 
 // Step 1: Stage files using rsync
+const excludeDirsAndFiles = [".strapi", ".tmp", "dist", "node_modules", ".git"];
+const stagingDir = path.join(strapiDirectoryPath, "../strapi-staging");
 const stageStrapiFiles = new command.local.Command("StageStrapiFiles", {
     create: `rsync -av --delete ${excludeDirsAndFiles.map(dir => `--exclude='${dir}'`).join(" ")} ${strapiDirectoryPath}/ ${stagingDir}/`,
 }, {});
 
-// Step 2: Hash the staging directory (optional but recommended)
-const stagedStrapiDirHash = hashDirectory(stagingDir);
+// Step 2: Hash the staging directory
+const stagedStrapiDirHash = stageStrapiFiles.stdout.apply(_ => {
+    const fs = require("fs");
+    if (!fs.existsSync(stagingDir)) {
+        throw new Error(`Staging directory does not exist: ${stagingDir}`);
+    }
+    return hashDirectory(stagingDir, excludeDirsAndFiles);
+});
 
 // Upload the devstrapi files 
 export const devStrapiFiles = new command.local.Command("UploadDevStrapiFiles", {
