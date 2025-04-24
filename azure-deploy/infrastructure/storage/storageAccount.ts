@@ -270,28 +270,27 @@ function hashDirectory(dir: string, excludeDirs: string[] = []): string {
     walk(dir);
     return hash.digest("hex");
 }
-
-// Step 1: Stage files using rsync
 const excludeDirsAndFiles = [".strapi", ".tmp", "dist", "node_modules", ".git"];
 const stagingDir = path.join(strapiDirectoryPath, "../strapi-staging");
+
+// Step 1: Stage files using rsync
 const stageStrapiFiles = new command.local.Command("StageStrapiFiles", {
-    create: `rsync --mkpath -av --delete ${excludeDirsAndFiles.map(dir => `--exclude='${dir}'`).join(" ")} ${strapiDirectoryPath}/ ${stagingDir}/`,
-    
+    create: `rsync -av --delete ${excludeDirsAndFiles.map(dir => `--exclude='${dir}'`).join(" ")} ${strapiDirectoryPath}/ ${stagingDir}/`,
 }, {});
 
-// Add a wait command to ensure the directory exists before hashing
-const waitForStagingDir = new command.local.Command("WaitForStagingDir", {
-    create: `powershell -Command "while (!(Test-Path '${stagingDir}')) { Start-Sleep -Seconds 1 }"`
-}, { dependsOn: [stageStrapiFiles] });
+// Cross-platform wait command for staging directory
+const isWin = process.platform === "win32";
+const waitCmd = isWin
+  ? `powershell -Command \"while (!(Test-Path '${stagingDir}')) { Start-Sleep -Seconds 1 }\"`
+  : `while [ ! -d \"${stagingDir}\" ]; do sleep 1; done`;
 
-// Now hash only after the wait command completes
-const stagedStrapiDirHash = waitForStagingDir.stdout.apply(_ => {
-    const fs = require("fs");
-    if (!fs.existsSync(stagingDir)) {
-        throw new Error(`Staging directory does not exist: ${stagingDir}`);
-    }
-    return hashDirectory(stagingDir, excludeDirsAndFiles);
-});
+const waitForStagingDir = new command.local.Command("WaitForStagingDir", {
+    create: waitCmd,
+    triggers: [stagingDir],
+}, { dependsOn: [] });
+
+// Step 2: Hash the staging directory (optional but recommended)
+const stagedStrapiDirHash = hashDirectory(stagingDir);
 
 // Upload the devstrapi files 
 export const devStrapiFiles = new command.local.Command("UploadDevStrapiFiles", {
@@ -304,7 +303,7 @@ export const devStrapiFiles = new command.local.Command("UploadDevStrapiFiles", 
                 --max-connections 10`,
     triggers: [stagedStrapiDirHash],
 }, {
-    dependsOn: [devStrapiAppFilesStorage, stageStrapiFiles],
+    dependsOn: [devStrapiAppFilesStorage, waitForStagingDir],
 });
 
 
@@ -320,7 +319,7 @@ export const strapiFiles = new command.local.Command("UploadStrapiFiles", {
                 --max-connections 10`,
     triggers: [stagedStrapiDirHash],
 }, {
-    dependsOn: [strapiAppFilesStorage, stageStrapiFiles],
+    dependsOn: [strapiAppFilesStorage, waitForStagingDir],
 });
 
 export const storageAccountName = storageAccount.name;
