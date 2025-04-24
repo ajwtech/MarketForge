@@ -210,7 +210,7 @@ export function strapiApp(args: {
     },{
         
         protect: false,
-        dependsOn: [strapiFiles, strapiAppFilesStorage, storageAccount, imageBuilds["marketing-strapi-app"]],
+        dependsOn: [strapiAppFilesStorage, storageAccount, imageBuilds["marketing-strapi-app"], ...(Array.isArray(strapiFiles) ? strapiFiles : [])],
     });
 }
 
