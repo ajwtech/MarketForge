@@ -295,33 +295,68 @@ const hashStagingDir = new command.local.Command("HashStagingDir", {
     triggers: [stagingDir],
 }, { dependsOn: [waitForStagingDir] });
 
-// Upload the devstrapi files 
-export const devStrapiFiles = new command.local.Command("UploadDevStrapiFiles", {
-    create: pulumi.interpolate`az storage file upload-batch \
-                --account-name ${storageAccount.name} \
-                --source ${stagingDir} \
-                --destination ${devStrapiAppFilesStorage.name} \
-                --account-key ${storageAccountKey} \
-                --destination-path "app" \
-                --max-connections 10`,
-    triggers: [hashStagingDir.stdout],
-}, {
-    dependsOn: [devStrapiAppFilesStorage, hashStagingDir],
-});
+// Helper to get all files in a directory recursively (relative to root)
+function getAllFiles(dir: string, root: string): string[] {
+    const fs = require("fs");
+    const path = require("path");
+    let results: string[] = [];
+    fs.readdirSync(dir).forEach((file: string) => {
+        const filePath = path.join(dir, file);
+        const relPath = path.relative(root, filePath);
+        if (fs.statSync(filePath).isDirectory()) {
+            if (!excludeDirsAndFiles.includes(file)) {
+                results = results.concat(getAllFiles(filePath, root));
+            }
+        } else {
+            results.push(relPath.replace(/\\/g, "/")); // Normalize for az CLI
+        }
+    });
+    return results;
+}
 
-// Upload the strapi files 
-export const strapiFiles = new command.local.Command("UploadStrapiFiles", {
-    create: pulumi.interpolate`az storage file upload-batch \
-                --account-name ${storageAccount.name} \
-                --source ${stagingDir} \
-                --destination ${strapiAppFilesStorage.name} \
-                --account-key ${storageAccountKey} \
-                --destination-path "app" \
-                --max-connections 10`,
-    triggers: [hashStagingDir.stdout],
-}, {
-    dependsOn: [strapiAppFilesStorage, hashStagingDir],
-});
+// Batch files for upload (OS safe, e.g. 500 per batch)
+const allStrapiFiles = getAllFiles(stagingDir, stagingDir);
+const BATCH_SIZE = 500;
+function chunkArray<T>(arr: T[], size: number): T[][] {
+    const res: T[][] = [];
+    for (let i = 0; i < arr.length; i += size) {
+        res.push(arr.slice(i, i + size));
+    }
+    return res;
+}
+const strapiFileBatches = chunkArray(allStrapiFiles, BATCH_SIZE);
+
+// Upload devStrapi files in batches
+export const devStrapiFiles = strapiFileBatches.map((batch, i) =>
+    new command.local.Command(`UploadDevStrapiFilesBatch${i+1}`, {
+        create: pulumi.interpolate`for file in ${batch.map(f => `'${f}'`).join(' ')}; do az storage file upload \
+            --account-name ${storageAccount.name} \
+            --source ${stagingDir}/$file \
+            --destination-path "app/$file" \
+            --share-name ${devStrapiAppFilesStorage.name} \
+            --account-key ${storageAccountKey} \
+            --max-connections 10; done`,
+        triggers: [hashStagingDir.stdout],
+    }, {
+        dependsOn: [devStrapiAppFilesStorage, hashStagingDir],
+    })
+);
+
+// Upload strapi files in batches
+export const strapiFiles = strapiFileBatches.map((batch, i) =>
+    new command.local.Command(`UploadStrapiFilesBatch${i+1}`, {
+        create: pulumi.interpolate`for file in ${batch.map(f => `'${f}'`).join(' ')}; do az storage file upload \
+            --account-name ${storageAccount.name} \
+            --source ${stagingDir}/$file \
+            --destination-path "app/$file" \
+            --share-name ${strapiAppFilesStorage.name} \
+            --account-key ${storageAccountKey} \
+            --max-connections 10; done`,
+        triggers: [hashStagingDir.stdout],
+    }, {
+        dependsOn: [strapiAppFilesStorage, hashStagingDir],
+    })
+);
 
 export const storageAccountName = storageAccount.name;
 
