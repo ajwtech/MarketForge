@@ -10,7 +10,7 @@ export default (config: UserConfig) => {
   return mergeConfig(config, {
     server: {
       host: '0.0.0.0',
-      port: 5173,
+      port: 1337,
       strictPort: true,
       allowedHosts: true,
       fs: {
