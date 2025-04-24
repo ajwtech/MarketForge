@@ -1,7 +1,7 @@
 // Import necessary modules and resources
 import * as pulumi from "@pulumi/pulumi";
 
-import {devStrapiFiles, strapiFiles, strapiAppFilesStorage, storageAccountKey, storageAccountName, storageAccount } from "../storage/storageAccount";
+import {strapiAppFilesStorage, storageAccountKey, storageAccountName, storageAccount, listStrapiFiles, devStrapiAppFilesStorage } from "../storage/storageAccount";
 import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 
 import { imageBuilds } from "../dockerImages"; // Ensure correct import
@@ -210,7 +210,7 @@ export function strapiApp(args: {
     },{
         
         protect: false,
-        dependsOn: [strapiAppFilesStorage, storageAccount, imageBuilds["marketing-strapi-app"], ...(Array.isArray(strapiFiles) ? strapiFiles : [])],
+        dependsOn: [strapiAppFilesStorage, storageAccount, imageBuilds["marketing-strapi-app"], listStrapiFiles],
     });
 }
 
@@ -423,6 +423,6 @@ export function devStrapiApp(args: {
     },{
         
         protect: false,
-        dependsOn: [...(Array.isArray(devStrapiFiles) ? devStrapiFiles : []), strapiAppFilesStorage, storageAccount, imageBuilds["marketing-strapi-app"]],
+        dependsOn: [devStrapiAppFilesStorage, storageAccount, imageBuilds["marketing-strapi-app"], listStrapiFiles],
     });
 }
