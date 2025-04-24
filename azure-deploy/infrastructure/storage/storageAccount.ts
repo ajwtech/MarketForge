@@ -276,10 +276,16 @@ const excludeDirsAndFiles = [".strapi", ".tmp", "dist", "node_modules", ".git"];
 const stagingDir = path.join(strapiDirectoryPath, "../strapi-staging");
 const stageStrapiFiles = new command.local.Command("StageStrapiFiles", {
     create: `rsync --mkpath -av --delete ${excludeDirsAndFiles.map(dir => `--exclude='${dir}'`).join(" ")} ${strapiDirectoryPath}/ ${stagingDir}/`,
+    
 }, {});
 
-// Step 2: Hash the staging directory
-const stagedStrapiDirHash = stageStrapiFiles.stdout.apply(_ => {
+// Add a wait command to ensure the directory exists before hashing
+const waitForStagingDir = new command.local.Command("WaitForStagingDir", {
+    create: `powershell -Command "while (!(Test-Path '${stagingDir}')) { Start-Sleep -Seconds 1 }"`
+}, { dependsOn: [stageStrapiFiles] });
+
+// Now hash only after the wait command completes
+const stagedStrapiDirHash = waitForStagingDir.stdout.apply(_ => {
     const fs = require("fs");
     if (!fs.existsSync(stagingDir)) {
         throw new Error(`Staging directory does not exist: ${stagingDir}`);
