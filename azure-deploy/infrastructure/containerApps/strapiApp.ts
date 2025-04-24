@@ -423,6 +423,6 @@ export function devStrapiApp(args: {
     },{
         
         protect: false,
-        dependsOn: [devStrapiFiles, strapiAppFilesStorage, storageAccount, imageBuilds["marketing-strapi-app"]],
+        dependsOn: [...(Array.isArray(devStrapiFiles) ? devStrapiFiles : []), strapiAppFilesStorage, storageAccount, imageBuilds["marketing-strapi-app"]],
     });
 }
