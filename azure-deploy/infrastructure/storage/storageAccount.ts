@@ -287,10 +287,13 @@ const waitCmd = isWin
 const waitForStagingDir = new command.local.Command("WaitForStagingDir", {
     create: waitCmd,
     triggers: [stagingDir],
-}, { dependsOn: [] });
+}, { dependsOn: [stageStrapiFiles] });
 
-// Step 2: Hash the staging directory (optional but recommended)
-const stagedStrapiDirHash = hashDirectory(stagingDir);
+// Step 2: Hash the staging directory (after it exists)
+const hashStagingDir = new command.local.Command("HashStagingDir", {
+    create: pulumi.interpolate`node -e "const crypto = require('crypto'); const fs = require('fs'); const path = require('path'); function walk(d, e = []) { let h = crypto.createHash('md5'); fs.readdirSync(d).forEach(f => { const p = path.join(d, f); if (fs.statSync(p).isDirectory()) { if (!['.strapi','.tmp','dist','node_modules','.git'].includes(f)) h.update(walk(p)); } else { h.update(fs.readFileSync(p)); h.update(p); } }); return h.digest('hex'); } process.stdout.write(walk('${stagingDir}'));"`,
+    triggers: [stagingDir],
+}, { dependsOn: [waitForStagingDir] });
 
 // Upload the devstrapi files 
 export const devStrapiFiles = new command.local.Command("UploadDevStrapiFiles", {
@@ -301,15 +304,13 @@ export const devStrapiFiles = new command.local.Command("UploadDevStrapiFiles", 
                 --account-key ${storageAccountKey} \
                 --destination-path "app" \
                 --max-connections 10`,
-    triggers: [stagedStrapiDirHash],
+    triggers: [hashStagingDir.stdout],
 }, {
-    dependsOn: [devStrapiAppFilesStorage, waitForStagingDir],
+    dependsOn: [devStrapiAppFilesStorage, hashStagingDir],
 });
-
 
 // Upload the strapi files 
 export const strapiFiles = new command.local.Command("UploadStrapiFiles", {
-    
     create: pulumi.interpolate`az storage file upload-batch \
                 --account-name ${storageAccount.name} \
                 --source ${stagingDir} \
@@ -317,9 +318,9 @@ export const strapiFiles = new command.local.Command("UploadStrapiFiles", {
                 --account-key ${storageAccountKey} \
                 --destination-path "app" \
                 --max-connections 10`,
-    triggers: [stagedStrapiDirHash],
+    triggers: [hashStagingDir.stdout],
 }, {
-    dependsOn: [strapiAppFilesStorage, waitForStagingDir],
+    dependsOn: [strapiAppFilesStorage, hashStagingDir],
 });
 
 export const storageAccountName = storageAccount.name;
