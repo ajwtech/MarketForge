@@ -325,7 +325,7 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
 }
 
 // Command to list all files after staging dir is ready, using the standalone script for readability
-const listStrapiFiles = new command.local.Command("ListStrapiFiles", {
+export const listStrapiFiles = new command.local.Command("ListStrapiFiles", {
     create: pulumi.interpolate`node ${path.resolve(__dirname, '../scripts/listFiles.ts')} ${stagingDir}`,
     triggers: [hashStagingDir.stdout],
 }, { dependsOn: [hashStagingDir] });
