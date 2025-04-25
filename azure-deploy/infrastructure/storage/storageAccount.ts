@@ -324,9 +324,9 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
     return res;
 }
 
-// Command to list all files after staging dir is ready
-export const listStrapiFiles = new command.local.Command("ListStrapiFiles", {
-    create: pulumi.interpolate`node -e "const fs = require('fs'); const path = require('path'); function walk(dir, root, exclude) { let results = []; if (!fs.existsSync(dir)) return results; fs.readdirSync(dir).forEach(file => { const filePath = path.join(dir, file); const relPath = path.relative(root, filePath); if (fs.statSync(filePath).isDirectory()) { if (!['.strapi','.tmp','dist','node_modules','.git'].includes(file)) results = results.concat(walk(filePath, root, exclude)); } else { results.push(relPath.replace(/\\\\/g, '/')); } }); return results; } process.stdout.write(JSON.stringify(walk('${stagingDir}', '${stagingDir}', ['.strapi','.tmp','dist','node_modules','.git'])));"`,
+// Command to list all files after staging dir is ready, using the standalone script for readability
+const listStrapiFiles = new command.local.Command("ListStrapiFiles", {
+    create: pulumi.interpolate`node ${path.resolve(__dirname, '../scripts/listFiles.ts')} ${stagingDir}`,
     triggers: [hashStagingDir.stdout],
 }, { dependsOn: [hashStagingDir] });
 
