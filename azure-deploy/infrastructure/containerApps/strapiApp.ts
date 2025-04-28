@@ -244,16 +244,12 @@ export function devStrapiApp(args: {
             activeRevisionsMode: azure_app.ActiveRevisionsMode.Single,
             ingress: {
                 external: false,
-                targetPort: 1337,
+                targetPort: 5173,
                 traffic: [{
                     latestRevision: true, 
                     weight: 100,
                 }],
                 transport: "TCP", 
-                additionalPortMappings: [{
-                    external: false,
-                    targetPort: 5173,
-                }],
             },
             maxInactiveRevisions: 10,
             registries: [{
