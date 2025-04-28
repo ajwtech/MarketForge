@@ -1,5 +1,5 @@
 console.log("[vite.config.ts] loaded")
-import { mergeConfig, searchForWorkspaceRoot, type UserConfig } from 'vite';
+import { mergeConfig, type UserConfig } from 'vite';
 import dns from 'dns';
 
 dns.setDefaultResultOrder('verbatim');
