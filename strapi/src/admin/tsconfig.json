@@ -16,7 +16,8 @@
     "noEmitOnError": true,
     "noImplicitThis": true,
     "incremental": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "outDir": "dist"
   },
   "include": ["../plugins/**/admin/src/**/*", "./"],
   "exclude": ["node_modules/", "build/", "dist/", "**/*.test.ts"]
