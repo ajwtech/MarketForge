@@ -15,7 +15,6 @@
     "noEmitOnError": true,
     "noImplicitThis": true,
     "outDir": "dist",
-    "rootDir": ".",
     "allowJs": true
 
   },
