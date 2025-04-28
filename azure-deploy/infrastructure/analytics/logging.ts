@@ -15,5 +15,5 @@ export const logAnalyticsWorkspace = new azure_native.operationalinsights.v20230
         name: "PerGB2018",
     },
     retentionInDays: 30
-    
+
 });

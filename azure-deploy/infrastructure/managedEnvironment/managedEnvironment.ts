@@ -31,6 +31,7 @@ export const marketing_env = new azure_app.ManagedEnvironment("marketing-env", {
         logAnalyticsConfiguration: {
             customerId: logAnalyticsWorkspace.customerId,
             sharedKey: sharedKey,
+            dynamicJsonColumns: true,
         },
     },
 

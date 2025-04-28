@@ -18,9 +18,9 @@ export default (config: UserConfig) => {
         allow: ['/', '/opt/app', '/opt/node_modules'], 
       },
       hmr: {
-        port: 5173,            // Same unified HTTP/WebSocket port
-        protocol: 'wss',       // Enforced by ACA SSL
-        clientPort: 443,       // ACA HTTPS standard port
+        port: 5173,         // Internal port Vite listens on
+        protocol: 'wss',    // Use 'wss' since SSL is terminated at the environment
+        clientPort: 443,    // Browser connects to 443 (public HTTPS/WSS)
         path: '/ws/',
       },
     },
