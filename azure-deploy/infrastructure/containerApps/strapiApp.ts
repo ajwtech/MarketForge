@@ -250,6 +250,10 @@ export function devStrapiApp(args: {
                     weight: 100,
                 }],
                 transport: "TCP", 
+                additionalPortMappings: [{
+                    external: false,
+                    targetPort: 1337,
+                }],
             },
             maxInactiveRevisions: 10,
             registries: [{
