@@ -96,13 +96,13 @@ export function jumpBox(args: {
                 ],
             }],
             scale: {
-                maxReplicas: 2, 
-                minReplicas: 0,
+                maxReplicas: 1, 
+                minReplicas: 1,
                 rules: [{
                     name: "tcp-scaler", 
                     tcp: { 
                         metadata: {
-                            tcpConnections: "100", 
+                            tcpConnections: "1000", 
                         },
                     },
                 }],
