@@ -287,7 +287,7 @@ export const cloudflareDNSentries = BoolSubdomains ? setupDns({
 }) : undefined ; // Set to undefined if BoolSubdomains is false
 
 // Update mauticNginxApp to use the cloudflareDNSentries as the customDomains
-export const customDomains = nginxCerts(mauticNginxApp, deployedStrapiApp, devDeployedStrapiApp, marketing_env, cloudflareDNSentries);
+export const customDomains = nginxCerts(mauticNginxApp, deployedStrapiApp, marketing_env, cloudflareDNSentries);
 
 // Deploy the Jumpbox container app
 export const jumpboxApp = jumpbox({

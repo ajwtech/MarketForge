@@ -17,9 +17,9 @@ const crmSubdomain = config.get("crmSubdomain") || "crm";
 export function nginxCerts(
     nginxApp: azure_app.ContainerApp, 
     strapiApp: azure_app.ContainerApp, 
-    devStrapiApp: azure_app.ContainerApp,
     environment: azure_app.ManagedEnvironment,
     cloudflareDNSentries: CloudflareDNSEntries | undefined,
+    devStrapiApp?: azure_app.ContainerApp,
     
     
 ) {
@@ -50,15 +50,15 @@ export function nginxCerts(
         },
     }, { dependsOn: [strapiApp, cloudflareDNSentries.cmsCNAME, cloudflareDNSentries.cmsTXT]});
     
-    const devCmsCert = new azure_app.ManagedCertificate("devCmsCert", {
-        resourceGroupName: resourceGroupName,
-        environmentName: environment.name,
-        managedCertificateName: `dev-${cmsSubdomain}`,
-        properties: {
-            domainControlValidation: "CNAME",
-            subjectName: `dev.${cmsSubdomain}.${domain}`,
-        },
-    }, { dependsOn: [nginxApp, cloudflareDNSentries.devCmsCNAME, cloudflareDNSentries.devCmsTXT] });
+    // const devCmsCert = new azure_app.ManagedCertificate("devCmsCert", {
+    //     resourceGroupName: resourceGroupName,
+    //     environmentName: environment.name,
+    //     managedCertificateName: `dev-${cmsSubdomain}`,
+    //     properties: {
+    //         domainControlValidation: "CNAME",
+    //         subjectName: `dev.${cmsSubdomain}.${domain}`,
+    //     },
+    // }, { dependsOn: [nginxApp, cloudflareDNSentries.devCmsCNAME, cloudflareDNSentries.devCmsTXT] });
 
     const mapCert = new azure_app.ManagedCertificate("mapCert", {
         resourceGroupName: resourceGroupName,
@@ -88,14 +88,14 @@ export function nginxCerts(
         triggers: [devCmsCert.systemData.lastModifiedAt, nginxApp.systemData.lastModifiedAt],
     }, { dependsOn: [devCmsCert, nginxApp, environment, cloudflareDNSentries.devCmsCNAME, cloudflareDNSentries.devCmsTXT] });
 
-    const bindMapCommand = new command.local.Command("bind-map-custom-domain", {
-        create: pulumi.interpolate `az containerapp hostname bind \
-        --hostname ${mapSubdomain}.${domain} \
-        -g ${resourceGroupName} -n ${nginxApp.name} \
-        --environment ${environment.name} \
-        --validation-method CNAME`,
-        triggers: [mapCert.systemData.lastModifiedAt, nginxApp.systemData.lastModifiedAt],
-    }, { dependsOn: [mapCert, nginxApp, environment, bindDevCmsCommand, cloudflareDNSentries.mapCNAME, cloudflareDNSentries.mapTXT] });
+    // const bindMapCommand = new command.local.Command("bind-map-custom-domain", {
+    //     create: pulumi.interpolate `az containerapp hostname bind \
+    //     --hostname ${mapSubdomain}.${domain} \
+    //     -g ${resourceGroupName} -n ${nginxApp.name} \
+    //     --environment ${environment.name} \
+    //     --validation-method CNAME`,
+    //     triggers: [mapCert.systemData.lastModifiedAt, nginxApp.systemData.lastModifiedAt],
+    // }, { dependsOn: [mapCert, nginxApp, environment, bindDevCmsCommand, cloudflareDNSentries.mapCNAME, cloudflareDNSentries.mapTXT] });
 
     const bindCrmCommand = new command.local.Command("bind-crm-custom-domain", {
         create: pulumi.interpolate `az containerapp hostname bind \
