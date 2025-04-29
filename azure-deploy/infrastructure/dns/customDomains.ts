@@ -29,8 +29,8 @@ export interface CustomDomainProps {
     strapiFQDN: pulumi.Output<string>;
     suiteCrmApp: azure_app.ContainerApp;
     suiteCrmFQDN: pulumi.Output<string>;
-    devStrapiApp: azure_app.ContainerApp;
-    devStrapiFQDN: pulumi.Output<string>;
+    devStrapiApp?: azure_app.ContainerApp;
+    devStrapiFQDN?: pulumi.Output<string>;
 }
 
 export function setupDns(props: CustomDomainProps) {

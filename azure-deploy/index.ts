@@ -104,19 +104,19 @@ const devStrapiStorage = new azure_app.ManagedEnvironmentsStorage("dev-strapi-ap
     },
 }, { protect: false, dependsOn: [devStrapiAppFilesStorage] });
 
-// // Create dedicated storage for SuiteCRM (also in marketingstacksa)
-// const suitecrmStorage = new azure_app.ManagedEnvironmentsStorage("suitecrm-app-files-storage", {
-//     environmentName: marketing_env.name,
-//     resourceGroupName: resourceGroupName,
-//     properties: {
-//         azureFile: {
-//             accountName: storageAccountName,
-//             shareName: suiteCrmAppFilesStorage.name, // e.g. "suitecrm-app-files"
-//             accessMode: "ReadWrite",
-//             accountKey: storageAccountKey,
-//         },
-//     },
-// }, { protect: false, dependsOn: [suiteCrmAppFilesStorage] });
+// Create dedicated storage for SuiteCRM (also in marketingstacksa)
+const suitecrmStorage = new azure_app.ManagedEnvironmentsStorage("suitecrm-app-files-storage", {
+    environmentName: marketing_env.name,
+    resourceGroupName: resourceGroupName,
+    properties: {
+        azureFile: {
+            accountName: storageAccountName,
+            shareName: suiteCrmAppFilesStorage.name, // e.g. "suitecrm-app-files"
+            accessMode: "ReadWrite",
+            accountKey: storageAccountKey,
+        },
+    },
+}, { protect: false, dependsOn: [suiteCrmAppFilesStorage] });
 
 // Create dedicated storage for Jumpbox
 const jumpboxStorage = new azure_app.ManagedEnvironmentsStorage("jumpbox-files-storage", {
@@ -132,19 +132,19 @@ const jumpboxStorage = new azure_app.ManagedEnvironmentsStorage("jumpbox-files-s
     },
 }, { protect: false, dependsOn: [jumpboxFilesStorage] });
 
-// // Create dedicated storage for frontend files
-// const frontendStorage = new azure_app.ManagedEnvironmentsStorage("frontend-files-storage", {
-//     environmentName: marketing_env.name,
-//     resourceGroupName: resourceGroupName,
-//     properties: {
-//         azureFile: {
-//             accountName: storageAccountName,
-//             shareName: frontendFilesStorage.name,
-//             accessMode: "ReadWrite",
-//             accountKey: storageAccountKey,
-//         },
-//     },
-// }, { protect: false, dependsOn: [frontendFilesStorage] });
+// Create dedicated storage for frontend files
+const frontendStorage = new azure_app.ManagedEnvironmentsStorage("frontend-files-storage", {
+    environmentName: marketing_env.name,
+    resourceGroupName: resourceGroupName,
+    properties: {
+        azureFile: {
+            accountName: storageAccountName,
+            shareName: frontendFilesStorage.name,
+            accessMode: "ReadWrite",
+            accountKey: storageAccountKey,
+        },
+    },
+}, { protect: false, dependsOn: [frontendFilesStorage] });
 
 
 // Function to get the image name from imageBuilds or return the existing image name
@@ -282,8 +282,8 @@ export const cloudflareDNSentries = BoolSubdomains ? setupDns({
     strapiFQDN: deployedStrapiApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
     suiteCrmApp: deployedSuitecrmApp,
     suiteCrmFQDN: deployedSuitecrmApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
-    devStrapiApp: devDeployedStrapiApp,
-    devStrapiFQDN: devDeployedStrapiApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
+    // devStrapiApp: devDeployedStrapiApp,
+    // devStrapiFQDN: devDeployedStrapiApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
 }) : undefined ; // Set to undefined if BoolSubdomains is false
 
 // Update mauticNginxApp to use the cloudflareDNSentries as the customDomains
