@@ -104,19 +104,19 @@ const devStrapiStorage = new azure_app.ManagedEnvironmentsStorage("dev-strapi-ap
     },
 }, { protect: false, dependsOn: [devStrapiAppFilesStorage] });
 
-// Create dedicated storage for SuiteCRM (also in marketingstacksa)
-const suitecrmStorage = new azure_app.ManagedEnvironmentsStorage("suitecrm-app-files-storage", {
-    environmentName: marketing_env.name,
-    resourceGroupName: resourceGroupName,
-    properties: {
-        azureFile: {
-            accountName: storageAccountName,
-            shareName: suiteCrmAppFilesStorage.name, // e.g. "suitecrm-app-files"
-            accessMode: "ReadWrite",
-            accountKey: storageAccountKey,
-        },
-    },
-}, { protect: false, dependsOn: [suiteCrmAppFilesStorage] });
+// // Create dedicated storage for SuiteCRM (also in marketingstacksa)
+// const suitecrmStorage = new azure_app.ManagedEnvironmentsStorage("suitecrm-app-files-storage", {
+//     environmentName: marketing_env.name,
+//     resourceGroupName: resourceGroupName,
+//     properties: {
+//         azureFile: {
+//             accountName: storageAccountName,
+//             shareName: suiteCrmAppFilesStorage.name, // e.g. "suitecrm-app-files"
+//             accessMode: "ReadWrite",
+//             accountKey: storageAccountKey,
+//         },
+//     },
+// }, { protect: false, dependsOn: [suiteCrmAppFilesStorage] });
 
 // Create dedicated storage for Jumpbox
 const jumpboxStorage = new azure_app.ManagedEnvironmentsStorage("jumpbox-files-storage", {
@@ -132,19 +132,19 @@ const jumpboxStorage = new azure_app.ManagedEnvironmentsStorage("jumpbox-files-s
     },
 }, { protect: false, dependsOn: [jumpboxFilesStorage] });
 
-// Create dedicated storage for frontend files
-const frontendStorage = new azure_app.ManagedEnvironmentsStorage("frontend-files-storage", {
-    environmentName: marketing_env.name,
-    resourceGroupName: resourceGroupName,
-    properties: {
-        azureFile: {
-            accountName: storageAccountName,
-            shareName: frontendFilesStorage.name,
-            accessMode: "ReadWrite",
-            accountKey: storageAccountKey,
-        },
-    },
-}, { protect: false, dependsOn: [frontendFilesStorage] });
+// // Create dedicated storage for frontend files
+// const frontendStorage = new azure_app.ManagedEnvironmentsStorage("frontend-files-storage", {
+//     environmentName: marketing_env.name,
+//     resourceGroupName: resourceGroupName,
+//     properties: {
+//         azureFile: {
+//             accountName: storageAccountName,
+//             shareName: frontendFilesStorage.name,
+//             accessMode: "ReadWrite",
+//             accountKey: storageAccountKey,
+//         },
+//     },
+// }, { protect: false, dependsOn: [frontendFilesStorage] });
 
 
 // Function to get the image name from imageBuilds or return the existing image name
@@ -219,30 +219,30 @@ export const deployedStrapiApp = strapiApp({
     cmsUrl: pulumi.interpolate`https://${cmsSubdomain}.${domain}/`,
 });
 
-// Deploy the Strapi App using the dedicated strapi storage mount
-export const devDeployedStrapiApp = devStrapiApp({
-    env: "development",
-    image: getImageName(imageBuilds, "marketing-dev-strapi-app"),
-    registryUrl: registryUrl,
-    registryUsername: acrUsername,
-    registryPassword: acrPassword,
-    managedEnvironmentId: marketing_env.id,
-    storageName: devStrapiStorage.name, // Use the new Strapi storage mount
-    dbHost: dbHost,
-    dbPort: dbPort,
-    dbName: devStrapiDbName,
-    dbUser: dbUser,
-    dbPassword: dbPassword,
-    dbClient: config.require("dbClient"),
-    jwtSecret: config.require("jwtSecret"),
-    adminJwtSecret: config.require("adminJwtSecret"),
-    appKeys: config.require("appKeys"),
-    nodeEnv: "development",
-    resourceGroupName: resourceGroupName,
-    apiToken: config.require("apiToken"),
-    transferTokenSalt: config.require("transferTokenSalt"),
-    cmsUrl: pulumi.interpolate`https://dev.${cmsSubdomain}.${domain}/`,
-});
+// // Deploy the Strapi App using the dedicated strapi storage mount
+// export const devDeployedStrapiApp = devStrapiApp({
+//     env: "development",
+//     image: getImageName(imageBuilds, "marketing-dev-strapi-app"),
+//     registryUrl: registryUrl,
+//     registryUsername: acrUsername,
+//     registryPassword: acrPassword,
+//     managedEnvironmentId: marketing_env.id,
+//     storageName: devStrapiStorage.name, // Use the new Strapi storage mount
+//     dbHost: dbHost,
+//     dbPort: dbPort,
+//     dbName: devStrapiDbName,
+//     dbUser: dbUser,
+//     dbPassword: dbPassword,
+//     dbClient: config.require("dbClient"),
+//     jwtSecret: config.require("jwtSecret"),
+//     adminJwtSecret: config.require("adminJwtSecret"),
+//     appKeys: config.require("appKeys"),
+//     nodeEnv: "development",
+//     resourceGroupName: resourceGroupName,
+//     apiToken: config.require("apiToken"),
+//     transferTokenSalt: config.require("transferTokenSalt"),
+//     cmsUrl: pulumi.interpolate`https://dev.${cmsSubdomain}.${domain}/`,
+// });
 
 // Deploy the suitecrm App
 export const deployedSuitecrmApp = suitecrmApp({
@@ -289,14 +289,14 @@ export const cloudflareDNSentries = BoolSubdomains ? setupDns({
 // Update mauticNginxApp to use the cloudflareDNSentries as the customDomains
 export const customDomains = nginxCerts(mauticNginxApp, deployedStrapiApp, devDeployedStrapiApp, marketing_env, cloudflareDNSentries);
 
-// // Deploy the Jumpbox container app
-// export const jumpboxApp = jumpbox({
-//     env: appEnv,
-//     managedEnvironmentId: marketing_env.id,
-//     storageName: jumpboxStorage.name,  // Updated to use jumpbox storage
-//     dbHost: dbHost,
-//     dbPort: dbPort,
-//     resourceGroupName: resourceGroupName,
-// });
+// Deploy the Jumpbox container app
+export const jumpboxApp = jumpbox({
+    env: appEnv,
+    managedEnvironmentId: marketing_env.id,
+    storageName: jumpboxStorage.name,  // Updated to use jumpbox storage
+    dbHost: dbHost,
+    dbPort: dbPort,
+    resourceGroupName: resourceGroupName,
+});
 
 
