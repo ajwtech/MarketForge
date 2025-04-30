@@ -7,12 +7,10 @@ import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 // import resources to manage
 import { ResourceGroup } from "./infrastructure/resourceGroup";
 import { 
-    storageAccount, 
     storageAccountKey, 
     mauticAppFilesStorage, 
     suiteCrmAppFilesStorage, 
-    strapiAppFilesStorage,
-    devStrapiAppFilesStorage, 
+    strapiAppFilesStorage, 
     jumpboxFilesStorage,
     frontendFilesStorage 
 } from "./infrastructure/storage/storageAccount";
@@ -21,12 +19,11 @@ import { acrUsername, acrPassword, registryUrl } from "./infrastructure/registri
 import { mauticWeb, mauticNginx } from "./infrastructure/containerApps/mauticApps";
 import { marketing_env } from "./infrastructure/managedEnvironment/managedEnvironment"; // Import from managedEnvironment.ts
 import { imageBuilds } from "./infrastructure/dockerImages"; // Ensure correct import
-import { strapiApp, devStrapiApp } from "./infrastructure/containerApps/strapiApp"; // Import strapiApp
+import { strapiApp } from "./infrastructure/containerApps/strapiApp"; // Import strapiApp
 import { suitecrmApp } from "./infrastructure/containerApps/suiteCrmApp"; // Import suitecrmApp
 import { setupDns } from "./infrastructure/dns/customDomains";
 import { nginxCerts } from "./infrastructure/certificates/nginxCerts";
 import { jumpBox as jumpbox } from "./infrastructure/containerApps/jumpbox"; // Import jumpbox deployment function
-
 
 const config = new pulumi.Config();
 
@@ -38,7 +35,6 @@ const dbType = config.get("dbType") || "mysqli";
 const dbVersion = config.get("dbVersion") || "8.0";
 const dbCharset = config.get("dbCharset") || "utf8mb4";
 const strapiDbName = config.get("strapiDbName") || "strapi";
-const devStrapiDbName = config.get("devStrapiDbName") || "dev-strapi";
 const suitecrmDbName = config.get("suitecrmDbName") || "suitecrm";
 const dbUser = config.get("dbUser") || config.get("mysqlAdminUser") || "mySqlAdmin";
 const dbPassword = config.requireSecret("dbPassword");
@@ -89,20 +85,6 @@ const strapiStorage = new azure_app.ManagedEnvironmentsStorage("strapi-app-files
         },
     },
 }, { protect: false, dependsOn: [strapiAppFilesStorage] });
-
-// Create dedicated storage for Strapi dev
-const devStrapiStorage = new azure_app.ManagedEnvironmentsStorage("dev-strapi-app-files-storage", {
-    environmentName: marketing_env.name,
-    resourceGroupName: resourceGroupName,
-    properties: {
-        azureFile: {
-            accountName: storageAccountName,
-            shareName: devStrapiAppFilesStorage.name,
-            accessMode: "ReadWrite",
-            accountKey: storageAccountKey,
-        },
-    },
-}, { protect: false, dependsOn: [devStrapiAppFilesStorage] });
 
 // Create dedicated storage for SuiteCRM (also in marketingstacksa)
 const suitecrmStorage = new azure_app.ManagedEnvironmentsStorage("suitecrm-app-files-storage", {
@@ -219,30 +201,6 @@ export const deployedStrapiApp = strapiApp({
     cmsUrl: pulumi.interpolate`https://${cmsSubdomain}.${domain}/`,
 });
 
-// // Deploy the Strapi App using the dedicated strapi storage mount
-// export const devDeployedStrapiApp = devStrapiApp({
-//     env: "development",
-//     image: getImageName(imageBuilds, "marketing-dev-strapi-app"),
-//     registryUrl: registryUrl,
-//     registryUsername: acrUsername,
-//     registryPassword: acrPassword,
-//     managedEnvironmentId: marketing_env.id,
-//     storageName: devStrapiStorage.name, // Use the new Strapi storage mount
-//     dbHost: dbHost,
-//     dbPort: dbPort,
-//     dbName: devStrapiDbName,
-//     dbUser: dbUser,
-//     dbPassword: dbPassword,
-//     dbClient: config.require("dbClient"),
-//     jwtSecret: config.require("jwtSecret"),
-//     adminJwtSecret: config.require("adminJwtSecret"),
-//     appKeys: config.require("appKeys"),
-//     nodeEnv: "development",
-//     resourceGroupName: resourceGroupName,
-//     apiToken: config.require("apiToken"),
-//     transferTokenSalt: config.require("transferTokenSalt"),
-//     cmsUrl: pulumi.interpolate`https://dev.${cmsSubdomain}.${domain}/`,
-// });
 
 // Deploy the suitecrm App
 export const deployedSuitecrmApp = suitecrmApp({
