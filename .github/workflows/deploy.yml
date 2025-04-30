@@ -19,22 +19,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: ./azure-deploy/package.json
-          
-      - name: Install Dependencies
-        run: npm ci
-        working-directory: ./azure-deploy
 
       - name: Set stack variables
         run: |
           if [ -n "${{ env.ESC }}" ]; then
             FULL_STACK="${{ env.ESC }}"
             echo "Using matrix stack: ${FULL_STACK}"
-          elif [ -n "${{ vars.matrix.stack }}" ]; then
-            FULL_STACK="${{ vars.matrix.stack }}"
+          elif [ -n ${vars.${{ matrix.stack }}} ]; then
+            FULL_STACK=${vars.${{ matrix.stack }}}
             echo "Using matrix stack: ${FULL_STACK}"
           else
             FULL_STACK=""
-            echo "No stack value provided. create a repo variable named ${{ vars.matrix.stack }} and list the fully qualified environments e.g. 'org/project/environment'"
+            echo "No stack value provided. create a repo variable named '${{ matrix.stack }}' and list the fully qualified environments e.g. 'org/project/environment'"
             echo "You can also set the environment variable ESC in the workflow file however you can only use one environment at a time."
             echo "::error file={name},line={line},endLine={endLine},title={title}::{message}"
             exit 1
@@ -48,7 +44,11 @@ jobs:
           echo "FULL_STACK: ${FULL_STACK}" 
           echo "ESC_ENVIRONMENT: ${ESC_ENVIRONMENT}"
           echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
-          
+                
+      - name: Install Dependencies
+        run: npm ci
+        working-directory: ./azure-deploy
+
       - name: Set ARM environment variables
         run: |
           echo "ARM_CLIENT_ID=${{ secrets.ARM_CLIENT_ID }}" >> $GITHUB_ENV
