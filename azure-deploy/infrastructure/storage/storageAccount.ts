@@ -275,7 +275,7 @@ const stagingDir = path.join(strapiDirectoryPath, "../strapi-staging");
 
 // Step 1: Stage files using rsync
 const stageStrapiFiles = new command.local.Command("StageStrapiFiles", {
-    create: `rsync -av --delete ${excludeDirsAndFiles.map(dir => `--exclude='${dir}'`).join(" ")} ${strapiDirectoryPath}/ ${stagingDir}/`,
+    create: `rsync -av --delete --include='*/' ${excludeDirsAndFiles.map(dir => `--exclude='${dir}'`).join(" ")} ${strapiDirectoryPath}/ ${stagingDir}/`,
 }, {});
 
 // Cross-platform wait command for staging directory
@@ -361,7 +361,7 @@ export const strapiFiles = listStrapiFiles.stdout.apply(stdout => {
             create: pulumi.interpolate`for file in ${batch.map(f => `'${f}'`).join(' ')}; do az storage file upload \
                 --account-name ${storageAccount.name} \
                 --source ${stagingDir}/$file \
-                --destination-path "app/$file" \
+                --path "app/$file" \
                 --share-name ${strapiAppFilesStorage.name} \
                 --account-key ${storageAccountKey} \
                 --max-connections 10; done`,
