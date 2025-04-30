@@ -10,7 +10,6 @@ const config = new pulumi.Config();
 const nginxServerName = config.get("nginxServerName") || "mautic-nginx";
 const mauticWebUrl = config.get("mauticWebUrl") || "mautic-web";
 const strapiAppUrl = config.get("strapiAppUrl") || "strapi-app";
-const devStrapiAppUrl = config.get("devStrapiAppUrl") || "dev-strapi-app";
 const suiteCrmAppUrl = config.get("suiteCrmAppUrl") || "suitecrm-app";
 const domain = config.require("domain");
 const crmSubdomain = config.get("crmSubdomain") || "crm";
@@ -47,10 +46,6 @@ export function mauticNginx(args: {
         {
             name: "STRAPI_APP_URL", 
             value: strapiAppUrl,
-        },
-        {
-            name: "DEV_STRAPI_APP_URL",
-            value: devStrapiAppUrl,
         },
         {
             name: "SUITECRM_APP_URL", 

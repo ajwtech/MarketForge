@@ -11,7 +11,7 @@ const ipAddressOrRange = config.get("ipAddressOrRange");
 const domain = config.require("domain");
 const cmsSubdomain = config.get("cmsSubdomain") || "cms";
 const crmSubdomain = config.get("crmSubdomain") || "crm";
-const allowedOrigins = [`https://${cmsSubdomain}.${domain}`, `https://dev.${cmsSubdomain}.${domain}`];
+const allowedOrigins = [`https://${cmsSubdomain}.${domain}`];
 const suiteCrmSiteUrl = `${crmSubdomain}.${domain}`;
 
 export const storageAccount = new azure_native.storage.StorageAccount(configStorageAccountName, {
@@ -88,11 +88,6 @@ export const strapiAppFilesStorage = new azure_native.storage.FileShare("strapi-
     shareName: "strapi-app-files",
 });
 
-export const devStrapiAppFilesStorage = new azure_native.storage.FileShare("dev-strapi-app-files", {
-    accountName: storageAccount.name,
-    resourceGroupName: ResourceGroup.name,
-    shareName: "dev-strapi-app-files",
-});
 
 export const suiteCrmAppFilesStorage = new azure_native.storage.FileShare("suitecrm-app-files", {
     accountName: storageAccount.name,
@@ -329,27 +324,6 @@ export const listStrapiFiles = new command.local.Command("ListStrapiFiles", {
     create: pulumi.interpolate`node ${path.resolve(__dirname, '../../scripts/listFiles.js')} ${stagingDir}`,
     triggers: [hashStagingDir.stdout],
 }, { dependsOn: [hashStagingDir] });
-
-// // Upload devStrapi files in batches after file list is available
-// export const devStrapiFiles = listStrapiFiles.stdout.apply(stdout => {
-//     const files = JSON.parse(stdout || '[]');
-//     const BATCH_SIZE = 500;
-//     const batches = chunkArray(files, BATCH_SIZE);
-//     return batches.map((batch, i) =>
-//         new command.local.Command(`UploadDevStrapiFilesBatch${i+1}`, {
-//             create: pulumi.interpolate`for file in ${batch.map(f => `'${f}'`).join(' ')}; do az storage file upload \
-//                 --account-name ${storageAccount.name} \
-//                 --source ${stagingDir}/$file \
-//                 --destination-path "app/$file" \
-//                 --share-name ${devStrapiAppFilesStorage.name} \
-//                 --account-key ${storageAccountKey} \
-//                 --max-connections 10; done`,
-//             triggers: [listStrapiFiles.stdout],
-//         }, {
-//             dependsOn: [devStrapiAppFilesStorage, listStrapiFiles],
-//         })
-//     );
-// });
 
 // Upload strapi files in batches after file list is available
 export const strapiFiles = listStrapiFiles.stdout.apply(stdout => {
