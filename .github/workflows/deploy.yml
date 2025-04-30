@@ -26,12 +26,12 @@ jobs:
 
       - name: Set stack variables
         run: |
-          if [ -n "${{ vars[matrix.stack] }}" ]; then
-            FULL_STACK="${{ vars[matrix.stack] }}"
+          if [ -n "${{ env.ESC }}" ]; then
+            FULL_STACK="${{ env.ESC }}"
             echo "Using matrix stack: ${FULL_STACK}"
           elif [ -n "${ESC}" ]; then
-            FULL_STACK="${ESC}"
-            echo "Using ESC value: ${FULL_STACK}"
+            FULL_STACK="${{ vars[matrix.stack]}}"
+            echo "Using matrix stack: ${FULL_STACK}"
           else
             FULL_STACK=""
             echo "No stack value provided."
