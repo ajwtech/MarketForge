@@ -26,14 +26,15 @@ jobs:
 
       - name: Set stack variables
         run: |
-          if [ -n "${{ env.ESC }}" ]; then
-            # When running locally with act, or when ESC is not provided,
-            # use the env.ESC value
-            FULL_STACK="${{ env.ESC }}"
+          if [ -n "${{ matrix.stack }}" ]; then
+            FULL_STACK="${{ matrix.stack }}"
+            echo "Using matrix stack: ${FULL_STACK}"
+          elif [ -n "${ESC}" ]; then
+            FULL_STACK="${ESC}"
             echo "Using ESC value: ${FULL_STACK}"
           else
-            FULL_STACK="${{ vars[matrix.stack]}}"
-            echo "Using matrix stack: ${FULL_STACK}"
+            FULL_STACK=""
+            echo "No stack value provided."
           fi
           TRIMMED_STACK="${FULL_STACK##*/}"
           ESC_ENVIRONMENT="${FULL_STACK#*/}"
