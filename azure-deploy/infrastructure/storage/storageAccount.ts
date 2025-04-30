@@ -330,26 +330,26 @@ export const listStrapiFiles = new command.local.Command("ListStrapiFiles", {
     triggers: [hashStagingDir.stdout],
 }, { dependsOn: [hashStagingDir] });
 
-// Upload devStrapi files in batches after file list is available
-export const devStrapiFiles = listStrapiFiles.stdout.apply(stdout => {
-    const files = JSON.parse(stdout || '[]');
-    const BATCH_SIZE = 500;
-    const batches = chunkArray(files, BATCH_SIZE);
-    return batches.map((batch, i) =>
-        new command.local.Command(`UploadDevStrapiFilesBatch${i+1}`, {
-            create: pulumi.interpolate`for file in ${batch.map(f => `'${f}'`).join(' ')}; do az storage file upload \
-                --account-name ${storageAccount.name} \
-                --source ${stagingDir}/$file \
-                --destination-path "app/$file" \
-                --share-name ${devStrapiAppFilesStorage.name} \
-                --account-key ${storageAccountKey} \
-                --max-connections 10; done`,
-            triggers: [listStrapiFiles.stdout],
-        }, {
-            dependsOn: [devStrapiAppFilesStorage, listStrapiFiles],
-        })
-    );
-});
+// // Upload devStrapi files in batches after file list is available
+// export const devStrapiFiles = listStrapiFiles.stdout.apply(stdout => {
+//     const files = JSON.parse(stdout || '[]');
+//     const BATCH_SIZE = 500;
+//     const batches = chunkArray(files, BATCH_SIZE);
+//     return batches.map((batch, i) =>
+//         new command.local.Command(`UploadDevStrapiFilesBatch${i+1}`, {
+//             create: pulumi.interpolate`for file in ${batch.map(f => `'${f}'`).join(' ')}; do az storage file upload \
+//                 --account-name ${storageAccount.name} \
+//                 --source ${stagingDir}/$file \
+//                 --destination-path "app/$file" \
+//                 --share-name ${devStrapiAppFilesStorage.name} \
+//                 --account-key ${storageAccountKey} \
+//                 --max-connections 10; done`,
+//             triggers: [listStrapiFiles.stdout],
+//         }, {
+//             dependsOn: [devStrapiAppFilesStorage, listStrapiFiles],
+//         })
+//     );
+// });
 
 // Upload strapi files in batches after file list is available
 export const strapiFiles = listStrapiFiles.stdout.apply(stdout => {

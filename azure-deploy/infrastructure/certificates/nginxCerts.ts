@@ -79,23 +79,23 @@ export function nginxCerts(
         triggers: [cmsCert.systemData.lastModifiedAt, strapiApp.systemData.lastModifiedAt],
     }, { dependsOn: [cmsCert, strapiApp, environment, cloudflareDNSentries.cmsCNAME, cloudflareDNSentries.cmsTXT] });
     
-    const bindDevCmsCommand = new command.local.Command("bind-dev-cms-custom-domain", {
-        create: pulumi.interpolate `az containerapp hostname bind \
-        --hostname dev.${cmsSubdomain}.${domain} \
-        -g ${resourceGroupName} -n ${nginxApp.name} \
-        --environment ${environment.name} \
-        --validation-method CNAME`,
-        triggers: [devCmsCert.systemData.lastModifiedAt, nginxApp.systemData.lastModifiedAt],
-    }, { dependsOn: [devCmsCert, nginxApp, environment, cloudflareDNSentries.devCmsCNAME, cloudflareDNSentries.devCmsTXT] });
-
-    // const bindMapCommand = new command.local.Command("bind-map-custom-domain", {
+    // const bindDevCmsCommand = new command.local.Command("bind-dev-cms-custom-domain", {
     //     create: pulumi.interpolate `az containerapp hostname bind \
-    //     --hostname ${mapSubdomain}.${domain} \
+    //     --hostname dev.${cmsSubdomain}.${domain} \
     //     -g ${resourceGroupName} -n ${nginxApp.name} \
     //     --environment ${environment.name} \
     //     --validation-method CNAME`,
-    //     triggers: [mapCert.systemData.lastModifiedAt, nginxApp.systemData.lastModifiedAt],
-    // }, { dependsOn: [mapCert, nginxApp, environment, bindDevCmsCommand, cloudflareDNSentries.mapCNAME, cloudflareDNSentries.mapTXT] });
+    //     triggers: [devCmsCert.systemData.lastModifiedAt, nginxApp.systemData.lastModifiedAt],
+    // }, { dependsOn: [devCmsCert, nginxApp, environment, cloudflareDNSentries.devCmsCNAME, cloudflareDNSentries.devCmsTXT] });
+
+    const bindMapCommand = new command.local.Command("bind-map-custom-domain", {
+        create: pulumi.interpolate `az containerapp hostname bind \
+        --hostname ${mapSubdomain}.${domain} \
+        -g ${resourceGroupName} -n ${nginxApp.name} \
+        --environment ${environment.name} \
+        --validation-method CNAME`,
+        triggers: [mapCert.systemData.lastModifiedAt, nginxApp.systemData.lastModifiedAt],
+    }, { dependsOn: [mapCert, nginxApp, environment, cloudflareDNSentries.mapCNAME, cloudflareDNSentries.mapTXT] });
 
     const bindCrmCommand = new command.local.Command("bind-crm-custom-domain", {
         create: pulumi.interpolate `az containerapp hostname bind \
@@ -104,9 +104,9 @@ export function nginxCerts(
         --environment ${environment.name} \
         --validation-method CNAME`,
         triggers: [crmCert.systemData.lastModifiedAt, nginxApp.systemData.lastModifiedAt],
-    }, { dependsOn: [crmCert, nginxApp, environment, bindDevCmsCommand, bindMapCommand, cloudflareDNSentries.crmCNAME, cloudflareDNSentries.crmTXT] });
+    }, { dependsOn: [crmCert, nginxApp, environment, bindMapCommand, cloudflareDNSentries.crmCNAME, cloudflareDNSentries.crmTXT] });
        
-    return [crmCert, cmsCert, devCmsCert, mapCert ];
+    return [crmCert, cmsCert, mapCert ];
 
 
 
