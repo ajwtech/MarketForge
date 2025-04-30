@@ -8,9 +8,11 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/catthehacker/ubuntu:act-22.04
+    env:
+      ENV_ESC: ${{ vars.ESC }}
     strategy:
       matrix:
-        stack: ["ESC"]
+        stack: [$ENV_ESC]
     permissions:
       contents: read
       id-token: write
@@ -25,8 +27,8 @@ jobs:
           if [ -n "${{ env.ESC }}" ]; then
             FULL_STACK="${{ env.ESC }}"
             echo "Using matrix stack: ${FULL_STACK}"
-          elif [ -n ${env.${{ matrix.stack }}} ]; then
-            FULL_STACK=${env.${{ matrix.stack }}}
+          elif [ -n "${{ matrix.stack }}" ]; then
+            FULL_STACK=${{ matrix.stack }}
             echo "Using matrix stack: ${FULL_STACK}"
           else
             FULL_STACK=""
@@ -44,7 +46,8 @@ jobs:
           echo "FULL_STACK: ${FULL_STACK}" 
           echo "ESC_ENVIRONMENT: ${ESC_ENVIRONMENT}"
           echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
-                
+        env:
+            ESC: "${{ vars.matrix.stack }}"
       - name: Install Dependencies
         run: npm ci
         working-directory: ./azure-deploy
