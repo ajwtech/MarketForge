@@ -29,12 +29,15 @@ jobs:
           if [ -n "${{ env.ESC }}" ]; then
             FULL_STACK="${{ env.ESC }}"
             echo "Using matrix stack: ${FULL_STACK}"
-          elif [ -n "${{ vars[matrix.stack]}}" ]; then
-            FULL_STACK="${{ vars[matrix.stack]}}"
+          elif [ -n "${{ vars.matrix.stack }}" ]; then
+            FULL_STACK="${{ vars.matrix.stack }}"
             echo "Using matrix stack: ${FULL_STACK}"
           else
             FULL_STACK=""
-            echo "No stack value provided."
+            echo "No stack value provided. create a repo variable named ${{ vars.matrix.stack }} and list the fully qualified environments e.g. 'org/project/environment'"
+            echo "You can also set the environment variable ESC in the workflow file however you can only use one environment at a time."
+            echo "::error file={name},line={line},endLine={endLine},title={title}::{message}"
+            exit 1
           fi
           TRIMMED_STACK="${FULL_STACK##*/}"
           ESC_ENVIRONMENT="${FULL_STACK#*/}"
