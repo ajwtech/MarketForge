@@ -5,8 +5,9 @@ on:
       - master
 jobs:
   pulumi-up:
-    environment: pulumi_environments
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/catthehacker/ubuntu:act-22.04
     strategy:
       matrix:
         stack: ["esc"]
@@ -15,12 +16,9 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version-file: ./azure-deploy/package.json
-          cache: 'npm'
-          cache-dependency-path: './azure-deploy/package-lock.json'
           
       - name: Install Dependencies
         run: npm ci
@@ -72,7 +70,7 @@ jobs:
       - name: Set up Pulumi
         uses: pulumi/actions@v6
         with: 
-          pulumi-version: 3.161.0
+          pulumi-version: 3.165.0
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
@@ -82,18 +80,19 @@ jobs:
           environment: ${{ env.FULL_STACK }}
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-      
+             
+      - name: Install Azure CLI
+        uses: pietrobolcato/install-azure-cli-action@main
+
+      - name: Install rsync
+        uses: GuillaumeFalourd/setup-rsync@v1.2
+      - run: rsync --version
+
+
       - name: Azure CLI Login
         uses: azure/login@v2
         with:
           creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","subscriptionId":"${{ secrets.ARM_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
-
-      - name: Azure CLI script
-        uses: azure/cli@v2
-        with:
-          azcliversion: latest
-          inlineScript: |
-            az account show
 
       - name: Run Pulumi inside ESC environment
         working-directory: ./azure-deploy

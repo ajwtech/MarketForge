@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@_sh/strapi-plugin-ckeditor": "^5.0.1",
+    "@strapi/icons": "2.0.0-rc.16",
     "@strapi/logger": "^5.11.2",
     "@strapi/plugin-seo": "^2.0.8",
     "@strapi/plugin-users-permissions": "5.12.4",
@@ -28,6 +29,9 @@
     "@strapi/plugin-graphql": "^5.0.0",
     "lodash": "^4.17.19",
     "styled-components": "^6.0.0"
+  },
+  "overrides": {
+    "@strapi/icons": "2.0.0-rc.16"
   },
   "devDependencies": {
     "@types/node": "^22",
