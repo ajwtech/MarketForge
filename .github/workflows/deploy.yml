@@ -29,7 +29,7 @@ jobs:
           if [ -n "${{ env.ESC }}" ]; then
             FULL_STACK="${{ env.ESC }}"
             echo "Using matrix stack: ${FULL_STACK}"
-          elif [ -n "${ESC}" ]; then
+          elif [ -n "${{ vars[matrix.stack]}}" ]; then
             FULL_STACK="${{ vars[matrix.stack]}}"
             echo "Using matrix stack: ${FULL_STACK}"
           else
