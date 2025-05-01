@@ -35,7 +35,7 @@ export function jumpBox(args: {
             maxInactiveRevisions: 100,
             secrets: [
             {
-                name: "jumpboxRootPassword",
+                name: "jumpboxrootpassword", // must be lowercase for azure
                 value: rootPassword,
             },
             ],
