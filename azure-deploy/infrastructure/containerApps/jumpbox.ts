@@ -35,7 +35,7 @@ export function jumpBox(args: {
             maxInactiveRevisions: 100,
             secrets: [
             {
-                name: "jumpboxrootpassword", // must be lowercase for azure
+                name: "jumpboxrootpassword", //must be lowecase
                 value: rootPassword,
             },
             ],
@@ -69,7 +69,7 @@ export function jumpBox(args: {
                     },
                     {
                         name: "ROOT_PASSWORD",
-                        secretRef: "jumpboxRootPassword",
+                        secretRef: "jumpboxrootpassword", //must be lowecase
                     },
                 ],
                 command: [ "/bin/sh", "-c" ],
