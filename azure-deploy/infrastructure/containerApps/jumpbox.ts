@@ -77,10 +77,10 @@ export function jumpBox(args: {
                         name: "DEPLOY_TRIGGER",
                         value: imageDigest,
                     },
-
                 ],
+                command: [ "/bin/sh", "-c" ],
                 args: ["echo 'root:$ROOT_PASSWORD' | chpasswd && exec /usr/sbin/sshd -D"],
-                image: "docker.io/rastasheep/ubuntu-sshd", // Using rastasheep/ubuntu-sshd from docker.io
+                image: "docker.io/rastasheep/ubuntu-sshd", 
                 name: "ubuntu-sshd",
                 resources: {
                     cpu: 0.25,
