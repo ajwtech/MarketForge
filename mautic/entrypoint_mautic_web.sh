@@ -36,6 +36,8 @@ done
 
 echo "MySQL is up and running!"
 
+echo "Running Mautic migrations..."
+php bin/console mautic:migrations:migrate --no-interaction
 
 # Start PHP-FPM
 echo "Starting PHP-FPM..."
