@@ -1,6 +1,5 @@
 import * as pulumi from "@pulumi/pulumi";
 import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
-//import * as azure from "@pulumi/azure";
 import * as command from "@pulumi/command";
 import { type CloudflareDNSEntries } from "../dns/customDomains";
 

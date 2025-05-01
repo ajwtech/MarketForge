@@ -96,7 +96,6 @@ jobs:
         uses: GuillaumeFalourd/setup-rsync@v1.2
       - run: rsync --version
 
-
       - name: Azure CLI Login
         uses: azure/login@v2
         with:
