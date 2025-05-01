@@ -89,10 +89,13 @@ export function strapiApp(args: {
                         name: "DOMAIN",
                         value: `${cmsSubdomain}.${domain}`,
                     },
-
                     {
                         name: "STORAGE_ACCOUNT_KEY",
                         value: storageAccountKey,
+                    },
+                    {
+                        name: "STORAGE_ACCOUNT_NAME",
+                        value: storageAccount.name,
                     },
                     {
                         name: "DATABASE_HOST",
