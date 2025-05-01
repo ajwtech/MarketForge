@@ -3,11 +3,12 @@ import * as pulumi from "@pulumi/pulumi";
 
 import { storageAccountKey, storageAccountName, storageAccount } from "../storage/storageAccount";
 import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
-
-import { imageBuilds } from "../dockerImages"; // Ensure correct import
 import { marketing_mysql } from "../database/mysqlServer";
 
 const config = new pulumi.Config(); 
+
+// Get the root password from Pulumi config as a secret
+const rootPassword = config.requireSecret("jumpboxRootPassword");
 
 export function jumpBox(args: {
     env: string;
@@ -18,8 +19,6 @@ export function jumpBox(args: {
     resourceGroupName: pulumi.Input<string>;
 }) 
 {
-    const imageDigest = imageBuilds["marketing-nginx"].digest; // Ensure correct image reference
-   
     return new azure_app.ContainerApp("ubuntu-sshd", {
         configuration: {
             activeRevisionsMode: azure_app.ActiveRevisionsMode.Single,
@@ -36,8 +35,8 @@ export function jumpBox(args: {
             maxInactiveRevisions: 100,
             secrets: [
             {
-                name: "root-password-secret",
-                value: "rooTaccesShaSbeenGranted!",
+                name: "jumpboxRootPassword",
+                value: rootPassword,
             },
             ],
         },
@@ -68,14 +67,9 @@ export function jumpBox(args: {
                         name: "DB_PORT",
                         value: args.dbPort, 
                     },
-                                        {
-                        name: "ROOT_PASSWORD",
-                        secretRef: "root-password-secret",
-                    },
-                    // Use a dummy variable to force revision updates when the image changes.
                     {
-                        name: "DEPLOY_TRIGGER",
-                        value: imageDigest,
+                        name: "ROOT_PASSWORD",
+                        secretRef: "jumpboxRootPassword",
                     },
                 ],
                 command: [ "/bin/sh", "-c" ],
