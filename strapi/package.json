@@ -7,9 +7,6 @@
     "build": "strapi build",
     "deploy": "strapi deploy",
     "develop": "strapi develop",
-    "develop:api": "node --max-old-space-size=2048 node_modules/.bin/strapi develop --no-watch-admin",
-    "develop:admin": "npx vite",
-    "develop:admin:debug": "npx vite -c ./src/admin/vite.config.ts -l info -d",
     "start": "strapi start",
     "strapi": "strapi"
   },
