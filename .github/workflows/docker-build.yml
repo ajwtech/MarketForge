@@ -1,0 +1,42 @@
+name: Build Docker Image with ESC
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Install Pulumi ESC CLI
+        run: |
+          echo "github variable = $GITHUB_CONTEXT"
+          curl -fsSL https://get.pulumi.com/esc/install.sh | sh
+          echo "$HOME/.pulumi/bin" >> $GITHUB_PATH
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+          
+      - name: Build Docker image with ESC env
+        run: |
+          if [ -n "$ACT" ]; then
+            # Running locally with act: build and tag for local use
+            esc env run ajwtech/marketforge/scouten -- docker build -f strapi/Dockerfile.dev -t marketforge-strapi-dev-local ./strapi
+          else
+            # Running in GitHub Actions: build and tag for CI/CD
+            esc env run ajwtech/marketforge/scouten -- docker build -f strapi/Dockerfile.dev -t marketforge-strapi-dev:${{ github.sha }} ./strapi
+          fi
+
+      - name: (Optional) Save Docker image locally for act
+        run: |
+          docker save marketforge-strapi-dev-local -o marketforge-strapi-dev-local.tar
+
+      # Add more steps here if you want to push to a registry, etc.
