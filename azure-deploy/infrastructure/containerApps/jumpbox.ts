@@ -72,8 +72,17 @@ export function jumpBox(args: {
                         secretRef: "jumpboxrootpassword", //must be lowecase
                     },
                 ],
-                command: [ "/bin/sh", "-c" ],
-                args: ["echo 'root:$ROOT_PASSWORD' | chpasswd && exec /usr/sbin/sshd -D"],
+                command: ["/bin/sh", "-c"],
+                args: [
+                    // 1) uncomment the three settings
+                    "sed -i 's/^#\\s*PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && " +
+                    "sed -i 's/^#\\s*AllowTcpForwarding.*/AllowTcpForwarding yes/' /etc/ssh/sshd_config && " +
+                    "sed -i 's/^#\\s*PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && " +
+                    // 2) set the root password
+                    "echo \"root:$ROOT_PASSWORD\" | chpasswd && " +
+                    // 3) finally, run sshd in the foreground
+                    "exec /usr/sbin/sshd -D"
+                ],
                 image: "docker.io/rastasheep/ubuntu-sshd", 
                 name: "ubuntu-sshd",
                 resources: {
