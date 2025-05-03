@@ -9,8 +9,10 @@ jobs:
   build:
     if: github.ref == 'refs/heads/development'
     runs-on: ubuntu-latest
+    environment: pulumi_environments
     env:
       PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+      ENV_ESC: ${{ vars.ESC }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -19,24 +21,25 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Install Pulumi ESC CLI
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ env.PULUMI_ACCESS_TOKEN }}
         run: |
-          echo "github variable = $GITHUB_CONTEXT"
           curl -fsSL https://get.pulumi.com/esc/install.sh | sh
           echo "$HOME/.pulumi/bin" >> $GITHUB_PATH
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
 
       - name: Build Docker image with ESC env
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ env.PULUMI_ACCESS_TOKEN }}
         run: |
+          export PULUMI_ACCESS_TOKEN
           if [ -n "$ACT" ]; then
-            # Running locally with act: build and tag for local use
-            esc env run ajwtech/marketforge/scouten -- docker build -f strapi/Dockerfile.dev -t marketforge-strapi-dev-local ./strapi
+            PULUMI_ACCESS_TOKEN=$PULUMI_ACCESS_TOKEN esc env run ajwtech/marketforge/scouten -- docker build -f strapi/Dockerfile.dev -t marketforge-strapi-dev-local ./strapi
           else
-            # Running in GitHub Actions: build and tag for CI/CD
-            esc env run ajwtech/marketforge/scouten -- docker build -f strapi/Dockerfile.dev -t marketforge-strapi-dev:${{ github.sha }} ./strapi
+            PULUMI_ACCESS_TOKEN=$PULUMI_ACCESS_TOKEN esc env run ajwtech/marketforge/scouten -- docker build -f strapi/Dockerfile.dev -t marketforge-strapi-dev:${{ github.sha }} ./strapi
           fi
 
       - name: (Optional) Save Docker image locally for act
+        if: env.ACT == 'true'
         run: |
           docker save marketforge-strapi-dev-local -o marketforge-strapi-dev-local.tar
 
