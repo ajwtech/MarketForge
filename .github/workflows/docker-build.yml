@@ -33,8 +33,10 @@ jobs:
         run: |
           export PULUMI_ACCESS_TOKEN
           if [ -n "$ACT" ]; then
+            echo "Running in act mode"
             PULUMI_ACCESS_TOKEN=$PULUMI_ACCESS_TOKEN esc env run ajwtech/marketforge/scouten -- docker build -f strapi/Dockerfile.dev -t marketforge-strapi-dev-local ./strapi
           else
+            echo "Running in normal mode"
             PULUMI_ACCESS_TOKEN=$PULUMI_ACCESS_TOKEN esc env run ajwtech/marketforge/scouten -- docker build -f strapi/Dockerfile.dev -t marketforge-strapi-dev:${{ github.sha }} ./strapi
           fi
 
