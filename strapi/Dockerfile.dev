@@ -48,8 +48,8 @@ RUN mkdir -p /opt/app/config-backup && cp -r /opt/app/config/* /opt/app/config-b
 COPY --chown=node:node supervisor.conf /etc/supervisor/conf.d/supervisor.conf
 
 # Entrypoint setup
-COPY --chown=node:node entrypoint.sh /opt/app/entrypoint.sh
-RUN chmod +x /opt/app/entrypoint.sh
+COPY --chown=node:node entrypoint.sh /opt/app/dev-entrypoint.sh
+RUN chmod +x /opt/app/dev-entrypoint.sh
 
 # Build application
 RUN yarn run build

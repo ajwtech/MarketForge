@@ -7,4 +7,4 @@ if [ -z "$(ls -A /opt/app/config)" ]; then
 fi
 
 # Execute the original command
-exec esc env run ajwtech/marketforge/scouten -- "$@"
+exec "$@"
