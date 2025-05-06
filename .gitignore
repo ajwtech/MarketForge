@@ -11,3 +11,4 @@ azure-deploy/config/*
 .env
 .env.secrets
 .github/copilot-instructions.md
+strapi/.env.development
