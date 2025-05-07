@@ -9,7 +9,6 @@ export default ({ env }) => {
   const port = env.int('DB_LOCAL_PORT', env.int('DATABASE_PORT', 3306));
 
   const connection = {
-      connectionString: '',
       host,
       port,
       database: env('DATABASE_NAME', 'strapi'),
