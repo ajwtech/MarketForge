@@ -41,7 +41,7 @@ export default function openSshTunnel(): Promise<void> {
   const forwardOptions: ForwardOptions = {
     srcAddr: process.env.DB_LOCAL_HOST,       // optional (defaults to serverOptions.host)
     srcPort: Number(process.env.DB_LOCAL_PORT),
-    dstAddr: process.env.DB_REMOTE_HOST,      // e.g. "scoutendbserver.mysql.database.azure.com"
+    dstAddr: process.env.DB_REMOTE_HOST,      // e.g. "scoutdbserver.mysql.database.azure.com"
     dstPort: Number(process.env.DB_REMOTE_PORT), // 3306
   };
 
