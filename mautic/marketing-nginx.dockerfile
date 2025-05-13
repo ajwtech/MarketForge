@@ -118,11 +118,11 @@ ARG ${APP_VERSION:-'5.2.2'}
 RUN apk update && apk add gettext
 
 # Set default environment variables for logging
-ENV NGINX_LOGGING_ENABLED=off \
-    NGINX_ACCESS_LOG_ENABLED= \
-    NGINX_ERROR_LOG_ENABLED= \
-    NGINX_DEBUG_LOG_ENABLED= \
-    NGINX_STATIC_LOG_ENABLED=
+ENV NGINX_LOGGING_ENABLED=on \
+    NGINX_ACCESS_LOG_ENABLED=on \
+    NGINX_ERROR_LOG_ENABLED=on \
+    NGINX_DEBUG_LOG_ENABLED=on \
+    NGINX_STATIC_LOG_ENABLED=on
 
 # Create Mautic docroot directory
 RUN addgroup -g 82 -S www-data || true && adduser -u 82 -S www-data -G www-data || true && \
