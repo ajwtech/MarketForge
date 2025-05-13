@@ -49,18 +49,18 @@ jobs:
           echo "ESC_ENVIRONMENT: ${ESC_ENVIRONMENT}"
           echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
 
-      - name: Cache npm dependencies
+      - name: Cache yarn dependencies
         uses: actions/cache@v4
         with:
           path: |
             ~/.npm
             ./azure-deploy/node_modules
-          key: ${{ runner.os }}-npm-${{ hashFiles('./azure-deploy/package-lock.json') }}
+          key: ${{ runner.os }}-npm-${{ hashFiles('./azure-deploy/.yarn/install-state.gz') }}
           restore-keys: |
             ${{ runner.os }}-npm-
 
       - name: Install Dependencies
-        run: npm ci
+        run: yarn install --frozen-lockfile
         working-directory: ./azure-deploy
 
       - name: Set ARM environment variables
