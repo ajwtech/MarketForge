@@ -107,6 +107,7 @@ jobs:
             echo "found=true" >> $GITHUB_OUTPUT
           else
             echo "found=false" >> $GITHUB_OUTPUT
+          fi
     
       - name: Install Azure CLI
         if: steps.azcli-check.outputs.found == 'false'
