@@ -8,7 +8,7 @@ echo "STRAPI_APP_URL is set to: ${STRAPI_APP_URL}"
 echo "DEV_STRAPI_APP_URL is set to: ${DEV_STRAPI_APP_URL}"
 
 # Use default values only if not already set from mauticNginx.ts
-: ${NGINX_LOGGING_ENABLED:=off}
+: ${NGINX_LOGGING_ENABLED:=on}
 : ${NGINX_ACCESS_LOG_ENABLED:=$NGINX_LOGGING_ENABLED}
 : ${NGINX_ERROR_LOG_ENABLED:=$NGINX_LOGGING_ENABLED}
 : ${NGINX_DEBUG_LOG_ENABLED:=off}
