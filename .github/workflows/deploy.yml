@@ -59,6 +59,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-npm-
 
+      - name: Install Yarn
+        run: npm install -g yarn
+        working-directory: ./azure-deploy
+
       - name: Install Dependencies
         run: yarn install --frozen-lockfile
         working-directory: ./azure-deploy
