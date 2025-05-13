@@ -24,14 +24,14 @@ export default (config: UserConfig) => {
         path: '/ws/',
       },
     },
-    optimizeDeps: {
-      exclude: process.env.NODE_ENV === 'development' ? [] : [
-        '@sh/strapi-plugin-ckeditor',
-        'strapi-plugin-navigation',
-        '@strapi/plugin-users-permissions',
-        '@strapi/plugin-seo',
-      ],
-    },
+    // optimizeDeps: {
+    //   exclude: [
+    //     '@sh/strapi-plugin-ckeditor',
+    //     '@strapi/plugin-navigation',
+    //     '@strapi/plugin-users-permissions',
+    //     '@strapi/plugin-seo',
+    //   ],
+    // },
     resolve: {
       alias: {
         '@': '/src',
