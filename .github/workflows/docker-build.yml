@@ -1,0 +1,80 @@
+name: Build Docker Image with ESC
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/development'
+    runs-on: ubuntu-latest
+    environment: pulumi_environments
+    env:
+      ENV_ESC: ${{ vars.ESC }}
+      PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+    strategy:
+      matrix:
+        stack: [$ENV_ESC]
+
+    steps:
+
+      - name: Set stack variables
+        run: |
+          if [ -n "${{ env.ESC }}" ]; then
+            FULL_STACK="${{ env.ESC }}"
+            echo "Using matrix stack: ${FULL_STACK}"
+          elif [ -n "${{ matrix.stack }}" ]; then
+            FULL_STACK=${{ matrix.stack }}
+            echo "Using matrix stack: ${FULL_STACK}"
+          else
+            FULL_STACK=""
+            echo "No stack value provided. create a repo variable named '${{ matrix.stack }}' and list the fully qualified environments e.g. 'org/project/environment'"
+            echo "You can also set the environment variable ESC in the workflow file however you can only use one environment at a time."
+            echo "::error file={name},line={line},endLine={endLine},title={title}::{message}"
+            exit 1
+          fi
+          TRIMMED_STACK="${FULL_STACK##*/}"
+          ESC_ENVIRONMENT="${FULL_STACK#*/}"
+          echo "TRIMMED_STACK=${TRIMMED_STACK}" >> $GITHUB_ENV
+          echo "FULL_STACK=${FULL_STACK}" >> $GITHUB_ENV
+          echo "ESC_ENVIRONMENT=${ESC_ENVIRONMENT}" >> $GITHUB_ENV
+          echo "TRIMMED_STACK: ${TRIMMED_STACK}"
+          echo "FULL_STACK: ${FULL_STACK}" 
+          echo "ESC_ENVIRONMENT: ${ESC_ENVIRONMENT}"
+          echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+          echo "PULUMI_ACCESS_TOKEN=${{ secrets.PULUMI_ACCESS_TOKEN }}" >> $GITHUB_ENV
+          echo "PULUMI_ACCESS_TOKEN: ${PULUMI_ACCESS_TOKEN}"
+          echo "PULUMI_ACCESS_TOKEN: ${{ env.PULUMI_ACCESS_TOKEN }}"
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set up Pulumi
+        uses: pulumi/actions@v6
+        with: 
+          pulumi-version: 3.165.0
+        env:
+          PULUMI_ACCESS_TOKEN: 
+          
+      - name: Install Pulumi ESC CLI
+        uses: pulumi/esc-action@v1
+        with:
+          environment: ${{ env.FULL_STACK }}
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ env.PULUMI_ACCESS_TOKEN }}
+
+      - name: Build Docker image with ESC env
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ env.PULUMI_ACCESS_TOKEN }}
+        run: |
+          esc run ${FULL_STACK} -- docker build --build-arg PULUMI_ACCESS_TOKEN=${PULUMI_ACCESS_TOKEN} -f strapi/Dockerfile.dev -t marketforge-strapi-dev ./strapi
+
+
+      - name: (Optional) Save Docker image locally for act
+        run: |  
+          docker save marketforge-strapi-dev-local -o marketforge-strapi-dev-local.tar
+
+      # Add more steps here if you want to push to a registry, etc.

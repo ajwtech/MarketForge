@@ -5,6 +5,7 @@ on:
       - master
 jobs:
   pulumi-up:
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     environment: pulumi_environments
     container:
@@ -106,7 +107,6 @@ jobs:
             echo "found=true" >> $GITHUB_OUTPUT
           else
             echo "found=false" >> $GITHUB_OUTPUT
-          fi
     
       - name: Install Azure CLI
         if: steps.azcli-check.outputs.found == 'false'
