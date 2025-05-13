@@ -30,7 +30,7 @@ COPY --chown=node:node .yarnrc.yml ./
 
 # Copy package files (small, quick)
 COPY --chown=node:node package.json yarn.lock ./
-
+RUN corepack enable
 RUN yarn install --frozen-lockfile
 
 # Update PATH adding node_module/.bin to avoid using global node_modules
