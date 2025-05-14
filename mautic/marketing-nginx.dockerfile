@@ -6,7 +6,19 @@ FROM composer/composer:2.8-bin AS composer
 # Stage 2: Builder
 FROM php:8.3.16-fpm-alpine3.20 AS builder
 
-# Install dev/build dependencies as early as possible for better cache usage
+# Copy Composer and node from the earlier images
+COPY --from=composer /composer /usr/bin/composer
+COPY --from=node /usr/local/bin/node /usr/local/bin/
+COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules/
+
+ARG ${APP_VERSION:-'5.2.2'}
+
+# Assign build arguments to environment variables
+ENV NODE_ENV=production \
+    PATH="/usr/local/bin:/usr/local/lib/node_modules/.bin:${PATH}" 
+
+RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm
+# Install dev/build dependencies
 RUN apk update && apk add --no-cache --virtual .build-deps \
         rabbitmq-c-dev \
         imap-dev \
@@ -46,26 +58,14 @@ RUN apk update && apk add --no-cache --virtual .build-deps \
         openssh-server \
         cronie
 
-# Copy Composer and node from the earlier images
-COPY --from=composer /composer /usr/bin/composer
-COPY --from=node /usr/local/bin/node /usr/local/bin/
-COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules/
 
-
-ARG ${APP_VERSION:-'5.2.2'}
-
-# Assign build arguments to environment variables
-ENV NODE_ENV=production \
-    PATH="/usr/local/bin:/usr/local/lib/node_modules/.bin:${PATH}" 
-
-RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
     #Configure php
-    && curl -L -o /tmp/amqp.tar.gz "https://github.com/php-amqp/php-amqp/archive/refs/tags/v2.1.2.tar.gz" \
-    && mkdir -p /usr/src/php/ext/amqp \
-    && tar -C /usr/src/php/ext/amqp -zxvf /tmp/amqp.tar.gz --strip 1 \
-    && rm /tmp/amqp.tar.gz \
+RUN curl -L -o /tmp/amqp.tar.gz "https://github.com/php-amqp/php-amqp/archive/refs/tags/v2.1.2.tar.gz" 
+    
+RUN mkdir -p /usr/src/php/ext/amqp \
+    && tar -C /usr/src/php/ext/amqp -zxvf /tmp/amqp.tar.gz --strip 1
     # Configure, install, and enable PHP extensions 
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
     && docker-php-ext-configure opcache --enable-opcache \
     && docker-php-ext-install -j$(nproc) intl mbstring mysqli curl pdo_mysql zip bcmath sockets exif amqp gd imap opcache \
@@ -80,8 +80,8 @@ WORKDIR /opt/
 # First I will install the reccomended project with composer include the dev dependencies and disable the scripts. note that the app version is parameterized so the mautic folder will have versioned subfolders to assist in future updates and rollbacks. This has to be the first step because the npm install depends on the packages.json from the recommended project. npx is also required for the post install scripts to eventually run.
 # Now when the npm install is run it will have npx needed by composer and the packages.json needed by npm. The npm post install script will run which will allow us to add the additional dev dependencies but we still need to disable the scripts because on a new system they will need to execute in a different order. Generate Assets, and patch-package need to run first.which will then complete the build. 
 RUN COMPOSER_ALLOW_SUPERUSER=1 COMPOSER_PROCESS_TIMEOUT=10000 composer create-project mautic/recommended-project ${APP_VERSION} mautic \
-        --no-interaction --prefer-install=auto --no-scripts && \
-    cd mautic && \
+        --no-interaction --prefer-install=auto --no-scripts
+RUN cd mautic && \
     npm install -g npx && \
     npm install --include=dev && \
     COMPOSER_ALLOW_SUPERUSER=1 composer require --dev --no-scripts\
