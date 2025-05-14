@@ -28,15 +28,18 @@ ENV PATH="/home/node/.pulumi/bin:${PATH}"
 # Copy yarnrc config before installing dependencies
 COPY --chown=node:node .yarnrc.yml ./
 
+# Copy yarn install state file for node_modules state
+COPY --chown=node:node .yarn/install-state.gz ./.yarn/install-state.gz
+
 # Copy package files (small, quick)
 COPY --chown=node:node package.json yarn.lock ./
-
-RUN yarn install --frozen-lockfile
+RUN corepack enable
+RUN yarn install --immutable
 
 # Update PATH adding node_module/.bin to avoid using global node_modules
 # This is important for running strapi commands
 # and for running the app in development mode
-ENV PATH /opt/app/node_modules/.bin:$PATH
+ENV PATH=/opt/app/node_modules/.bin:$PATH
 
 # Copy app files 
 COPY --chown=node:node . .
@@ -57,5 +60,5 @@ RUN yarn run build
 # Expose necessary ports
 EXPOSE 1337 5173
 
-ENTRYPOINT ["/opt/app/dev-entrypoint.sh"]
+ENTRYPOINT ["/opt/app/entrypoint.sh"]
 CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisor.conf"]
