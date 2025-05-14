@@ -6,21 +6,8 @@ FROM composer/composer:2.8-bin AS composer
 # Stage 2: Builder
 FROM php:8.3.16-fpm-alpine3.20 AS builder
 
-# Copy Composer and node from the earlier images
-COPY --from=composer /composer /usr/bin/composer
-COPY --from=node /usr/local/bin/node /usr/local/bin/
-COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules/
-
-
-ARG ${APP_VERSION:-'5.2.2'}
-
-# Assign build arguments to environment variables
-ENV NODE_ENV=production \
-    PATH="/usr/local/bin:/usr/local/lib/node_modules/.bin:${PATH}" 
-
-RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
-    # Install dev/build dependencies
-    apk update && apk add --no-cache --virtual .build-deps \
+# Install dev/build dependencies as early as possible for better cache usage
+RUN apk update && apk add --no-cache --virtual .build-deps \
         rabbitmq-c-dev \
         imap-dev \
         build-base \
@@ -43,7 +30,6 @@ RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
         freetype-dev \
         oniguruma-dev \
         linux-headers \
-        imap-dev \
     && apk add --no-cache \
         ca-certificates \
         curl \
@@ -58,8 +44,22 @@ RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
         php83-intl \
         dialog \
         openssh-server \
-        cronie \
-        #Configure php
+        cronie
+
+# Copy Composer and node from the earlier images
+COPY --from=composer /composer /usr/bin/composer
+COPY --from=node /usr/local/bin/node /usr/local/bin/
+COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules/
+
+
+ARG ${APP_VERSION:-'5.2.2'}
+
+# Assign build arguments to environment variables
+ENV NODE_ENV=production \
+    PATH="/usr/local/bin:/usr/local/lib/node_modules/.bin:${PATH}" 
+
+RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
+    #Configure php
     && curl -L -o /tmp/amqp.tar.gz "https://github.com/php-amqp/php-amqp/archive/refs/tags/v2.1.2.tar.gz" \
     && mkdir -p /usr/src/php/ext/amqp \
     && tar -C /usr/src/php/ext/amqp -zxvf /tmp/amqp.tar.gz --strip 1 \
@@ -72,11 +72,6 @@ RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
     && docker-php-ext-enable intl mbstring mysqli curl pdo_mysql zip bcmath sockets exif amqp gd imap opcache \
     && echo "memory_limit = -1" > /usr/local/etc/php/php.ini
     
-# ssh
-ENV SSH_PASSWD="root:Docker!"
-
-RUN echo "$SSH_PASSWD" | chpasswd 
-
 
 #set the working directory to the selected app version
 
