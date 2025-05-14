@@ -49,18 +49,24 @@ jobs:
           echo "ESC_ENVIRONMENT: ${ESC_ENVIRONMENT}"
           echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
 
-      - name: Cache npm dependencies
+      - name: Cache yarn dependencies
         uses: actions/cache@v4
         with:
           path: |
             ~/.npm
             ./azure-deploy/node_modules
-          key: ${{ runner.os }}-npm-${{ hashFiles('./azure-deploy/package-lock.json') }}
+          key: ${{ runner.os }}-npm-${{ hashFiles('./azure-deploy/.yarn/install-state.gz') }}
           restore-keys: |
-            ${{ runner.os }}-npm-
+            ${{ runner.os }}-npm-${{ hashFiles('./azure-deploy/.yarn/install-state.gz') }}
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Activate Yarn 4.9.1
+        run: corepack prepare yarn@4.9.1 --activate
 
       - name: Install Dependencies
-        run: npm ci
+        run: yarn install --immutable
         working-directory: ./azure-deploy
 
       - name: Set ARM environment variables
@@ -108,7 +114,6 @@ jobs:
           else
             echo "found=false" >> $GITHUB_OUTPUT
           fi
-    
       - name: Install Azure CLI
         if: steps.azcli-check.outputs.found == 'false'
         uses: pietrobolcato/install-azure-cli-action@main
