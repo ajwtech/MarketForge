@@ -43,9 +43,10 @@ jobs:
             --cache-from=type=local,src=${{ matrix.build.cache }} \
             --cache-to=type=local,dest=${{ matrix.build.cache }}-new \
             -f ${{ matrix.build.dockerfile }} \
-            -t ${{ matrix.build.name }}:latest ${{ matrix.build.context }}
+            -t ${{ matrix.build.name }}:latest .
           rm -rf ${{ matrix.build.cache }}
           mv ${{ matrix.build.cache }}-new ${{ matrix.build.cache }}
+        working-directory: ${{ matrix.build.context }}
 
   pulumi-up:
     needs: build-images
