@@ -18,7 +18,8 @@ ENV NODE_ENV=production \
     PATH="/usr/local/bin:/usr/local/lib/node_modules/.bin:${PATH}" 
 
 RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm
-# Install dev/build dependencies
+
+# Install dev/build dependencies and download amqp in a single RUN for better caching
 RUN apk update && apk add --no-cache --virtual .build-deps \
         rabbitmq-c-dev \
         imap-dev \
@@ -56,15 +57,13 @@ RUN apk update && apk add --no-cache --virtual .build-deps \
         php83-intl \
         dialog \
         openssh-server \
-        cronie
-
-
-    #Configure php
-RUN curl -L -o /tmp/amqp.tar.gz "https://github.com/php-amqp/php-amqp/archive/refs/tags/v2.1.2.tar.gz" 
-    
-RUN mkdir -p /usr/src/php/ext/amqp \
+        cronie \
+    # Download and extract amqp extension in the same layer for cache efficiency
+    && curl -L -o /tmp/amqp.tar.gz "https://github.com/php-amqp/php-amqp/archive/refs/tags/v2.1.2.tar.gz" \
+    && mkdir -p /usr/src/php/ext/amqp \
     && tar -C /usr/src/php/ext/amqp -zxvf /tmp/amqp.tar.gz --strip 1
-    # Configure, install, and enable PHP extensions 
+
+# Configure, install, and enable PHP extensions in a single RUN for better caching
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
     && docker-php-ext-configure opcache --enable-opcache \
