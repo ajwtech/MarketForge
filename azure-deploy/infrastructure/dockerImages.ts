@@ -25,14 +25,6 @@ const imageConfigs: { [key: string]: { context: string, dockerfile: string } } =
   'marketing-suitecrm-app': { context: '../suitecrm', dockerfile: '../suitecrm/marketing-suitecrm-app.dockerfile' },
 };
 
-// Ensure SuiteCRM-Core is available in mautic/suitecrm for nginx build context
-const srcSuitecrm = path.resolve(__dirname, '../../../suitecrm/SuiteCRM-Core');
-const destSuitecrm = path.resolve(__dirname, '../../../mautic/suitecrm/SuiteCRM-Core');
-
-if (fs.existsSync(srcSuitecrm)) {
-  fse.ensureDirSync(path.dirname(destSuitecrm));
-  fse.copySync(srcSuitecrm, destSuitecrm, { preserveTimestamps: true,  });
-}
 
 // Wait for the ACR to be created before proceeding
 const registry = registryUrl.apply(registry => registry);
