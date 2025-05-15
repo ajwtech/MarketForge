@@ -122,11 +122,6 @@ jobs:
 
       - name: Activate Yarn 4.9.1
         run: corepack prepare yarn@4.9.1 --activate
-
-      - name: Install Dependencies
-        run: yarn install --immutable
-        working-directory: ./azure-deploy
-
       - name: Set ARM environment variables
         run: |
           echo "ARM_CLIENT_ID=${{ secrets.ARM_CLIENT_ID }}" >> $GITHUB_ENV
@@ -164,17 +159,13 @@ jobs:
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
              
-      - name: Check for Azure CLI
-        id: azcli-check
-        run: |
-          if command -v az >/dev/null 2>&1; then
-            echo "found=true" >> $GITHUB_OUTPUT
-          else
-            echo "found=false" >> $GITHUB_OUTPUT
-          fi
       - name: Install Azure CLI
         if: steps.azcli-check.outputs.found == 'false'
         uses: pietrobolcato/install-azure-cli-action@main
+
+      - name: Install Dependencies
+        run: yarn install --immutable
+        working-directory: ./azure-deploy
 
       - name: Run Pulumi inside ESC environment
         working-directory: ./azure-deploy
