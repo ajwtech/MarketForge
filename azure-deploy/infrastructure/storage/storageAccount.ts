@@ -239,7 +239,7 @@ export const suiteCrmOverrideFilePlaceholder = new command.local.Command("Upload
 });
 
 // Resolve the path to the Strapi directory
-const strapiDirectoryPath = path.resolve(__dirname, "../../../strapi");
+const strapiDirectoryPath = path.resolve(__dirname, "../../../launchpad/strapi");
 
 // Helper function to hash all files in a directory recursively, excluding certain folders
 function hashDirectory(dir: string, excludeDirs: string[] = []): string {

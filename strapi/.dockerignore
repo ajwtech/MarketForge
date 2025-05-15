@@ -6,7 +6,7 @@ build/
 node_modules/
 .env
 .env.secrets
+.env.*
 backup/
 dist/
-.strapi-updater.json
 .strapi-cloud.json
