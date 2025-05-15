@@ -35,7 +35,7 @@ jobs:
         run: |
           mkdir -p mautic/suitecrm
           rm -rf mautic/suitecrm/SuiteCRM-Core
-          cp -r suitecrm/SuiteCRM-Core mautic/suitecrm/SuiteCRM-Core
+          cp -a suitecrm/SuiteCRM-Core mautic/suitecrm/SuiteCRM-Core
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3

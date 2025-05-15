@@ -1,6 +1,9 @@
 import * as pulumi from '@pulumi/pulumi';
 import * as dockerbuild from '@pulumi/docker-build';
 import { marketingcr, acrUsername, acrPassword, registryUrl } from './registries/acrRegistry';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as fse from 'fs-extra';
 
 const config = new pulumi.Config();
 const imageTag = config.get('imageTag') || 'latest';
@@ -14,7 +17,6 @@ const imageNames = [
 ];
 const imageBuilds: { [key: string]: dockerbuild.Image } = {};
 
-
 const imageConfigs: { [key: string]: { context: string, dockerfile: string } } = {
   'marketing-nginx': { context: '../mautic', dockerfile: '../mautic/marketing-nginx.dockerfile' },
   'marketing-mautic-app': { context: '../mautic', dockerfile: '../mautic/marketing-mautic-app.dockerfile' },
@@ -22,6 +24,15 @@ const imageConfigs: { [key: string]: { context: string, dockerfile: string } } =
 //  'marketing-dev-strapi-app': { context: '../launchpad/strapi', dockerfile: '../launchpad/strapi/Dockerfile.dev' }, 
   'marketing-suitecrm-app': { context: '../suitecrm', dockerfile: '../suitecrm/marketing-suitecrm-app.dockerfile' },
 };
+
+// Ensure SuiteCRM-Core is available in mautic/suitecrm for nginx build context
+const srcSuitecrm = path.resolve(__dirname, '../../../suitecrm/SuiteCRM-Core');
+const destSuitecrm = path.resolve(__dirname, '../../../mautic/suitecrm/SuiteCRM-Core');
+
+if (fs.existsSync(srcSuitecrm)) {
+  fse.ensureDirSync(path.dirname(destSuitecrm));
+  fse.copySync(srcSuitecrm, destSuitecrm, { preserveTimestamps: true,  });
+}
 
 // Wait for the ACR to be created before proceeding
 const registry = registryUrl.apply(registry => registry);
