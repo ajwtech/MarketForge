@@ -146,10 +146,11 @@ jobs:
           docker buildx build \
             --cache-from=type=local,src=/tmp/.buildx-cache \
             --cache-to=type=local,dest=/tmp/.buildx-cache-new \
-            -f launchpad/strapi/Dockerfile.prod \
+            -f Dockerfile.prod \
             -t marketing-strapi-app:latest .
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+        working-directory: launchpad/strapi
 
       - name: Run Pulumi inside ESC environment
         working-directory: ./azure-deploy
