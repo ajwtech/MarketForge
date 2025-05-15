@@ -131,16 +131,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
 
-      - name: Build marketing-nginx image with cache
-        run: |
-          docker buildx build \
-            --cache-from=type=local,src=/tmp/.buildx-cache \
-            --cache-to=type=local,dest=/tmp/.buildx-cache-new \
-            -f mautic/marketing-nginx.dockerfile \
-            -t marketing-nginx:latest .
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-
       - name: Build marketing-strapi-app image with cache
         run: |
           docker buildx build \
@@ -151,6 +141,16 @@ jobs:
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
         working-directory: launchpad/strapi
+
+      - name: Build marketing-nginx image with cache
+        run: |
+          docker buildx build \
+            --cache-from=type=local,src=/tmp/.buildx-cache \
+            --cache-to=type=local,dest=/tmp/.buildx-cache-new \
+            -f mautic/marketing-nginx.dockerfile \
+            -t marketing-nginx:latest .
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
       - name: Run Pulumi inside ESC environment
         working-directory: ./azure-deploy
