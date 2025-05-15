@@ -21,7 +21,6 @@ const imageConfigs: { [key: string]: { context: string, dockerfile: string } } =
   'marketing-nginx': { context: '../mautic', dockerfile: '../mautic/marketing-nginx.dockerfile' },
   'marketing-mautic-app': { context: '../mautic', dockerfile: '../mautic/marketing-mautic-app.dockerfile' },
   'marketing-strapi-app': { context: '../launchpad/strapi', dockerfile: '../launchpad/strapi/Dockerfile.prod' },
-//  'marketing-dev-strapi-app': { context: '../launchpad/strapi', dockerfile: '../launchpad/strapi/Dockerfile.dev' }, 
   'marketing-suitecrm-app': { context: '../suitecrm', dockerfile: '../suitecrm/marketing-suitecrm-app.dockerfile' },
 };
 
