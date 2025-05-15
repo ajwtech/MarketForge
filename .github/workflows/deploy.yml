@@ -14,12 +14,12 @@ jobs:
             context: launchpad/strapi
             cache: /tmp/.buildx-cache-strapi
           - name: marketing-nginx
-            dockerfile: mautic/marketing-nginx.dockerfile
-            context: .
+            dockerfile: marketing-nginx.dockerfile
+            context: mautic
             cache: /tmp/.buildx-cache-nginx
           - name: marketing-mautic-app
-            dockerfile: mautic/marketing-mautic-app.dockerfile
-            context: .
+            dockerfile: marketing-mautic-app.dockerfile
+            context: mautic
             cache: /tmp/.buildx-cache-mautic
     steps:
       - uses: actions/checkout@v4
