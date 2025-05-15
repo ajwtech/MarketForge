@@ -151,26 +151,10 @@ export function strapiApp(args: {
                 },
                 volumeMounts: [
                     {
-                        mountPath: "/opt/app/config",   
-                        volumeName: "config",
-                        subPath: "app/config",            
-                    },
-                    {
-                        mountPath: "/opt/app/src",  
-                        volumeName: "src",
-                        subPath: "app/src",   
-                    },                    
-                    {
-                        mountPath: "/opt/app/data",  
-                        volumeName: "app",
-                        subPath: "app/data",
-                    },
-                    {
                         mountPath: "/opt/app/public/uploads",  
                         volumeName: "uploads",
                         subPath: "uploads",   
                     },
-
                 ],
             }],
             scale: {
@@ -186,21 +170,6 @@ export function strapiApp(args: {
                 }],
             },
             volumes: [
-                {
-                    name: "app",
-                    storageName: args.storageName,
-                    storageType: azure_app.StorageType.AzureFile,
-                },
-                {
-                    name: "config",
-                    storageName: args.storageName,
-                    storageType: azure_app.StorageType.AzureFile,
-                },
-                {
-                    name: "src",
-                    storageName: args.storageName,
-                    storageType: azure_app.StorageType.AzureFile,
-                }, 
                 {
                     name: "uploads",
                     storageName: args.storageName,
