@@ -9,7 +9,7 @@ const excludeDirs = ['.strapi', '.tmp', 'dist', 'node_modules', '.git'];
 
 function walk(dir, root) {
     let results = [];
-    if (!fs.existsSync(dir)) return results;
+    if (!fs.existsSync(dir)) {return results;}
     fs.readdirSync(dir).forEach(file => {
         const filePath = path.join(dir, file);
         const relPath = path.relative(root, filePath);

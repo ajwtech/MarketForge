@@ -11,5 +11,5 @@ azure-deploy/config/*
 .env
 .env.secrets
 .github/copilot-instructions.md
-strapi/.env.development
-strapi-staging/*
+launchpad/strapi/.env.development
+*/strapi-staging/*
