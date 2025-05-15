@@ -120,6 +120,27 @@ jobs:
         if: steps.azcli-check.outputs.found == 'false'
         uses: pietrobolcato/install-azure-cli-action@main
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build marketing-nginx image with cache
+        run: |
+          docker buildx build \
+            --cache-from=type=local,src=/tmp/.buildx-cache \
+            --cache-to=type=local,dest=/tmp/.buildx-cache-new \
+            -f mautic/marketing-nginx.dockerfile \
+            -t marketing-nginx:latest .
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
       - name: Run Pulumi inside ESC environment
         working-directory: ./azure-deploy
         env:
