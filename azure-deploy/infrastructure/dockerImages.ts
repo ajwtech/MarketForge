@@ -10,7 +10,6 @@ const imageNames = [
   'marketing-nginx',
   'marketing-mautic-app',
   'marketing-strapi-app',
-//  'marketing-dev-strapi-app',
   'marketing-suitecrm-app',
 ];
 const imageBuilds: { [key: string]: dockerbuild.Image } = {};
