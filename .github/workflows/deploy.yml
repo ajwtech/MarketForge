@@ -34,7 +34,6 @@ jobs:
         if: matrix.build.name == 'marketing-nginx'
         run: |
           mkdir -p mautic/suitecrm
-          rm -rf mautic/suitecrm/SuiteCRM-Core
           cp -a suitecrm/SuiteCRM-Core mautic/suitecrm/SuiteCRM-Core
 
       - name: Set up Docker Buildx
@@ -166,6 +165,10 @@ jobs:
         run: yarn install --immutable
         working-directory: ./azure-deploy
 
+      - name: Copy SuiteCRM-Core for Pulumi (guarantee context)
+        run: |
+          mkdir -p mautic/suitecrm
+          cp -a suitecrm/SuiteCRM-Core mautic/suitecrm/SuiteCRM-Core
       - name: Run Pulumi inside ESC environment
         working-directory: ./azure-deploy
         env:
