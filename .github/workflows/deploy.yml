@@ -120,15 +120,6 @@ jobs:
         if: steps.azcli-check.outputs.found == 'false'
         uses: pietrobolcato/install-azure-cli-action@main
 
-      - name: Install rsync
-        uses: GuillaumeFalourd/setup-rsync@v1.2
-      - run: rsync --version
-
-      - name: Azure CLI Login
-        uses: azure/login@v2
-        with:
-          creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","subscriptionId":"${{ secrets.ARM_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
-
       - name: Run Pulumi inside ESC environment
         working-directory: ./azure-deploy
         env:
