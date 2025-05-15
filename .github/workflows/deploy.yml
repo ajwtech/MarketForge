@@ -21,10 +21,20 @@ jobs:
             dockerfile: marketing-mautic-app.dockerfile
             context: mautic
             cache: /tmp/.buildx-cache-mautic
+          - name: marketing-suitecrm-app
+            dockerfile: marketing-suitecrm-app.dockerfile
+            context: suitecrm
+            cache: /tmp/.buildx-cache-suitecrm
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+
+      - name: Copy SuiteCRM-Core into mautic context (for nginx build)
+        if: matrix.build.name == 'marketing-nginx'
+        run: |
+          rm -rf mautic/SuiteCRM-Core
+          cp -r suitecrm/SuiteCRM-Core mautic/SuiteCRM-Core
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
