@@ -10,13 +10,6 @@ Describe the issue you are solving.
 
 Simply make sure the whole Strapi application doesn't crash and the connected Next.js application is fully working.
 
-Some additional things to check:
-
-- [ ] Strapi project uuid is "LAUNCHPAD". `strapi/packages.json`.
-- [ ] If you updated Strapi content, make sure to create a new export in the `strapi/data` folder and update the `strapi/packages.json` seed command if necessary.
-- [ ] Strapi version is the latest possible.
-- [ ] SuiteCRM version is the latest possible.
-- [ ] Mautic version is the latest possible.
 
 ### Related issue(s)/PR(s)
 

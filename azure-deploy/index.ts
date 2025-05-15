@@ -240,8 +240,7 @@ export const cloudflareDNSentries = BoolSubdomains ? setupDns({
     strapiFQDN: deployedStrapiApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
     suiteCrmApp: deployedSuitecrmApp,
     suiteCrmFQDN: deployedSuitecrmApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
-    // devStrapiApp: devDeployedStrapiApp,
-    // devStrapiFQDN: devDeployedStrapiApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
+  
 }) : undefined ; // Set to undefined if BoolSubdomains is false
 
 // Update mauticNginxApp to use the cloudflareDNSentries as the customDomains
