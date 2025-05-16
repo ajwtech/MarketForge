@@ -9,10 +9,10 @@ jobs:
     strategy:
       matrix:
         build:
-          - name: marketing-strapi-app
+          - name: marketing-web-app
             dockerfile: Dockerfile.prod
-            context: launchpad/strapi
-            cache: /tmp/.buildx-cache-strapi
+            context: launchpad
+            cache: /tmp/.buildx-cache-web
           - name: marketing-nginx
             dockerfile: marketing-nginx.dockerfile
             context: mautic
