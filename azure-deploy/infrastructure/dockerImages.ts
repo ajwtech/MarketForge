@@ -1,13 +1,9 @@
 import * as pulumi from '@pulumi/pulumi';
-import * as dockerbuild from '@pulumi/docker-build';
-import { marketingcr, acrUsername, acrPassword, registryUrl } from './registries/acrRegistry';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as fse from 'fs-extra';
+import * as docker from '@pulumi/docker';
+import { registryUrl, acrUsername, acrPassword } from './registries/acrRegistry';
 
 const config = new pulumi.Config();
 const imageTag = config.get('imageTag') || 'latest';
-const mauticAppVersion = config.get('appVersion') || '5.2.2';
 
 const imageNames = [
   'marketing-nginx',
@@ -15,46 +11,24 @@ const imageNames = [
   'marketing-strapi-app',
   'marketing-suitecrm-app',
 ];
-const imageBuilds: { [key: string]: dockerbuild.Image } = {};
 
-const imageConfigs: { [key: string]: { context: string, dockerfile: string } } = {
-  'marketing-nginx': { context: '../mautic', dockerfile: '../mautic/marketing-nginx.dockerfile' },
-  'marketing-mautic-app': { context: '../mautic', dockerfile: '../mautic/marketing-mautic-app.dockerfile' },
-  'marketing-strapi-app': { context: '../launchpad', dockerfile: '../launchpad/Dockerfile.prod' },
-  'marketing-suitecrm-app': { context: '../suitecrm', dockerfile: '../suitecrm/marketing-suitecrm-app.dockerfile' },
-};
-
-
-// Wait for the ACR to be created before proceeding
-const registry = registryUrl.apply(registry => registry);
+const imageBuilds: { [key: string]: pulumi.Output<string> } = {};
 
 for (const imageName of imageNames) {
-  const fullImageName = pulumi.interpolate`${registry}/${imageName}:${imageTag}`;
-  const config = imageConfigs[imageName];
-  // Define the dockerbuild.Image resource
-  imageBuilds[imageName] = new dockerbuild.Image(
-    imageName,
-    {
-      buildArgs: {
-        APP_VERSION: mauticAppVersion, // parameterize the build args so that each app can have their own build args set here. 
-      },
-      context: {
-        location: config.context,
-      },
-      push: true,
-      dockerfile: {
-        location: config.dockerfile,
-      },
-      platforms: ['linux/amd64'],
-      registries: [{
-        address: registry,
-        username: acrUsername,
-        password: acrPassword,
-      }],
-      tags: [fullImageName],
-    }, {
-      dependsOn: [marketingcr],
-    });
+  const localTag = `${imageName}:latest`; // or use imageTag if you tag locally with it
+  imageBuilds[imageName] = registryUrl.apply(url => `${url}/${imageName}:${imageTag}`);
+
+  new docker.RegistryImage(imageName, {
+    name: imageBuilds[imageName],
+    build: undefined, // Not needed, image must already exist locally
+    localImageName: localTag, // This is the local image to push
+    keepRemotely: true,
+    registry: {
+      server: registryUrl,
+      username: acrUsername,
+      password: acrPassword,
+    },
+  });
 }
 
 // Export the image builds so they can be used elsewhere in the Pulumi stack
