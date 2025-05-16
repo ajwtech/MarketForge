@@ -39,6 +39,9 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Ensure cache directory exists
+        run: mkdir -p ${{ matrix.build.cache }}
+
       - name: Cache Docker layers
         uses: actions/cache@v4
         with:
@@ -54,7 +57,7 @@ jobs:
             --cache-to=type=local,dest=${{ matrix.build.cache }}-new \
             -f ${{ matrix.build.dockerfile }} \
             -t ${{ matrix.build.name }}:latest .
-          rm -rf ${{ matrix.build.cache }}
+          rm -rf ${{ matrix.build.cache }}-new
           mv ${{ matrix.build.cache }}-new ${{ matrix.build.cache }}
         working-directory: ${{ matrix.build.context }}
 
