@@ -119,8 +119,12 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
 
-      - name: Activate Yarn 4.9.1
-        run: corepack prepare yarn@4.9.1 --activate
+      - name: Activate Yarn 4.9.1 (with retry)
+        run: |
+          for i in 1 2 3 4 5; do
+            corepack prepare yarn@4.9.1 --activate && break || sleep 10
+          done
+
       - name: Set ARM environment variables
         run: |
           echo "ARM_CLIENT_ID=${{ secrets.ARM_CLIENT_ID }}" >> $GITHUB_ENV
