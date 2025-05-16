@@ -14,6 +14,8 @@ export interface CloudflareDNSEntries {
     mapTXT: cloudflare.Record;
     devCmsCNAME: cloudflare.Record;
     devCmsTXT: cloudflare.Record;
+    rootCNAME: cloudflare.Record;
+    rootTXT: cloudflare.Record;
 }
 
 
@@ -126,6 +128,29 @@ export function setupDns(props: CustomDomainProps) {
         ...dnsOptions,
         dependsOn: [marketing_env, props.mauticNginxApp,mapCNAME ]});
     
+    // Create DNS records for the root domain (WEBSITE_URL)
+    const rootCNAME = new cloudflare.Record("root-domain", {
+        zoneId: zone.then((z: cloudflare.GetZoneResult) => z.id),
+        name: "@",
+        type: "CNAME",
+        content: props.siteFQDN,
+        ttl: 3600,
+    },{
+        ...dnsOptions,
+        dependsOn: [marketing_env, props.mauticNginxApp]
+    });
+
+    const rootTXT = new cloudflare.Record("asuid-root-domain", {
+        zoneId: zone.then((z: cloudflare.GetZoneResult) => z.id),
+        name: `asuid` ,
+        type: "TXT",
+        content: props.nginxCvid,
+        ttl: 3600,
+    },{
+        ...dnsOptions,
+        dependsOn: [marketing_env, props.mauticNginxApp, rootCNAME]
+    });
+
     const dnsentries: CloudflareDNSEntries = {
         cmsCNAME: cmsCNAME,
         cmsTXT: cmsTXT,
@@ -135,7 +160,8 @@ export function setupDns(props: CustomDomainProps) {
         mapTXT: mapTXT,
         devCmsCNAME: devCmsCNAME,
         devCmsTXT: devCmsTXT,
-
+        rootCNAME: rootCNAME,
+        rootTXT: rootTXT,
     };
 
     return   dnsentries;

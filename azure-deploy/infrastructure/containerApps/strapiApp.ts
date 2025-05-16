@@ -43,7 +43,10 @@ export function strapiApp(args: {
                 allowInsecure: false,
                 clientCertificateMode: "Ignore",
                 external: true,
-                targetPort: 1337,
+                additionalPortMappings: [{
+                    targetPort: 3000,
+                    external: true,
+                }],
                 traffic: [{
                     latestRevision: true, 
                     weight: 100,
@@ -52,6 +55,7 @@ export function strapiApp(args: {
                     { bindingType: 'Disabled', name: `${cmsSubdomain}.${domain}` },
                 ],
                 transport: "Auto", 
+                
             },
             maxInactiveRevisions: 50,
             registries: [{

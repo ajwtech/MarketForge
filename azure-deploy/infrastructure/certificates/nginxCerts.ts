@@ -86,7 +86,28 @@ export function nginxCerts(
         triggers: [crmCert.systemData.lastModifiedAt, nginxApp.systemData.lastModifiedAt],
     }, { dependsOn: [crmCert, nginxApp, environment, bindMapCommand, cloudflareDNSentries.crmCNAME, cloudflareDNSentries.crmTXT] });
        
-    return [crmCert, cmsCert, mapCert ];
+    // Add root domain (WEBSITE_URL) certificate
+    const rootCert = new azure_app.ManagedCertificate("rootCert", {
+        resourceGroupName: resourceGroupName,
+        environmentName: environment.name,
+        managedCertificateName: domain,
+        properties: {
+            domainControlValidation: "CNAME",
+            subjectName: domain,
+        },
+    }, { dependsOn: [nginxApp, cloudflareDNSentries.rootCNAME, cloudflareDNSentries.rootTXT] });
+
+    // Bind root domain to the environment (frontend)
+    const bindRootCommand = new command.local.Command("bind-root-custom-domain", {
+        create: pulumi.interpolate `az containerapp hostname bind \
+        --hostname ${domain} \
+        -g ${resourceGroupName} -n ${nginxApp.name} \
+        --environment ${environment.name} \
+        --validation-method CNAME`,
+        triggers: [rootCert.systemData.lastModifiedAt, nginxApp.systemData.lastModifiedAt],
+    }, { dependsOn: [rootCert, nginxApp, environment, cloudflareDNSentries.rootCNAME, cloudflareDNSentries.rootTXT] });
+
+    return [crmCert, cmsCert, mapCert, rootCert ];
 
 
 

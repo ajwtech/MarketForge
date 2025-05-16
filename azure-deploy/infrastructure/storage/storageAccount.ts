@@ -102,12 +102,6 @@ export const jumpboxFilesStorage = new azure_native.storage.FileShare("jumpbox-f
     shareName: "jumpbox-files",
 });
 
-// Add a new file share for frontend static files
-export const frontendFilesStorage = new azure_native.storage.FileShare("frontend-files", {
-    accountName: storageAccount.name,
-    resourceGroupName: ResourceGroup.name,
-    shareName: "frontend-files",
-});
 
 export const strapiPublicAssetsContainer = new azure_native.storage.BlobContainer("assets", {
     accountName: storageAccount.name,
