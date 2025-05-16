@@ -12,7 +12,6 @@ import {
     suiteCrmAppFilesStorage, 
     strapiAppFilesStorage, 
     jumpboxFilesStorage,
-    frontendFilesStorage 
 } from "./infrastructure/storage/storageAccount";
 import { marketing_mysql } from "./infrastructure/database/mysqlServer";
 import { acrUsername, acrPassword, registryUrl } from "./infrastructure/registries/acrRegistry";
@@ -50,7 +49,6 @@ let createSubdomains: pulumi.Output<boolean> = pulumi.output(false).apply(unwrap
 // While these are used in this file, they were only exported for the github actions to use
 export const storageAccountName = config.require("storageAccountName");
 export const resourceGroupName = ResourceGroup.name;
-export const frontendStorageName = frontendFilesStorage.name;
 
 // // Define Azure Function URL for frontend dynamic content
 // const azureFunctionUrl = config.get("azureFunctionUrl") || "frontend-app";
@@ -114,19 +112,6 @@ const jumpboxStorage = new azure_app.ManagedEnvironmentsStorage("jumpbox-files-s
     },
 }, { protect: false, dependsOn: [jumpboxFilesStorage] });
 
-// Create dedicated storage for frontend files
-const frontendStorage = new azure_app.ManagedEnvironmentsStorage("frontend-files-storage", {
-    environmentName: marketing_env.name,
-    resourceGroupName: resourceGroupName,
-    properties: {
-        azureFile: {
-            accountName: storageAccountName,
-            shareName: frontendFilesStorage.name,
-            accessMode: "ReadWrite",
-            accountKey: storageAccountKey,
-        },
-    },
-}, { protect: false, dependsOn: [frontendFilesStorage] });
 
 
 // Function to get the image name from imageBuilds or return the existing image name
@@ -144,7 +129,6 @@ export const mauticNginxApp = mauticNginx({
     managedEnvironmentId: marketing_env.id,
     storageName: mauticStorage.name,
     suiteCrmStorageName: suitecrmStorage.name,
-    frontendStorageName: frontendStorage.name, 
     dbHost: dbHost,
     dbPort: dbPort,
     dbName: dbName,

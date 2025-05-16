@@ -26,7 +26,6 @@ export function mauticNginx(args: {
     managedEnvironmentId: pulumi.Input<string>;
     storageName: pulumi.Input<string>;
     suiteCrmStorageName: pulumi.Input<string>;
-    frontendStorageName?: pulumi.Input<string>; // Add frontend storage name (optional)
     dbHost: pulumi.Input<string>;
     dbPort: pulumi.Input<string>;
     dbName: pulumi.Input<string>;
@@ -130,14 +129,7 @@ export function mauticNginx(args: {
         }
     ];
 
-    // Add frontend mount if storage is provided
-    if (args.frontendStorageName) {
-        volumeMounts.push({
-            mountPath: "/var/www/marketingSite",
-            volumeName: "frontend-files",
-            subPath: "marketingSite",
-        });
-    }
+
 
     // Prepare volumes
     const volumes = [
@@ -163,14 +155,7 @@ export function mauticNginx(args: {
         }
     ];
 
-    // Add frontend volume if storage is provided
-    if (args.frontendStorageName) {
-        volumes.push({
-            name: "frontend-files",
-            storageName: args.frontendStorageName,
-            storageType: azure_app.StorageType.AzureFile
-        });
-    }
+
 
     return new azure_app.ContainerApp("mautic-nginx", {
 
