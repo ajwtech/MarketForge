@@ -100,7 +100,7 @@ export function jumpBox(args: {
             }],
             scale: {
                 maxReplicas: 1, 
-                minReplicas: 1,
+                minReplicas: 0,
                 rules: [{
                     name: "tcp-scaler", 
                     tcp: { 
