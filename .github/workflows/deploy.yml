@@ -57,8 +57,10 @@ jobs:
             --cache-to=type=local,dest=${{ matrix.build.cache }}-new \
             -f ${{ matrix.build.dockerfile }} \
             -t ${{ matrix.build.name }}:latest .
-          rm -rf ${{ matrix.build.cache }}-new
-          mv ${{ matrix.build.cache }}-new ${{ matrix.build.cache }}
+          if [ -d "${{ matrix.build.cache }}-new" ]; then
+            rm -rf ${{ matrix.build.cache }}
+            mv ${{ matrix.build.cache }}-new ${{ matrix.build.cache }}
+          fi
         working-directory: ${{ matrix.build.context }}
 
   pulumi-up:
