@@ -34,7 +34,7 @@ export function strapiApp(args: {
     transferTokenSalt: pulumi.Input<string>;
     cmsUrl: pulumi.Input<string>;
 }) {
-    const imageDigest = imageBuilds["marketing-strapi-app"].digest;
+    const imageDigest = imageBuilds["marketing-strapi-app"];
 
     return new azure_app.ContainerApp(strapiAppUrl, {
         configuration: {
@@ -185,6 +185,6 @@ export function strapiApp(args: {
     },{
         
         protect: false,
-        dependsOn: [strapiAppFilesStorage, storageAccount, imageBuilds["marketing-strapi-app"]],
+        dependsOn: [strapiAppFilesStorage, storageAccount], // Only Pulumi Resources
     });
 }

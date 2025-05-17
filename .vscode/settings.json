@@ -19,5 +19,6 @@
     "yaml.schemas": {
         "https://json.schemastore.org/pulumi.json": "file:///d%3A/Source/MarketForge/azure-deploy/config/Pulumi.test.yaml"
     },
-    "git.ignoreLimitWarning": true
+    "git.ignoreLimitWarning": true,
+    "remote.autoForwardPortsFallback": 0
 }

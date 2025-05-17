@@ -34,7 +34,7 @@ export function mauticNginx(args: {
     azureFunctionUrl?: pulumi.Input<string>; // Add Azure Function URL (optional)
 }) {
    
-    const imageDigest = imageBuilds["marketing-nginx"].digest; // Ensure correct image reference
+    const imageDigest = imageBuilds["marketing-nginx"];
 
     // Get environment variables including logging controls
     const envVars = [
@@ -234,6 +234,6 @@ export function mauticNginx(args: {
     },{
         replaceOnChanges: ["image", "createSubdomains" ],
         protect: false,
-        dependsOn: [ mauticAppFilesStorage, storageAccount, imageBuilds["marketing-nginx"]], // Reference centralized image build
+        dependsOn: [mauticAppFilesStorage, storageAccount], // Only Pulumi Resources
     });
 }

@@ -1,6 +1,5 @@
 import * as pulumi from "@pulumi/pulumi";
 import { storageAccountName, storageAccountKey, storageAccount, configFilePlaceholder } from "../storage/storageAccount";
-import { imageBuilds } from "../dockerImages";
 import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 
 const config = new pulumi.Config();
@@ -25,7 +24,6 @@ export function mauticWeb(args: {
     siteUrl: pulumi.Output<string>;
 
 }) {
-    const imageDigest = imageBuilds["marketing-mautic-app"].digest;
     return new azure_app.ContainerApp("mautic-web", {
 
         configuration: {
@@ -96,7 +94,7 @@ export function mauticWeb(args: {
                     // Use a dummy variable to force revision updates when the image changes.
                     {
                         name: "DEPLOY_TRIGGER",
-                        value: imageDigest,
+                        value: args.image,
                     },
                 ],
                 resources: {
@@ -177,6 +175,6 @@ export function mauticWeb(args: {
         },
     }, {
         protect: false,
-        dependsOn: [storageAccount, imageBuilds["marketing-mautic-app"], configFilePlaceholder],
+        dependsOn: [storageAccount, configFilePlaceholder],
     });
 }

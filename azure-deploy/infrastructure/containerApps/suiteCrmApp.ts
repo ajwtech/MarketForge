@@ -34,7 +34,7 @@ interface suitecrmAppArgs {
 }
 
 export function suitecrmApp(args: suitecrmAppArgs) {
-    const imageDigest = imageBuilds["marketing-suitecrm-app"].digest;
+    const imageDigest = imageBuilds["marketing-suitecrm-app"];
 
     return new azure_app.ContainerApp(suitecrmAppUrl, {
         resourceGroupName: args.resourceGroupName,
@@ -162,6 +162,6 @@ export function suitecrmApp(args: suitecrmAppArgs) {
         ],
         },
     },{
-        dependsOn:[storageAccount, imageBuilds["marketing-suitecrm-app"]],
+        dependsOn: [storageAccount], // Only Pulumi Resources
     });
 }

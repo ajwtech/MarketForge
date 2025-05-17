@@ -1,6 +1,6 @@
 import * as pulumi from '@pulumi/pulumi';
 import * as docker from '@pulumi/docker';
-import { registryUrl, acrUsername, acrPassword } from './registries/acrRegistry';
+import { registryUrl } from './registries/acrRegistry';
 
 const config = new pulumi.Config();
 const imageTag = config.get('imageTag') || 'latest';
@@ -15,19 +15,13 @@ const imageNames = [
 const imageBuilds: { [key: string]: pulumi.Output<string> } = {};
 
 for (const imageName of imageNames) {
-  const localTag = `${imageName}:latest`; // or use imageTag if you tag locally with it
-  imageBuilds[imageName] = registryUrl.apply(url => `${url}/${imageName}:${imageTag}`);
+  // The full remote tag (with registry name)
+  const remoteTag = registryUrl.apply(url => `${url}/${imageName}:${imageTag}`);
+  imageBuilds[imageName] = remoteTag;
 
   new docker.RegistryImage(imageName, {
-    name: imageBuilds[imageName],
-    build: undefined, // Not needed, image must already exist locally
-    localImageName: localTag, // This is the local image to push
+    name: remoteTag, // Remote ACR image name (with registry)
     keepRemotely: true,
-    registry: {
-      server: registryUrl,
-      username: acrUsername,
-      password: acrPassword,
-    },
   });
 }
 
