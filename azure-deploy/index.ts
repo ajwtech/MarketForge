@@ -1,5 +1,4 @@
 import * as pulumi from "@pulumi/pulumi";
-import * as dockerbuild from "@pulumi/docker-build";
 import * as random from "@pulumi/random";
 import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 
@@ -114,15 +113,15 @@ const jumpboxStorage = new azure_app.ManagedEnvironmentsStorage("jumpbox-files-s
 
 
 
-// Function to get the image name from imageBuilds or return the existing image name
-function getImageName(imageBuilds: { [key: string]: dockerbuild.Image }, imageName: string): pulumi.Output<string> {
-    return imageBuilds[imageName] ? imageBuilds[imageName].tags.apply(tags => tags ? tags[0] : "") : pulumi.interpolate`${registryUrl}/${imageName}:${imageTag}`;
+// Function to get the image name from the registry
+function getImageName(imageName: string): pulumi.Output<string> {
+    return registryUrl.apply(url => `${url}/${imageName}:${imageTag}`);
 }
 
 // Deploy the Mautic Nginx App
 export const mauticNginxApp = mauticNginx({
     env: appEnv,
-    image: getImageName(imageBuilds, "marketing-nginx"),
+    image: getImageName("marketing-nginx"),
     registryUrl: registryUrl,
     registryUsername: acrUsername,
     registryPassword: acrPassword,
@@ -143,7 +142,7 @@ const nginxCvid = mauticNginxApp.customDomainVerificationId.apply(cvid => cvid);
 // Deploy the Mautic Web App
 export const mauticWebApp = mauticWeb({
     env: appEnv,
-    image: getImageName(imageBuilds, "marketing-mautic-app"),
+    image: getImageName("marketing-mautic-app"),
     registryUrl: registryUrl,
     registryUsername: acrUsername,
     registryPassword: acrPassword,
@@ -163,7 +162,7 @@ export const mauticWebApp = mauticWeb({
 // Deploy the Strapi App using the dedicated strapi storage mount
 export const deployedStrapiApp = strapiApp({
     env: appEnv,
-    image: getImageName(imageBuilds, "marketing-strapi-app"),
+    image: getImageName("marketing-strapi-app"),
     registryUrl: registryUrl,
     registryUsername: acrUsername,
     registryPassword: acrPassword,
@@ -191,7 +190,7 @@ export const deployedSuitecrmApp = suitecrmApp({
     env: appEnv,
     appSecret: appSecret,
     siteFQDN: siteFQDN,
-    image: getImageName(imageBuilds, "marketing-suitecrm-app"),
+    image: getImageName("marketing-suitecrm-app"),
     registryUrl: registryUrl,
     registryUsername: acrUsername,
     registryPassword: acrPassword,
