@@ -34,7 +34,7 @@ export function strapiApp(args: {
     transferTokenSalt: pulumi.Input<string>;
     cmsUrl: pulumi.Input<string>;
 }) {
-    const imageDigest = imageBuilds["marketing-strapi-app"];
+    const imageTag = imageBuilds["marketing-strapi-app"];
 
     return new azure_app.ContainerApp(strapiAppUrl, {
         configuration: {
@@ -144,7 +144,7 @@ export function strapiApp(args: {
                     // Use a dummy variable to force revision updates when the image changes.
                     {
                         name: "DEPLOY_TRIGGER",
-                        value: imageDigest,
+                        value: imageTag,
                     },
                 ],
                 image: args.image,

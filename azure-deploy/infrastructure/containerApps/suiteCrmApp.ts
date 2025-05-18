@@ -34,7 +34,7 @@ interface suitecrmAppArgs {
 }
 
 export function suitecrmApp(args: suitecrmAppArgs) {
-    const imageDigest = imageBuilds["marketing-suitecrm-app"];
+    const imageTag = imageBuilds["marketing-suitecrm-app"];
 
     return new azure_app.ContainerApp(suitecrmAppUrl, {
         resourceGroupName: args.resourceGroupName,
@@ -72,7 +72,7 @@ export function suitecrmApp(args: suitecrmAppArgs) {
                 template: {
                     containers: [{
                         name: "suitecrm-app",
-                        image: args.image,
+                        image: imageTag,
                         env: [
                     { name: "APP_ENV", value: args.env },
                     { name: "DB_HOST", value: args.dbHost },
@@ -91,7 +91,7 @@ export function suitecrmApp(args: suitecrmAppArgs) {
                     // Use a dummy variable to force revision updates when the image changes.
                     {
                         name: "DEPLOY_TRIGGER",
-                        value: imageDigest,
+                        value: imageTag,
                     },
 
                 ],

@@ -34,7 +34,7 @@ export function mauticNginx(args: {
     azureFunctionUrl?: pulumi.Input<string>; // Add Azure Function URL (optional)
 }) {
    
-    const imageDigest = imageBuilds["marketing-nginx"];
+    const imageTag = imageBuilds["marketing-nginx"];
 
     // Get environment variables including logging controls
     const envVars = [
@@ -101,7 +101,7 @@ export function mauticNginx(args: {
         },
         {
             name: "DEPLOY_TRIGGER",
-            value: imageDigest,
+            value: imageTag,
         }
     ];
 

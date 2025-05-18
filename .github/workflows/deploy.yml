@@ -1,83 +1,20 @@
-name: Deploy 
+name: Deploy
 on:
   push:
     branches:
       - master
 jobs:
-  build-images:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        build:
-          - name: marketing-web-app
-            dockerfile: Dockerfile.prod
-            context: launchpad
-            cache: /tmp/.buildx-cache-web
-          - name: marketing-nginx
-            dockerfile: marketing-nginx.dockerfile
-            context: mautic
-            cache: /tmp/.buildx-cache-nginx
-          - name: marketing-mautic-app
-            dockerfile: marketing-mautic-app.dockerfile
-            context: mautic
-            cache: /tmp/.buildx-cache-mautic
-          - name: marketing-suitecrm-app
-            dockerfile: marketing-suitecrm-app.dockerfile
-            context: suitecrm
-            cache: /tmp/.buildx-cache-suitecrm
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Copy SuiteCRM-Core into mautic/suitecrm context (for nginx build)
-        if: matrix.build.name == 'marketing-nginx'
-        run: |
-          mkdir -p mautic/suitecrm
-          cp -a suitecrm/SuiteCRM-Core mautic/suitecrm/SuiteCRM-Core
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Ensure cache directory exists
-        run: mkdir -p ${{ matrix.build.cache }}
-
-      - name: Cache Docker layers
-        uses: actions/cache@v4
-        with:
-          path: ${{ matrix.build.cache }}
-          key: ${{ runner.os }}-buildx-${{ matrix.build.name }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-${{ matrix.build.name }}-
-
-      - name: Build ${{ matrix.build.name }} image with cache
-        run: |
-          docker buildx build \
-            --cache-from=type=local,src=${{ matrix.build.cache }} \
-            --cache-to=type=local,dest=${{ matrix.build.cache }}-new \
-            -f ${{ matrix.build.dockerfile }} \
-            -t ${{ matrix.build.name }}:latest .
-          if [ -d "${{ matrix.build.cache }}-new" ]; then
-            rm -rf ${{ matrix.build.cache }}
-            mv ${{ matrix.build.cache }}-new ${{ matrix.build.cache }}
-          fi
-        working-directory: ${{ matrix.build.context }}
-
-  pulumi-up:
-    needs: build-images
-    if: github.ref == 'refs/heads/master'
+  pulumi-infra:
     runs-on: ubuntu-latest
     environment: pulumi_environments
     container:
       image: ghcr.io/catthehacker/ubuntu:act-22.04
     env:
       ENV_ESC: ${{ vars.ESC }}
-    strategy:
-      matrix:
-        stack: [$ENV_ESC]
-    permissions:
-      contents: read
-      id-token: write
+    outputs:
+      ACR_USERNAME: ${{ steps.acr-creds.outputs.ACR_USERNAME }}
+      ACR_PASSWORD: ${{ steps.acr-creds.outputs.ACR_PASSWORD }}
+      ACR_URL: ${{ steps.acr-creds.outputs.ACR_URL }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -85,51 +22,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: ./azure-deploy/package.json
-
       - name: Set stack variables
         run: |
-          if [ -n "${{ env.ESC }}" ]; then
-            FULL_STACK="${{ env.ESC }}"
-            echo "Using matrix stack: ${FULL_STACK}"
-          elif [ -n "${{ matrix.stack }}" ]; then
-            FULL_STACK=${{ matrix.stack }}
-            echo "Using matrix stack: ${FULL_STACK}"
-          else
-            FULL_STACK=""
-            echo "No stack value provided. create a repo variable named '${{ matrix.stack }}' and list the fully qualified environments e.g. 'org/project/environment'"
-            echo "You can also set the environment variable ESC in the workflow file however you can only use one environment at a time."
-            echo "::error file={name},line={line},endLine={endLine},title={title}::{message}"
-            exit 1
-          fi
+          FULL_STACK="${{ vars.ESC }}"
           TRIMMED_STACK="${FULL_STACK##*/}"
           ESC_ENVIRONMENT="${FULL_STACK#*/}"
           echo "TRIMMED_STACK=${TRIMMED_STACK}" >> $GITHUB_ENV
           echo "FULL_STACK=${FULL_STACK}" >> $GITHUB_ENV
           echo "ESC_ENVIRONMENT=${ESC_ENVIRONMENT}" >> $GITHUB_ENV
-          echo "TRIMMED_STACK: ${TRIMMED_STACK}"
-          echo "FULL_STACK: ${FULL_STACK}" 
-          echo "ESC_ENVIRONMENT: ${ESC_ENVIRONMENT}"
           echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
-
-      - name: Cache yarn dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.npm
-            ./azure-deploy/node_modules
-          key: ${{ runner.os }}-npm-${{ hashFiles('./azure-deploy/.yarn/install-state.gz') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-${{ hashFiles('./azure-deploy/.yarn/install-state.gz') }}
-
       - name: Enable Corepack
         run: corepack enable
-
       - name: Activate Yarn 4.9.1 (with retry)
         run: |
           for i in 1 2 3 4 5; do
             corepack prepare yarn@4.9.1 --activate && break || sleep 10
           done
-
       - name: Set ARM environment variables
         run: |
           echo "ARM_CLIENT_ID=${{ secrets.ARM_CLIENT_ID }}" >> $GITHUB_ENV
@@ -137,58 +45,18 @@ jobs:
           echo "ARM_TENANT_ID=${{ secrets.ARM_TENANT_ID }}" >> $GITHUB_ENV
           echo "ARM_SUBSCRIPTION_ID=${{ secrets.ARM_SUBSCRIPTION_ID }}" >> $GITHUB_ENV
           echo "PULUMI_ACCESS_TOKEN=${{ secrets.PULUMI_ACCESS_TOKEN }}" >> $GITHUB_ENV
-          
-      - name: Create Pulumi configuration file
-        working-directory: ./azure-deploy
-        run: |
-          mkdir -p ./config
-          cat <<EOF > ./config/Pulumi.${TRIMMED_STACK}.yaml
-            environment: 
-              - ${ESC_ENVIRONMENT}
-          EOF
-
-      - name: Verify Pulumi configuration file
-        working-directory: ./azure-deploy
-        run: |
-          echo "Pulumi configuration file content:"
-          cat ./config/Pulumi.${TRIMMED_STACK}.yaml
-
       - name: Set up Pulumi
         uses: pulumi/actions@v6
-        with: 
+        with:
           pulumi-version: 3.165.0
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-
-      - name: Install Pulumi ESC CLI
-        uses: pulumi/esc-action@v1
-        with:
-          environment: ${{ env.FULL_STACK }}
-        env:
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-             
       - name: Install Azure CLI
         uses: pietrobolcato/install-azure-cli-action@main
-
       - name: Install Dependencies
         run: yarn install --immutable
         working-directory: ./azure-deploy
-
-      - name: Copy SuiteCRM-Core for Pulumi (guarantee context)
-        run: |
-          mkdir -p mautic/suitecrm
-          cp -a suitecrm/SuiteCRM-Core mautic/suitecrm/SuiteCRM-Core
-
-      - name: Azure CLI Login
-        uses: azure/login@v2
-        with:
-          creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","subscriptionId":"${{ secrets.ARM_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
-
-
-      - name: Set Azure Subscription (explicit, optional)
-        run: az account set --subscription ${{ secrets.ARM_SUBSCRIPTION_ID }}
-
-      - name: Run Pulumi inside ESC environment
+      - name: Run Pulumi to create infra (ACR, storage, etc)
         working-directory: ./azure-deploy
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
@@ -197,8 +65,90 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
         run: |
-          esc run ${FULL_STACK} -- bash -c "
-            pulumi stack select ${TRIMMED_STACK} &&
-            pulumi up --yes
-            "
+          pulumi stack select ${TRIMMED_STACK}
+          pulumi up --yes --target "infrastructure/registries/acrRegistry.ts"
+      - name: Export ACR credentials for next job
+        id: acr-creds
+        run: |
+          echo "ACR_USERNAME=$(pulumi stack output acrUsername)" >> $GITHUB_OUTPUT
+          echo "ACR_PASSWORD=$(pulumi stack output acrPassword)" >> $GITHUB_OUTPUT
+          echo "ACR_URL=$(pulumi stack output registryUrl)" >> $GITHUB_OUTPUT
+
+  build-and-push-images:
+    needs: pulumi-infra
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Login to Azure Container Registry
+        run: echo ${{ needs.pulumi-infra.outputs.ACR_PASSWORD }} | docker login ${{ needs.pulumi-infra.outputs.ACR_URL }} -u ${{ needs.pulumi-infra.outputs.ACR_USERNAME }} --password-stdin
+      - name: Build and push Docker images
+        run: |
+          docker buildx create --use
+          docker buildx build --push -t ${{ needs.pulumi-infra.outputs.ACR_URL }}/marketing-nginx:latest -f mautic/marketing-nginx.dockerfile mautic
+          docker buildx build --push -t ${{ needs.pulumi-infra.outputs.ACR_URL }}/marketing-mautic-app:latest -f mautic/marketing-mautic-app.dockerfile mautic
+          docker buildx build --push -t ${{ needs.pulumi-infra.outputs.ACR_URL }}/marketing-strapi-app:latest -f launchpad/Dockerfile.prod launchpad
+          docker buildx build --push -t ${{ needs.pulumi-infra.outputs.ACR_URL }}/marketing-suitecrm-app:latest -f suitecrm/marketing-suitecrm-app.dockerfile suitecrm
+
+  pulumi-apps:
+    needs: build-and-push-images
+    runs-on: ubuntu-latest
+    environment: pulumi_environments
+    container:
+      image: ghcr.io/catthehacker/ubuntu:act-22.04
+    env:
+      ENV_ESC: ${{ vars.ESC }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ./azure-deploy/package.json
+      - name: Set stack variables
+        run: |
+          FULL_STACK="${{ vars.ESC }}"
+          TRIMMED_STACK="${FULL_STACK##*/}"
+          ESC_ENVIRONMENT="${FULL_STACK#*/}"
+          echo "TRIMMED_STACK=${TRIMMED_STACK}" >> $GITHUB_ENV
+          echo "FULL_STACK=${FULL_STACK}" >> $GITHUB_ENV
+          echo "ESC_ENVIRONMENT=${ESC_ENVIRONMENT}" >> $GITHUB_ENV
+          echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Activate Yarn 4.9.1 (with retry)
+        run: |
+          for i in 1 2 3 4 5; do
+            corepack prepare yarn@4.9.1 --activate && break || sleep 10
+          done
+      - name: Set ARM environment variables
+        run: |
+          echo "ARM_CLIENT_ID=${{ secrets.ARM_CLIENT_ID }}" >> $GITHUB_ENV
+          echo "ARM_CLIENT_SECRET=${{ secrets.ARM_CLIENT_SECRET }}" >> $GITHUB_ENV
+          echo "ARM_TENANT_ID=${{ secrets.ARM_TENANT_ID }}" >> $GITHUB_ENV
+          echo "ARM_SUBSCRIPTION_ID=${{ secrets.ARM_SUBSCRIPTION_ID }}" >> $GITHUB_ENV
+          echo "PULUMI_ACCESS_TOKEN=${{ secrets.PULUMI_ACCESS_TOKEN }}" >> $GITHUB_ENV
+      - name: Set up Pulumi
+        uses: pulumi/actions@v6
+        with:
+          pulumi-version: 3.165.0
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+      - name: Install Azure CLI
+        uses: pietrobolcato/install-azure-cli-action@main
+      - name: Install Dependencies
+        run: yarn install --immutable
+        working-directory: ./azure-deploy
+      - name: Run Pulumi to deploy container apps
+        working-directory: ./azure-deploy
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+        run: |
+          pulumi stack select ${TRIMMED_STACK}
+          pulumi up --yes --target "infrastructure/containerApps/mauticNginx.ts" --target "infrastructure/containerApps/strapiApp.ts" --target "infrastructure/containerApps/suiteCrmApp.ts"
 
