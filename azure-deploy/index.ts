@@ -318,14 +318,14 @@ const jumpboxStorage = new azure_app.ManagedEnvironmentsStorage("jumpbox-files-s
         resourceGroupName: resourceGroupName,
     });
 
-    // Assign to module-level variables for export
-    globalThis._mauticNginxApp = mauticNginxApp;
-    globalThis._mauticWebApp = mauticWebApp;
-    globalThis._deployedStrapiApp = deployedStrapiApp;
-    globalThis._deployedSuitecrmApp = deployedSuitecrmApp;
-    globalThis._cloudflareDNSentries = cloudflareDNSentries;
-    globalThis._customDomains = customDomains;
-    globalThis._jumpboxApp = jumpboxApp;
+    // Assign to module-level variables for export (with type safety)
+    (globalThis as any)._mauticNginxApp = mauticNginxApp;
+    (globalThis as any)._mauticWebApp = mauticWebApp;
+    (globalThis as any)._deployedStrapiApp = deployedStrapiApp;
+    (globalThis as any)._deployedSuitecrmApp = deployedSuitecrmApp;
+    (globalThis as any)._cloudflareDNSentries = cloudflareDNSentries;
+    (globalThis as any)._customDomains = customDomains;
+    (globalThis as any)._jumpboxApp = jumpboxApp;
     break;
   }
   default: {
@@ -395,7 +395,7 @@ function getImageName(imageName: string): pulumi.Output<string> {
 }
 
 // Deploy the Mautic Nginx App
-export const mauticNginxApp = mauticNginx({
+const mauticNginxApp = mauticNginx({
     env: appEnv,
     image: getImageName("marketing-nginx"),
     registryUrl: registryUrl,
@@ -411,12 +411,11 @@ export const mauticNginxApp = mauticNginx({
     createSubdomains: createSubdomains, // Set to false for initial deployment
     // azureFunctionUrl: azureFunctionUrl, 
 });
-
 const siteFQDN = mauticNginxApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost");
 const nginxCvid = mauticNginxApp.customDomainVerificationId.apply(cvid => cvid);
 
 // Deploy the Mautic Web App
-export const mauticWebApp = mauticWeb({
+const mauticWebApp = mauticWeb({
     env: appEnv,
     image: getImageName("marketing-mautic-app"),
     registryUrl: registryUrl,
@@ -436,7 +435,7 @@ export const mauticWebApp = mauticWeb({
 });
 
 // Deploy the Strapi App using the dedicated strapi storage mount
-export const deployedStrapiApp = strapiApp({
+const deployedStrapiApp = strapiApp({
     env: appEnv,
     image: getImageName("marketing-strapi-app"),
     registryUrl: registryUrl,
@@ -462,7 +461,7 @@ export const deployedStrapiApp = strapiApp({
 
 
 // Deploy the suitecrm App
-export const deployedSuitecrmApp = suitecrmApp({
+const deployedSuitecrmApp = suitecrmApp({
     env: appEnv,
     appSecret: appSecret,
     siteFQDN: siteFQDN,
@@ -487,7 +486,7 @@ export const deployedSuitecrmApp = suitecrmApp({
 });
 
 
-export const cloudflareDNSentries = BoolSubdomains ? setupDns({
+const cloudflareDNSentries = BoolSubdomains ? setupDns({
     domain: domain,
     cmsSubdomain: cmsSubdomain,
     crmSubdomain: crmSubdomain,
@@ -503,10 +502,10 @@ export const cloudflareDNSentries = BoolSubdomains ? setupDns({
 }) : undefined ; // Set to undefined if BoolSubdomains is false
 
 // Update mauticNginxApp to use the cloudflareDNSentries as the customDomains
-export const customDomains = nginxCerts(mauticNginxApp, deployedStrapiApp, marketing_env, cloudflareDNSentries);
+const customDomains = nginxCerts(mauticNginxApp, deployedStrapiApp, marketing_env, cloudflareDNSentries);
 
 // Deploy the Jumpbox container app
-export const jumpboxApp = jumpbox({
+const jumpboxApp = jumpbox({
     env: appEnv,
     managedEnvironmentId: marketing_env.id,
     storageName: jumpboxStorage.name,  // Updated to use jumpbox storage
@@ -518,13 +517,22 @@ export const jumpboxApp = jumpbox({
   }
 }
 
-// Export resources at the top-level for Pulumi stack outputs (after switch)
-export const mauticNginxApp = globalThis._mauticNginxApp;
-export const mauticWebApp = globalThis._mauticWebApp;
-export const deployedStrapiApp = globalThis._deployedStrapiApp;
-export const deployedSuitecrmApp = globalThis._deployedSuitecrmApp;
-export const cloudflareDNSentries = globalThis._cloudflareDNSentries;
-export const customDomains = globalThis._customDomains;
-export const jumpboxApp = globalThis._jumpboxApp;
+// Assign to module-level variables for export (with type safety)
+(globalThis as any)._mauticNginxApp = mauticNginxApp;
+(globalThis as any)._mauticWebApp = mauticWebApp;
+(globalThis as any)._deployedStrapiApp = deployedStrapiApp;
+(globalThis as any)._deployedSuitecrmApp = deployedSuitecrmApp;
+(globalThis as any)._cloudflareDNSentries = cloudflareDNSentries;
+(globalThis as any)._customDomains = customDomains;
+(globalThis as any)._jumpboxApp = jumpboxApp;
+
+// Export stack outputs at the module level for all resources
+export const mauticNginxApp = (globalThis as any)._mauticNginxApp;
+export const mauticWebApp = (globalThis as any)._mauticWebApp;
+export const deployedStrapiApp = (globalThis as any)._deployedStrapiApp;
+export const deployedSuitecrmApp = (globalThis as any)._deployedSuitecrmApp;
+export const cloudflareDNSentries = (globalThis as any)._cloudflareDNSentries;
+export const customDomains = (globalThis as any)._customDomains;
+export const jumpboxApp = (globalThis as any)._jumpboxApp;
 
 
