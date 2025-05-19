@@ -63,6 +63,7 @@ jobs:
         env_esc: ${{ fromJson(vars.ESC) }}
     env:
       ENV_ESC: ${{ matrix.env_esc }}
+      PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
     outputs:
       ACR_USERNAME: ${{ steps.acr-creds.outputs.ACR_USERNAME }}
       ACR_PASSWORD: ${{ steps.acr-creds.outputs.ACR_PASSWORD }}
@@ -78,10 +79,6 @@ jobs:
           ORG="${ENV_ESC%%/*}"
           echo "organization=$ORG" >> $GITHUB_OUTPUT
         
-      - uses: pulumi/auth-actions@v1
-        with:
-          organization: ${{ steps.set-esc-vars.outputs.organization }}
-          requested-token-type: urn:pulumi:token-type:access_token:organization
       - uses: pulumi/esc-action@v1
 
       - name: Run Pulumi for ACR infra only
@@ -108,6 +105,7 @@ jobs:
         env_esc: ${{ fromJson(vars.ESC) }}
     env:
       ENV_ESC: ${{ matrix.env_esc }}
+      PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -118,10 +116,6 @@ jobs:
           echo "ESC_ACTION_ENVIRONMENT=$ENV_ESC" >> $GITHUB_ENV
           ORG="${ENV_ESC%%/*}"
           echo "organization=$ORG" >> $GITHUB_OUTPUT
-      - uses: pulumi/auth-actions@v1
-        with:
-          organization: ${{ steps.set-esc-vars.outputs.organization }}
-          requested-token-type: urn:pulumi:token-type:access_token:organization
       - uses: pulumi/esc-action@v1
       - name: Run Pulumi for infra (no apps)
         working-directory: ./azure-deploy
@@ -158,6 +152,7 @@ jobs:
         env_esc: ${{ fromJson(vars.ESC) }}
     env:
       ENV_ESC: ${{ matrix.env_esc }}
+      PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -168,10 +163,6 @@ jobs:
           echo "ESC_ACTION_ENVIRONMENT=$ENV_ESC" >> $GITHUB_ENV
           ORG="${ENV_ESC%%/*}"
           echo "organization=$ORG" >> $GITHUB_OUTPUT
-      - uses: pulumi/auth-actions@v1
-        with:
-          organization: ${{ steps.set-esc-vars.outputs.organization }}
-          requested-token-type: urn:pulumi:token-type:access_token:organization
       - uses: pulumi/esc-action@v1
       - name: Run Pulumi for apps only
         working-directory: ./azure-deploy
