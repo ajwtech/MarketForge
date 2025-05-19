@@ -318,8 +318,14 @@ const jumpboxStorage = new azure_app.ManagedEnvironmentsStorage("jumpbox-files-s
         resourceGroupName: resourceGroupName,
     });
 
-    // Export resources at the top-level for Pulumi stack outputs
-    export { mauticNginxApp, mauticWebApp, deployedStrapiApp, deployedSuitecrmApp, cloudflareDNSentries, customDomains, jumpboxApp };
+    // Assign to module-level variables for export
+    globalThis._mauticNginxApp = mauticNginxApp;
+    globalThis._mauticWebApp = mauticWebApp;
+    globalThis._deployedStrapiApp = deployedStrapiApp;
+    globalThis._deployedSuitecrmApp = deployedSuitecrmApp;
+    globalThis._cloudflareDNSentries = cloudflareDNSentries;
+    globalThis._customDomains = customDomains;
+    globalThis._jumpboxApp = jumpboxApp;
     break;
   }
   default: {
@@ -511,5 +517,14 @@ export const jumpboxApp = jumpbox({
     break;
   }
 }
+
+// Export resources at the top-level for Pulumi stack outputs (after switch)
+export const mauticNginxApp = globalThis._mauticNginxApp;
+export const mauticWebApp = globalThis._mauticWebApp;
+export const deployedStrapiApp = globalThis._deployedStrapiApp;
+export const deployedSuitecrmApp = globalThis._deployedSuitecrmApp;
+export const cloudflareDNSentries = globalThis._cloudflareDNSentries;
+export const customDomains = globalThis._customDomains;
+export const jumpboxApp = globalThis._jumpboxApp;
 
 

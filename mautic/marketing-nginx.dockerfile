@@ -130,20 +130,19 @@ RUN mkdir /etc/nginx/utils.d && \
     chmod -R 755 /etc/nginx/utils.d
 
 #utility configs
-COPY ./nginx.configd/fastcgi-params.conf /etc/nginx/utils.d/fastcgi-params.conf
-COPY ./nginx.configd/options-gzip-nginx.conf /etc/nginx/utils.d/options-gzip-nginx.conf
-COPY ./nginx.configd/options-ssl-nginx.conf /etc/nginx/utils.d/options-ssl-nginx.conf
-COPY ./nginx.configd/fastcgi-php-nginx.conf /etc/nginx/utils.d/fastcgi-php-nginx.conf 
- 
+COPY mautic/nginx.configd/fastcgi-params.conf /etc/nginx/utils.d/fastcgi-params.conf
+COPY mautic/nginx.configd/options-gzip-nginx.conf /etc/nginx/utils.d/options-gzip-nginx.conf
+COPY mautic/nginx.configd/options-ssl-nginx.conf /etc/nginx/utils.d/options-ssl-nginx.conf
+COPY mautic/nginx.configd/fastcgi-php-nginx.conf /etc/nginx/utils.d/fastcgi-php-nginx.conf
 
 #server configs
-COPY ./nginx.configd/mauticdemo.nginx.conf /etc/nginx/conf.d/default.conf
-COPY ./nginx.configd/strapi.conf /etc/nginx/conf.d/strapi.conf
-COPY ./nginx.configd/suitecrm.conf /etc/nginx/conf.d/suitecrm.conf
+COPY mautic/nginx.configd/mauticdemo.nginx.conf /etc/nginx/conf.d/default.conf
+COPY mautic/nginx.configd/strapi.conf /etc/nginx/conf.d/strapi.conf
+COPY mautic/nginx.configd/suitecrm.conf /etc/nginx/conf.d/suitecrm.conf
 
 #configs with templates
-COPY ./nginx.configd/nginx.conf /etc/nginx/templates/nginx.conf.template
-COPY ./nginx.configd/logging.conf /etc/nginx/templates/logging.conf.template
+COPY mautic/nginx.configd/nginx.conf /etc/nginx/templates/nginx.conf.template
+COPY mautic/nginx.configd/logging.conf /etc/nginx/templates/logging.conf.template
 
 # Copy startup script
 COPY mautic/entrypoint_nginx.sh /entrypoint_nginx.sh
