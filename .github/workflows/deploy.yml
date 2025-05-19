@@ -82,6 +82,9 @@ jobs:
       - uses: pulumi/esc-action@v1
       - name: Install Pulumi CLI
         uses: pulumi/setup-pulumi@v2
+      - name: Select Pulumi stack
+        working-directory: ./azure-deploy
+        run: pulumi stack select ${{ env.ENV_ESC }}
       - name: Run Pulumi for ACR infra only
         working-directory: ./azure-deploy
         env:
@@ -120,6 +123,9 @@ jobs:
       - uses: pulumi/esc-action@v1
       - name: Install Pulumi CLI
         uses: pulumi/setup-pulumi@v2
+      - name: Select Pulumi stack
+        working-directory: ./azure-deploy
+        run: pulumi stack select ${{ env.ENV_ESC }}
       - name: Run Pulumi for infra (no apps)
         working-directory: ./azure-deploy
         env:
@@ -169,6 +175,9 @@ jobs:
       - uses: pulumi/esc-action@v1
       - name: Install Pulumi CLI
         uses: pulumi/setup-pulumi@v2
+      - name: Select Pulumi stack
+        working-directory: ./azure-deploy
+        run: pulumi stack select ${{ env.ENV_ESC }}
       - name: Run Pulumi for apps only
         working-directory: ./azure-deploy
         env:
