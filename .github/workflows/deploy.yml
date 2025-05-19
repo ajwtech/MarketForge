@@ -36,6 +36,7 @@ jobs:
       - name: Set stack variables
         id: set-stack-vars
         run: |
+          echo "FULL_STACK=${ENV_ESC}"
           echo "FULL_STACK=${ENV_ESC}" >> $GITHUB_ENV
           trimmed_stack="${ENV_ESC##*/}"
           esc_environment="${ENV_ESC#*/}"
