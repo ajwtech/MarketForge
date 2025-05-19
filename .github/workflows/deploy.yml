@@ -74,6 +74,7 @@ jobs:
         run: |
           echo "ESC_ACTION_ENVIRONMENT=$ENV_ESC" >> $GITHUB_ENV
           ORG="${ENV_ESC%%/*}"
+          echo $ORG
           echo "organization=$ORG" >> $GITHUB_OUTPUT
           echo "OIDC_ORGANIZATION=$ORG" >> $GITHUB_ENV
       - uses: pulumi/esc-action@v1
