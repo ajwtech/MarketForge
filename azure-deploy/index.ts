@@ -2,14 +2,6 @@ import * as pulumi from "@pulumi/pulumi";
 import * as random from "@pulumi/random";
 import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 
-// Declare stack output variables at module scope to avoid 'used before declaration' errors
-let mauticNginxApp: any;
-let mauticWebApp: any;
-let deployedStrapiApp: any;
-let deployedSuitecrmApp: any;
-let cloudflareDNSentries: any;
-let customDomains: any;
-let jumpboxApp: any;
 
 // import resources to manage
 import { ResourceGroup } from "./infrastructure/resourceGroup";
@@ -30,6 +22,16 @@ import { suitecrmApp } from "./infrastructure/containerApps/suiteCrmApp"; // Imp
 import { setupDns } from "./infrastructure/dns/customDomains";
 import { nginxCerts } from "./infrastructure/certificates/nginxCerts";
 import { jumpBox as jumpbox } from "./infrastructure/containerApps/jumpbox"; // Import jumpbox deployment function
+
+
+// Declare stack output variables at module scope to avoid 'used before declaration' errors
+let mauticNginxApp: any;
+let mauticWebApp: any;
+let deployedStrapiApp: any;
+let deployedSuitecrmApp: any;
+let cloudflareDNSentries: any;
+let customDomains: any;
+let jumpboxApp: any;
 
 const config = new pulumi.Config();
 
