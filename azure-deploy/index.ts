@@ -2,6 +2,14 @@ import * as pulumi from "@pulumi/pulumi";
 import * as random from "@pulumi/random";
 import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 
+// Declare stack output variables at module scope to avoid 'used before declaration' errors
+let mauticNginxApp: any;
+let mauticWebApp: any;
+let deployedStrapiApp: any;
+let deployedSuitecrmApp: any;
+let cloudflareDNSentries: any;
+let customDomains: any;
+let jumpboxApp: any;
 
 // import resources to manage
 import { ResourceGroup } from "./infrastructure/resourceGroup";
@@ -219,8 +227,8 @@ const jumpboxStorage = new azure_app.ManagedEnvironmentsStorage("jumpbox-files-s
         // azureFunctionUrl: azureFunctionUrl, 
     });
 
-    const siteFQDN = mauticNginxApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost");
-    const nginxCvid = mauticNginxApp.customDomainVerificationId.apply(cvid => cvid);
+    const siteFQDN = mauticNginxApp.configuration.apply((fqdn: any) => fqdn?.ingress?.fqdn ?? "localhost");
+    const nginxCvid = mauticNginxApp.customDomainVerificationId.apply((cvid: any) => cvid);
 
     // Deploy the Mautic Web App
     mauticWebApp = mauticWeb({
@@ -301,9 +309,9 @@ const jumpboxStorage = new azure_app.ManagedEnvironmentsStorage("jumpbox-files-s
         nginxCvid: nginxCvid,
         mauticNginxApp: mauticNginxApp,
         strapiApp: deployedStrapiApp,
-        strapiFQDN: deployedStrapiApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
+        strapiFQDN: deployedStrapiApp.configuration.apply((fqdn: any) => fqdn?.ingress?.fqdn ?? "localhost"),
         suiteCrmApp: deployedSuitecrmApp,
-        suiteCrmFQDN: deployedSuitecrmApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
+        suiteCrmFQDN: deployedSuitecrmApp.configuration.apply((fqdn: any) => fqdn?.ingress?.fqdn ?? "localhost"),
     }) : undefined; // Set to undefined if BoolSubdomains is false
 
     const customDomains = nginxCerts(mauticNginxApp, deployedStrapiApp, marketing_env, cloudflareDNSentries);
@@ -411,8 +419,8 @@ mauticNginxApp = mauticNginx({
     createSubdomains: createSubdomains, // Set to false for initial deployment
     // azureFunctionUrl: azureFunctionUrl, 
 });
-const siteFQDN = mauticNginxApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost");
-const nginxCvid = mauticNginxApp.customDomainVerificationId.apply(cvid => cvid);
+const siteFQDN = mauticNginxApp.configuration.apply((fqdn: any) => fqdn?.ingress?.fqdn ?? "localhost");
+const nginxCvid = mauticNginxApp.customDomainVerificationId.apply((cvid: any) => cvid);
 
 // Deploy the Mautic Web App
 mauticWebApp = mauticWeb({
@@ -495,9 +503,9 @@ const cloudflareDNSentries = BoolSubdomains ? setupDns({
     nginxCvid: nginxCvid,
     mauticNginxApp: mauticNginxApp,
     strapiApp: deployedStrapiApp,
-    strapiFQDN: deployedStrapiApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
+    strapiFQDN: deployedStrapiApp.configuration.apply((fqdn: any) => fqdn?.ingress?.fqdn ?? "localhost"),
     suiteCrmApp: deployedSuitecrmApp,
-    suiteCrmFQDN: deployedSuitecrmApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
+    suiteCrmFQDN: deployedSuitecrmApp.configuration.apply((fqdn: any) => fqdn?.ingress?.fqdn ?? "localhost"),
   
 }) : undefined ; // Set to undefined if BoolSubdomains is false
 
@@ -514,17 +522,7 @@ jumpboxApp = jumpbox({
     resourceGroupName: resourceGroupName,
 });
     break;
-  }
 }
-
-// Declare stack output variables at module scope to avoid 'used before declaration' errors
-let mauticNginxApp: any;
-let mauticWebApp: any;
-let deployedStrapiApp: any;
-let deployedSuitecrmApp: any;
-let cloudflareDNSentries: any;
-let customDomains: any;
-let jumpboxApp: any;
 
 // Assign to module-level variables for export (with type safety)
 (globalThis as any)._mauticNginxApp = mauticNginxApp;
