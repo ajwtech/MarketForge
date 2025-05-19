@@ -202,7 +202,7 @@ const jumpboxStorage = new azure_app.ManagedEnvironmentsStorage("jumpbox-files-s
   case "setup-apps": {
     // Only deploy container apps, DNS, certs, jumpbox
     // Deploy the Mautic Nginx App
-    const mauticNginxApp = mauticNginx({
+    let mauticNginxApp = mauticNginx({
         env: appEnv,
         image: getImageName("marketing-nginx"),
         registryUrl: registryUrl,
@@ -223,7 +223,7 @@ const jumpboxStorage = new azure_app.ManagedEnvironmentsStorage("jumpbox-files-s
     const nginxCvid = mauticNginxApp.customDomainVerificationId.apply(cvid => cvid);
 
     // Deploy the Mautic Web App
-    const mauticWebApp = mauticWeb({
+    let mauticWebApp = mauticWeb({
         env: appEnv,
         image: getImageName("marketing-mautic-app"),
         registryUrl: registryUrl,
@@ -243,7 +243,7 @@ const jumpboxStorage = new azure_app.ManagedEnvironmentsStorage("jumpbox-files-s
     });
 
     // Deploy the Strapi App using the dedicated strapi storage mount
-    const deployedStrapiApp = strapiApp({
+    let deployedStrapiApp = strapiApp({
         env: appEnv,
         image: getImageName("marketing-strapi-app"),
         registryUrl: registryUrl,
@@ -268,7 +268,7 @@ const jumpboxStorage = new azure_app.ManagedEnvironmentsStorage("jumpbox-files-s
     });
 
     // Deploy the suitecrm App
-    const deployedSuitecrmApp = suitecrmApp({
+    let deployedSuitecrmApp = suitecrmApp({
         env: appEnv,
         appSecret: appSecret,
         siteFQDN: siteFQDN,
@@ -309,7 +309,7 @@ const jumpboxStorage = new azure_app.ManagedEnvironmentsStorage("jumpbox-files-s
     const customDomains = nginxCerts(mauticNginxApp, deployedStrapiApp, marketing_env, cloudflareDNSentries);
 
     // Deploy the Jumpbox container app
-    const jumpboxApp = jumpbox({
+    let jumpboxApp = jumpbox({
         env: appEnv,
         managedEnvironmentId: marketing_env.id,
         storageName: pulumi.output("jumpbox-files-storage"),
@@ -395,7 +395,7 @@ function getImageName(imageName: string): pulumi.Output<string> {
 }
 
 // Deploy the Mautic Nginx App
-const mauticNginxApp = mauticNginx({
+let mauticNginxApp = mauticNginx({
     env: appEnv,
     image: getImageName("marketing-nginx"),
     registryUrl: registryUrl,
@@ -415,7 +415,7 @@ const siteFQDN = mauticNginxApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn 
 const nginxCvid = mauticNginxApp.customDomainVerificationId.apply(cvid => cvid);
 
 // Deploy the Mautic Web App
-const mauticWebApp = mauticWeb({
+let mauticWebApp = mauticWeb({
     env: appEnv,
     image: getImageName("marketing-mautic-app"),
     registryUrl: registryUrl,
@@ -435,7 +435,7 @@ const mauticWebApp = mauticWeb({
 });
 
 // Deploy the Strapi App using the dedicated strapi storage mount
-const deployedStrapiApp = strapiApp({
+let deployedStrapiApp = strapiApp({
     env: appEnv,
     image: getImageName("marketing-strapi-app"),
     registryUrl: registryUrl,
@@ -461,7 +461,7 @@ const deployedStrapiApp = strapiApp({
 
 
 // Deploy the suitecrm App
-const deployedSuitecrmApp = suitecrmApp({
+let deployedSuitecrmApp = suitecrmApp({
     env: appEnv,
     appSecret: appSecret,
     siteFQDN: siteFQDN,
@@ -502,10 +502,10 @@ const cloudflareDNSentries = BoolSubdomains ? setupDns({
 }) : undefined ; // Set to undefined if BoolSubdomains is false
 
 // Update mauticNginxApp to use the cloudflareDNSentries as the customDomains
-const customDomains = nginxCerts(mauticNginxApp, deployedStrapiApp, marketing_env, cloudflareDNSentries);
+let customDomains = nginxCerts(mauticNginxApp, deployedStrapiApp, marketing_env, cloudflareDNSentries);
 
 // Deploy the Jumpbox container app
-const jumpboxApp = jumpbox({
+let jumpboxApp = jumpbox({
     env: appEnv,
     managedEnvironmentId: marketing_env.id,
     storageName: jumpboxStorage.name,  // Updated to use jumpbox storage
@@ -516,6 +516,15 @@ const jumpboxApp = jumpbox({
     break;
   }
 }
+
+// Declare stack output variables at module scope to avoid 'used before declaration' errors
+let mauticNginxApp: any;
+let mauticWebApp: any;
+let deployedStrapiApp: any;
+let deployedSuitecrmApp: any;
+let cloudflareDNSentries: any;
+let customDomains: any;
+let jumpboxApp: any;
 
 // Assign to module-level variables for export (with type safety)
 (globalThis as any)._mauticNginxApp = mauticNginxApp;

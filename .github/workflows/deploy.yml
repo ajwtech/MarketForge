@@ -133,17 +133,25 @@ jobs:
   build-images:
     needs: setup-environment
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: marketing-nginx
+            dockerfile: mautic/marketing-nginx.dockerfile
+          - name: marketing-mautic-app
+            dockerfile: mautic/marketing-mautic-app.dockerfile
+          - name: marketing-strapi-app
+            dockerfile: launchpad/Dockerfile.prod
+          - name: marketing-suitecrm-app
+            dockerfile: suitecrm/marketing-suitecrm-app.dockerfile
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Build Docker images
+      - name: Build Docker image
         run: |
           docker buildx create --use
-          docker buildx build --load -t marketing-nginx:build -f mautic/marketing-nginx.dockerfile .
-          docker buildx build --load -t marketing-mautic-app:build -f mautic/marketing-mautic-app.dockerfile .
-          docker buildx build --load -t marketing-strapi-app:build -f launchpad/Dockerfile.prod .
-          docker buildx build --load -t marketing-suitecrm-app:build -f suitecrm/marketing-suitecrm-app.dockerfile .
+          docker buildx build --load -t ${{ matrix.name }}:build -f ${{ matrix.dockerfile }} .
 
   push-images:
     needs: [build-images, setup-acr-infra]
