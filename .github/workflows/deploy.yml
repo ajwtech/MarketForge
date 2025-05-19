@@ -75,10 +75,10 @@ jobs:
           echo "ESC_ACTION_ENVIRONMENT=$ENV_ESC" >> $GITHUB_ENV
           ORG="${ENV_ESC%%/*}"
           echo "organization=$ORG" >> $GITHUB_OUTPUT
+          echo "OIDC_ORGANIZATION=$ORG" >> $GITHUB_ENV
       - uses: pulumi/esc-action@v1
         env:
           ESC_ACTION_OIDC_AUTH: true
-          OIDC_ORGANIZATION: ${{ steps.set-esc-vars.outputs.organization }}
       - uses: pulumi/auth-actions@v1
         with:
           organization: ${{ steps.set-esc-vars.outputs.organization }}
@@ -118,10 +118,10 @@ jobs:
           echo "ESC_ACTION_ENVIRONMENT=$ENV_ESC" >> $GITHUB_ENV
           ORG="${ENV_ESC%%/*}"
           echo "organization=$ORG" >> $GITHUB_OUTPUT
+          echo "OIDC_ORGANIZATION=$ORG" >> $GITHUB_ENV
       - uses: pulumi/esc-action@v1
         env:
           ESC_ACTION_OIDC_AUTH: true
-          OIDC_ORGANIZATION: ${{ steps.set-esc-vars.outputs.organization }}
       - uses: pulumi/auth-actions@v1
         with:
           organization: ${{ steps.set-esc-vars.outputs.organization }}
@@ -172,10 +172,10 @@ jobs:
           echo "ESC_ACTION_ENVIRONMENT=$ENV_ESC" >> $GITHUB_ENV
           ORG="${ENV_ESC%%/*}"
           echo "organization=$ORG" >> $GITHUB_OUTPUT
+          echo "OIDC_ORGANIZATION=$ORG" >> $GITHUB_ENV
       - uses: pulumi/esc-action@v1
         env:
           ESC_ACTION_OIDC_AUTH: true
-          OIDC_ORGANIZATION: ${{ steps.set-esc-vars.outputs.organization }}
       - uses: pulumi/auth-actions@v1
         with:
           organization: ${{ steps.set-esc-vars.outputs.organization }}
