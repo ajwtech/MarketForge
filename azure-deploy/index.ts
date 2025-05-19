@@ -49,6 +49,11 @@ let createSubdomains: pulumi.Output<boolean> = pulumi.output(false).apply(unwrap
 export const storageAccountName = config.require("storageAccountName");
 export const resourceGroupName = ResourceGroup.name;
 
+// Export ACR outputs for GitHub Actions (must be top-level, not inside switch)
+export const acrUsernameOut = process.env.GITHUB_JOB === "setup-acr-infra" ? acrUsername : undefined;
+export const acrPasswordOut = process.env.GITHUB_JOB === "setup-acr-infra" ? acrPassword : undefined;
+export const registryUrlOut = process.env.GITHUB_JOB === "setup-acr-infra" ? registryUrl : undefined;
+
 // // Define Azure Function URL for frontend dynamic content
 // const azureFunctionUrl = config.get("azureFunctionUrl") || "frontend-app";
 
@@ -126,10 +131,7 @@ switch (githubJob) {
     // Only create ACR and its dependencies, and output creds
     // ResourceGroup and ACR registry are always needed
     // Export acrUsername, acrPassword, registryUrl
-    // (Assume these are imported and defined at the top)
-    export const acrUsernameOut = acrUsername;
-    export const acrPasswordOut = acrPassword;
-    export const registryUrlOut = registryUrl;
+    // (Exports moved to top-level for TypeScript compatibility)
     break;
   }
   case "setup-infra": {

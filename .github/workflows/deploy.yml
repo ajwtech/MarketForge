@@ -168,10 +168,10 @@ jobs:
       - name: Build Docker images
         run: |
           docker buildx create --use
-          docker buildx build --load -t marketing-nginx:build -f mautic/marketing-nginx.dockerfile mautic
-          docker buildx build --load -t marketing-mautic-app:build -f mautic/marketing-mautic-app.dockerfile mautic
-          docker buildx build --load -t marketing-strapi-app:build -f launchpad/Dockerfile.prod launchpad
-          docker buildx build --load -t marketing-suitecrm-app:build -f suitecrm/marketing-suitecrm-app.dockerfile suitecrm
+          docker buildx build --load -t marketing-nginx:build -f mautic/marketing-nginx.dockerfile .
+          docker buildx build --load -t marketing-mautic-app:build -f mautic/marketing-mautic-app.dockerfile .
+          docker buildx build --load -t marketing-strapi-app:build -f launchpad/Dockerfile.prod .
+          docker buildx build --load -t marketing-suitecrm-app:build -f suitecrm/marketing-suitecrm-app.dockerfile .
 
   push-images:
     needs: [build-images, setup-acr-infra]
