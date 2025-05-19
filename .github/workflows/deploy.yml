@@ -77,11 +77,13 @@ jobs:
           echo "ESC_ACTION_ENVIRONMENT=$ENV_ESC" >> $GITHUB_ENV
           ORG="${ENV_ESC%%/*}"
           echo "organization=$ORG" >> $GITHUB_OUTPUT
-      - uses: pulumi/esc-action@v1
+        
       - uses: pulumi/auth-actions@v1
         with:
           organization: ${{ steps.set-esc-vars.outputs.organization }}
           requested-token-type: urn:pulumi:token-type:access_token:organization
+      - uses: pulumi/esc-action@v1
+
       - name: Run Pulumi for ACR infra only
         working-directory: ./azure-deploy
         env:
@@ -116,11 +118,11 @@ jobs:
           echo "ESC_ACTION_ENVIRONMENT=$ENV_ESC" >> $GITHUB_ENV
           ORG="${ENV_ESC%%/*}"
           echo "organization=$ORG" >> $GITHUB_OUTPUT
-      - uses: pulumi/esc-action@v1
       - uses: pulumi/auth-actions@v1
         with:
           organization: ${{ steps.set-esc-vars.outputs.organization }}
           requested-token-type: urn:pulumi:token-type:access_token:organization
+      - uses: pulumi/esc-action@v1
       - name: Run Pulumi for infra (no apps)
         working-directory: ./azure-deploy
         env:
@@ -166,11 +168,11 @@ jobs:
           echo "ESC_ACTION_ENVIRONMENT=$ENV_ESC" >> $GITHUB_ENV
           ORG="${ENV_ESC%%/*}"
           echo "organization=$ORG" >> $GITHUB_OUTPUT
-      - uses: pulumi/esc-action@v1
       - uses: pulumi/auth-actions@v1
         with:
           organization: ${{ steps.set-esc-vars.outputs.organization }}
           requested-token-type: urn:pulumi:token-type:access_token:organization
+      - uses: pulumi/esc-action@v1
       - name: Run Pulumi for apps only
         working-directory: ./azure-deploy
         env:
