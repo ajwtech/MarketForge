@@ -69,10 +69,10 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
 RUN addgroup -g 82 -S www-data || true && adduser -u 82 -S www-data -G www-data || true && \
 mkdir -p /var/suitecrm/www/html/
 # env with templates
-COPY --chown=root:www-data .template.env /var/template/.template.env
+COPY --chown=root:www-data suitecrm/.template.env /var/template/.template.env
 
 # Copy SuiteCRM application files (replacing SuiteCRM)
-COPY --chown=root:www-data SuiteCRM-Core/ /var/suitecrm/www/html
+COPY --chown=root:www-data suitecrm/SuiteCRM-Core/ /var/suitecrm/www/html
 
 
 WORKDIR /var/suitecrm/www/html
@@ -87,9 +87,9 @@ ENV  SSH_PASSWD="root:Docker!"
 RUN echo "$SSH_PASSWD" | chpasswd 
 
 # Copy configuration files to their correct locations
-COPY --chown=root:www-data  ./php.ini /usr/local/etc/php/php.ini
-COPY --chown=root:www-data  ./www.conf /usr/local/etc/php-fpm.d/www.conf
-COPY --chown=root:www-data  ./php-fpm.conf /usr/local/etc/php-fpm.conf
+COPY --chown=root:www-data suitecrm/php.ini /usr/local/etc/php/php.ini
+COPY --chown=root:www-data suitecrm/www.conf /usr/local/etc/php-fpm.d/www.conf
+COPY --chown=root:www-data suitecrm/php-fpm.conf /usr/local/etc/php-fpm.conf
 
 # Apply necessary permissions
 RUN chmod -R 644 /usr/local/etc/php/php.ini \
@@ -97,7 +97,7 @@ RUN chmod -R 644 /usr/local/etc/php/php.ini \
     && chmod -R 644 /usr/local/etc/php-fpm.conf
 
 # Set permissions for the entrypoint script
-COPY --chown=root:www-data ./entrypoint.sh /var/local/entrypoint.sh
+COPY --chown=root:www-data suitecrm/entrypoint.sh /var/local/entrypoint.sh
 RUN chmod +x /var/local/entrypoint.sh
 
 RUN COMPOSER_ALLOW_SUPERUSER=1 composer install
@@ -109,10 +109,10 @@ RUN find . -type d -not -perm 2775 -exec chmod 2775 {} \; && \
     chmod +x bin/console
 
 # Copy Supervisor config
-COPY --chown=root:www-data ./supervisor/suitecrm.conf /etc/supervisor.d/suitecrm.conf
+COPY --chown=root:www-data suitecrm/supervisor/suitecrm.conf /etc/supervisor.d/suitecrm.conf
 
 # Copy run_installer script
-COPY --chown=root:www-data ./run_installer.sh /usr/local/bin/run_installer.sh
+COPY --chown=root:www-data suitecrm/run_installer.sh /usr/local/bin/run_installer.sh
 RUN chmod +x /usr/local/bin/run_installer.sh
 
 RUN mkdir -p /var/log/supervisor

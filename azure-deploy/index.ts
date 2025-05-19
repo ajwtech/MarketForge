@@ -202,125 +202,124 @@ const jumpboxStorage = new azure_app.ManagedEnvironmentsStorage("jumpbox-files-s
   case "setup-apps": {
     // Only deploy container apps, DNS, certs, jumpbox
     // Deploy the Mautic Nginx App
-export const mauticNginxApp = mauticNginx({
-    env: appEnv,
-    image: getImageName("marketing-nginx"),
-    registryUrl: registryUrl,
-    registryUsername: acrUsername,
-    registryPassword: acrPassword,
-    managedEnvironmentId: marketing_env.id,
-    storageName: pulumi.output("mautic-app-files-storage"),
-    suiteCrmStorageName: pulumi.output("suitecrm-app-files-storage"),
-    dbHost: dbHost,
-    dbPort: dbPort,
-    dbName: dbName,
-    resourceGroupName: resourceGroupName,
-    createSubdomains: createSubdomains, // Set to false for initial deployment
-    // azureFunctionUrl: azureFunctionUrl, 
-});
+    const mauticNginxApp = mauticNginx({
+        env: appEnv,
+        image: getImageName("marketing-nginx"),
+        registryUrl: registryUrl,
+        registryUsername: acrUsername,
+        registryPassword: acrPassword,
+        managedEnvironmentId: marketing_env.id,
+        storageName: pulumi.output("mautic-app-files-storage"),
+        suiteCrmStorageName: pulumi.output("suitecrm-app-files-storage"),
+        dbHost: dbHost,
+        dbPort: dbPort,
+        dbName: dbName,
+        resourceGroupName: resourceGroupName,
+        createSubdomains: createSubdomains, // Set to false for initial deployment
+        // azureFunctionUrl: azureFunctionUrl, 
+    });
 
-const siteFQDN = mauticNginxApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost");
-const nginxCvid = mauticNginxApp.customDomainVerificationId.apply(cvid => cvid);
+    const siteFQDN = mauticNginxApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost");
+    const nginxCvid = mauticNginxApp.customDomainVerificationId.apply(cvid => cvid);
 
-// Deploy the Mautic Web App
-export const mauticWebApp = mauticWeb({
-    env: appEnv,
-    image: getImageName("marketing-mautic-app"),
-    registryUrl: registryUrl,
-    registryUsername: acrUsername,
-    registryPassword: acrPassword,
-    managedEnvironmentId: marketing_env.id,
-    storageName: pulumi.output("mautic-app-files-storage"),
-    dbHost: dbHost,
-    dbPort: dbPort,
-    dbName: dbName,
-    dbUser: dbUser,
-    dbPassword: dbPassword,
-    appSecret: appSecret,
-    resourceGroupName: resourceGroupName, 
-    siteFQDN: siteFQDN,
-    siteUrl: pulumi.interpolate`https://${mapSubdomain}.${domain}/`,
-});
+    // Deploy the Mautic Web App
+    const mauticWebApp = mauticWeb({
+        env: appEnv,
+        image: getImageName("marketing-mautic-app"),
+        registryUrl: registryUrl,
+        registryUsername: acrUsername,
+        registryPassword: acrPassword,
+        managedEnvironmentId: marketing_env.id,
+        storageName: pulumi.output("mautic-app-files-storage"),
+        dbHost: dbHost,
+        dbPort: dbPort,
+        dbName: dbName,
+        dbUser: dbUser,
+        dbPassword: dbPassword,
+        appSecret: appSecret,
+        resourceGroupName: resourceGroupName, 
+        siteFQDN: siteFQDN,
+        siteUrl: pulumi.interpolate`https://${mapSubdomain}.${domain}/`,
+    });
 
-// Deploy the Strapi App using the dedicated strapi storage mount
-export const deployedStrapiApp = strapiApp({
-    env: appEnv,
-    image: getImageName("marketing-strapi-app"),
-    registryUrl: registryUrl,
-    registryUsername: acrUsername,
-    registryPassword: acrPassword,
-    managedEnvironmentId: marketing_env.id,
-    storageName: pulumi.output("strapi-app-files-storage"),
-    dbHost: dbHost,
-    dbPort: dbPort,
-    dbName: strapiDbName,
-    dbUser: dbUser,
-    dbPassword: dbPassword,
-    dbClient: config.require("dbClient"),
-    jwtSecret: config.require("jwtSecret"),
-    adminJwtSecret: config.require("adminJwtSecret"),
-    appKeys: config.require("appKeys"),
-    nodeEnv: config.require("nodeEnv"),
-    resourceGroupName: resourceGroupName,
-    apiToken: config.require("apiToken"),
-    transferTokenSalt: config.require("transferTokenSalt"),
-    cmsUrl: pulumi.interpolate`https://${cmsSubdomain}.${domain}/`,
-});
+    // Deploy the Strapi App using the dedicated strapi storage mount
+    const deployedStrapiApp = strapiApp({
+        env: appEnv,
+        image: getImageName("marketing-strapi-app"),
+        registryUrl: registryUrl,
+        registryUsername: acrUsername,
+        registryPassword: acrPassword,
+        managedEnvironmentId: marketing_env.id,
+        storageName: pulumi.output("strapi-app-files-storage"),
+        dbHost: dbHost,
+        dbPort: dbPort,
+        dbName: strapiDbName,
+        dbUser: dbUser,
+        dbPassword: dbPassword,
+        dbClient: config.require("dbClient"),
+        jwtSecret: config.require("jwtSecret"),
+        adminJwtSecret: config.require("adminJwtSecret"),
+        appKeys: config.require("appKeys"),
+        nodeEnv: config.require("nodeEnv"),
+        resourceGroupName: resourceGroupName,
+        apiToken: config.require("apiToken"),
+        transferTokenSalt: config.require("transferTokenSalt"),
+        cmsUrl: pulumi.interpolate`https://${cmsSubdomain}.${domain}/`,
+    });
 
+    // Deploy the suitecrm App
+    const deployedSuitecrmApp = suitecrmApp({
+        env: appEnv,
+        appSecret: appSecret,
+        siteFQDN: siteFQDN,
+        image: getImageName("marketing-suitecrm-app"),
+        registryUrl: registryUrl,
+        registryUsername: acrUsername,
+        registryPassword: acrPassword,
+        managedEnvironmentId: marketing_env.id,
+        storageName: pulumi.output("suitecrm-app-files-storage"),
+        dbHost: dbHost,
+        dbPort: dbPort,
+        dbName: suitecrmDbName,
+        dbUser: dbUser,
+        dbPassword: dbPassword,
+        dbType: dbType,
+        dbVersion: dbVersion,
+        dbCharset: dbCharset,
+        resourceGroupName: resourceGroupName,
+        siteUrl: pulumi.interpolate`https://${crmSubdomain}.${domain}/`,
+        crmSubdomain: crmSubdomain,
+        domain: domain,
+    });
 
-// Deploy the suitecrm App
-export const deployedSuitecrmApp = suitecrmApp({
-    env: appEnv,
-    appSecret: appSecret,
-    siteFQDN: siteFQDN,
-    image: getImageName("marketing-suitecrm-app"),
-    registryUrl: registryUrl,
-    registryUsername: acrUsername,
-    registryPassword: acrPassword,
-    managedEnvironmentId: marketing_env.id,
-    storageName: pulumi.output("suitecrm-app-files-storage"),
-    dbHost: dbHost,
-    dbPort: dbPort,
-    dbName: suitecrmDbName,
-    dbUser: dbUser,
-    dbPassword: dbPassword,
-    dbType: dbType,
-    dbVersion: dbVersion,
-    dbCharset: dbCharset,
-    resourceGroupName: resourceGroupName,
-    siteUrl: pulumi.interpolate`https://${crmSubdomain}.${domain}/`,
-    crmSubdomain: crmSubdomain,
-    domain: domain,
-});
+    const cloudflareDNSentries = BoolSubdomains ? setupDns({
+        domain: domain,
+        cmsSubdomain: cmsSubdomain,
+        crmSubdomain: crmSubdomain,
+        mapSubdomain: mapSubdomain,
+        siteFQDN: siteFQDN,
+        nginxCvid: nginxCvid,
+        mauticNginxApp: mauticNginxApp,
+        strapiApp: deployedStrapiApp,
+        strapiFQDN: deployedStrapiApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
+        suiteCrmApp: deployedSuitecrmApp,
+        suiteCrmFQDN: deployedSuitecrmApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
+    }) : undefined; // Set to undefined if BoolSubdomains is false
 
+    const customDomains = nginxCerts(mauticNginxApp, deployedStrapiApp, marketing_env, cloudflareDNSentries);
 
-export const cloudflareDNSentries = BoolSubdomains ? setupDns({
-    domain: domain,
-    cmsSubdomain: cmsSubdomain,
-    crmSubdomain: crmSubdomain,
-    mapSubdomain: mapSubdomain,
-    siteFQDN: siteFQDN,
-    nginxCvid: nginxCvid,
-    mauticNginxApp: mauticNginxApp,
-    strapiApp: deployedStrapiApp,
-    strapiFQDN: deployedStrapiApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
-    suiteCrmApp: deployedSuitecrmApp,
-    suiteCrmFQDN: deployedSuitecrmApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
-  
-}) : undefined ; // Set to undefined if BoolSubdomains is false
+    // Deploy the Jumpbox container app
+    const jumpboxApp = jumpbox({
+        env: appEnv,
+        managedEnvironmentId: marketing_env.id,
+        storageName: pulumi.output("jumpbox-files-storage"),
+        dbHost: dbHost,
+        dbPort: dbPort,
+        resourceGroupName: resourceGroupName,
+    });
 
-// Update mauticNginxApp to use the cloudflareDNSentries as the customDomains
-export const customDomains = nginxCerts(mauticNginxApp, deployedStrapiApp, marketing_env, cloudflareDNSentries);
-
-// Deploy the Jumpbox container app
-export const jumpboxApp = jumpbox({
-    env: appEnv,
-    managedEnvironmentId: marketing_env.id,
-    storageName: pulumi.output("jumpbox-files-storage"),
-    dbHost: dbHost,
-    dbPort: dbPort,
-    resourceGroupName: resourceGroupName,
-});
+    // Export resources at the top-level for Pulumi stack outputs
+    export { mauticNginxApp, mauticWebApp, deployedStrapiApp, deployedSuitecrmApp, cloudflareDNSentries, customDomains, jumpboxApp };
     break;
   }
   default: {

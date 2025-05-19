@@ -146,7 +146,7 @@ COPY ./nginx.configd/nginx.conf /etc/nginx/templates/nginx.conf.template
 COPY ./nginx.configd/logging.conf /etc/nginx/templates/logging.conf.template
 
 # Copy startup script
-COPY ./entrypoint_nginx.sh /entrypoint_nginx.sh
+COPY mautic/entrypoint_nginx.sh /entrypoint_nginx.sh
 RUN chmod +x /entrypoint_nginx.sh
 
 # Create log directory

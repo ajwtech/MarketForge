@@ -160,11 +160,11 @@ php83-imap \
 && docker-php-ext-enable amqp
 
 # Copy configuration files to their correct locations
-COPY ./php.ini /usr/local/etc/php/php.ini
-COPY ./www.conf /usr/local/etc/php-fpm.d/www.conf
-COPY ./entrypoint_mautic_web.sh /entrypoint_mautic_web.sh
-COPY ./docker-entrypoint.sh /entrypoint.sh
-COPY --chown=www-data:www-data ./local.php.conf /var/www/html/local.php.conf
+COPY mautic/php.ini /usr/local/etc/php/php.ini
+COPY mautic/www.conf /usr/local/etc/php-fpm.d/www.conf
+COPY mautic/entrypoint_mautic_web.sh /entrypoint_mautic_web.sh
+COPY mautic/docker-entrypoint.sh /entrypoint.sh
+COPY --chown=www-data:www-data mautic/local.php.conf /var/www/html/local.php.conf
 
 # Apply necessary permissions
 RUN chmod +x /entrypoint.sh /entrypoint_mautic_web.sh
