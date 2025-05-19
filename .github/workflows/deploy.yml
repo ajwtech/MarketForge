@@ -6,12 +6,12 @@ on:
 jobs:
   setup-environment:
     runs-on: ubuntu-latest
-    environment: pulumi_environments
+
     container:
       image: ghcr.io/catthehacker/ubuntu:act-22.04
     strategy:
       matrix:
-        env_esc: '${{ vars.ESC }}'
+        env_esc: ${{ fromJson(vars.ESC) }}
     env:
       ENV_ESC: ${{ matrix.env_esc }}
     outputs:
@@ -52,7 +52,7 @@ jobs:
   setup-acr-infra:
     needs: setup-environment
     runs-on: ubuntu-latest
-    environment: pulumi_environments
+
     container:
       image: ghcr.io/catthehacker/ubuntu:act-22.04
     strategy:
@@ -95,7 +95,7 @@ jobs:
   setup-infra:
     needs: setup-acr-infra
     runs-on: ubuntu-latest
-    environment: pulumi_environments
+
     container:
       image: ghcr.io/catthehacker/ubuntu:act-22.04
     strategy:
@@ -145,7 +145,7 @@ jobs:
   setup-apps:
     needs: [setup-infra, build-and-push-images]
     runs-on: ubuntu-latest
-    environment: pulumi_environments
+
     container:
       image: ghcr.io/catthehacker/ubuntu:act-22.04
     strategy:
