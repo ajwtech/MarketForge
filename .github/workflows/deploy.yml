@@ -82,6 +82,9 @@ jobs:
       - uses: pulumi/esc-action@v1
       - name: Install Pulumi CLI
         uses: pulumi/setup-pulumi@v2
+      - name: Install Pulumi Node.js SDK dependencies
+        run: yarn install --immutable
+        working-directory: ./azure-deploy
       - name: Select Pulumi stack
         working-directory: ./azure-deploy
         run: pulumi stack select ${{ env.ENV_ESC }}
