@@ -1,7 +1,7 @@
 import * as pulumi from "@pulumi/pulumi";
 
 // Debug: Print Pulumi config at stack start
-console.log("[infraStack] Pulumi config at stack start:", new pulumi.Config().getAll());
+pulumi.runtime.allConfig().then(cfg => console.log("[infraStack] Pulumi config at stack start:", cfg));
 
 // Infrastructure stack (storage, managed env, DB, etc.)
 const {
