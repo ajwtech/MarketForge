@@ -16,6 +16,9 @@ jobs:
         env_esc: ${{ fromJson(vars.ESC) }}
     env:
       ENV_ESC: ${{ matrix.env_esc }}
+    steps:
+      - name: No-op
+        run: echo "setup-environment is a matrix/needs anchor only; no steps needed."
 
   setup-acr-infra:
     needs: setup-environment
