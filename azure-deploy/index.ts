@@ -43,14 +43,15 @@ async function ensureEscEnvironment() {
 }
 
 // Entrypoint for modular Pulumi stacks
-const job = process.env.GITHUB_JOB;
-
-// Ensure ESC environment is set before running stack code
-ensureEscEnvironment().then(() => {
+async function main() {
+  const job = process.env.GITHUB_JOB;
+  await ensureEscEnvironment();
+  // Debug: Print ENV_ESC and GITHUB_JOB
+  console.log("[index.ts] ENV_ESC:", process.env.ENV_ESC);
+  console.log("[index.ts] GITHUB_JOB:", job);
   switch (job) {
     case "setup-acr-infra":
       require("./acrStack");
-      
       break;
     case "setup-infra":
       require("./infraStack");
@@ -64,4 +65,6 @@ ensureEscEnvironment().then(() => {
       require("./infraStack");
       require("./appsStack");
   }
-});
+}
+
+main();
