@@ -31,6 +31,8 @@ jobs:
         uses: pulumi/auth-actions@v1
         with:
           organization: ajwtech
+          requested-token-type: urn:pulumi:token-type:access_token:personal
+          scope: user:${ORGANIZATION}
       - name: Install and inject ESC environment variables
         uses: pulumi/esc-action@v1
         with:
