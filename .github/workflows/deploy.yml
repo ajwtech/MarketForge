@@ -46,6 +46,8 @@ jobs:
       - name: Install ts-node
         run: yarn add --dev ts-node
         working-directory: ./azure-deploy
+      - name: Install Pulumi CLI
+        uses: pulumi/setup-pulumi@v2
       - name: Run Pulumi Automation API for ACR infra
         working-directory: ./azure-deploy
         env:
@@ -83,6 +85,8 @@ jobs:
       - name: Install ts-node
         run: yarn add --dev ts-node
         working-directory: ./azure-deploy
+      - name: Install Pulumi CLI
+        uses: pulumi/setup-pulumi@v2
       - name: Run Pulumi Automation API for infra
         working-directory: ./azure-deploy
         env:
@@ -157,6 +161,8 @@ jobs:
       - name: Install ts-node
         run: yarn add --dev ts-node
         working-directory: ./azure-deploy
+      - name: Install Pulumi CLI
+        uses: pulumi/setup-pulumi@v2
       - name: Run Pulumi Automation API for apps
         working-directory: ./azure-deploy
         env:
