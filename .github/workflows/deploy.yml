@@ -43,6 +43,9 @@ jobs:
       - name: Install Node.js dependencies
         run: yarn install --immutable
         working-directory: ./azure-deploy
+      - name: Install ts-node
+        run: yarn add --dev ts-node
+        working-directory: ./azure-deploy
       - name: Run Pulumi Automation API for ACR infra
         working-directory: ./azure-deploy
         env:
@@ -76,6 +79,9 @@ jobs:
       - uses: ./.github/actions/setup-node-yarn
       - name: Install Node.js dependencies
         run: yarn install --immutable
+        working-directory: ./azure-deploy
+      - name: Install ts-node
+        run: yarn add --dev ts-node
         working-directory: ./azure-deploy
       - name: Run Pulumi Automation API for infra
         working-directory: ./azure-deploy
@@ -147,6 +153,9 @@ jobs:
       - uses: ./.github/actions/setup-node-yarn
       - name: Install Node.js dependencies
         run: yarn install --immutable
+        working-directory: ./azure-deploy
+      - name: Install ts-node
+        run: yarn add --dev ts-node
         working-directory: ./azure-deploy
       - name: Run Pulumi Automation API for apps
         working-directory: ./azure-deploy
