@@ -42,17 +42,6 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/setup-node-yarn
-      - name: Authenticate with Pulumi Cloud
-        uses: pulumi/auth-actions@v1
-        with:
-          organization: ${{ steps.set-stack-vars.outputs.ORGANIZATION }}
-          requested-token-type: urn:pulumi:token-type:access_token:personal
-          scope: user:${{ steps.set-stack-vars.outputs.ORGANIZATION }}
-      - name: Install and inject ESC environment variables
-        uses: pulumi/esc-action@v1
-        with:
-          environment: ${ENV_ESC}
-          export-environment-variables: true
       - name: Install Dependencies
         run: yarn install --immutable
         working-directory: ./azure-deploy
@@ -78,14 +67,6 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/setup-node-yarn
-      - name: Set ESC and Pulumi OIDC env vars
-        id: set-esc-vars
-        run: |
-          echo "ESC_ACTION_ENVIRONMENT=$ENV_ESC" >> $GITHUB_ENV
-          ORG="${ENV_ESC%%/*}"
-          echo "organization=$ORG" >> $GITHUB_OUTPUT
-        
-      - uses: pulumi/esc-action@v1
       - name: Install Pulumi CLI
         uses: pulumi/setup-pulumi@v2
       - name: Install Pulumi Node.js SDK dependencies
@@ -124,20 +105,13 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/setup-node-yarn
-      - name: Set ESC and Pulumi OIDC env vars
-        id: set-esc-vars
-        run: |
-          echo "ESC_ACTION_ENVIRONMENT=$ENV_ESC" >> $GITHUB_ENV
-          ORG="${ENV_ESC%%/*}"
-          echo "organization=$ORG" >> $GITHUB_OUTPUT
-      - uses: pulumi/esc-action@v1
       - name: Install Pulumi CLI
         uses: pulumi/setup-pulumi@v2
       - name: Install Pulumi and Yarn
         uses: ./.github/actions/setup-pulumi-yarn
       - name: Select Pulumi stack
         working-directory: ./azure-deploy
-        run: pulumi stack select ${{ env.ENV_ESC }}
+        run: pulumi stack select setup-infra
       - name: Run Pulumi for infra (no apps)
         working-directory: ./azure-deploy
         env:
@@ -205,20 +179,13 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/setup-node-yarn
-      - name: Set ESC and Pulumi OIDC vars
-        id: set-esc-vars
-        run: |
-          echo "ESC_ACTION_ENVIRONMENT=$ENV_ESC" >> $GITHUB_ENV
-          ORG="${ENV_ESC%%/*}"
-          echo "organization=$ORG" >> $GITHUB_OUTPUT
-      - uses: pulumi/esc-action@v1
       - name: Install Pulumi CLI
         uses: pulumi/setup-pulumi@v2
       - name: Install Pulumi and Yarn
         uses: ./.github/actions/setup-pulumi-yarn
       - name: Select Pulumi stack
         working-directory: ./azure-deploy
-        run: pulumi stack select ${{ env.ENV_ESC }}
+        run: pulumi stack select setup-apps
       - name: Run Pulumi for apps only
         working-directory: ./azure-deploy
         env:
