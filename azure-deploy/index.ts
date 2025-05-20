@@ -18,13 +18,18 @@ function getProjectName(escEnv: string | undefined): string {
 // Dynamically add the ESC environment to the Pulumi config if running in CI
 async function ensureEscEnvironment() {
   const escEnv = process.env.ENV_ESC;
-  const stackName = process.env.PULUMI_STACK || escEnv;
+  // Use the stack name as 'project/stack' (last two segments of ENV_ESC + job)
+  const escParts = escEnv ? escEnv.split("/") : [];
+  const project = escParts.length >= 2 ? escParts[escParts.length - 2] : undefined;
+  const env = escParts.length >= 1 ? escParts[escParts.length - 1] : undefined;
+  const job = process.env.GITHUB_JOB;
+  // Compose stack name as 'project/job' (e.g. 'marketforge/setup-acr-infra')
+  const stackName = project && job ? `${project}/${job}` : escEnv;
   const projectName = getProjectName(escEnv);
 
   if (escEnv && stackName) {
     // Only use the last two segments for the environment reference (project/environment)
-    const escParts = escEnv.split("/");
-    const envRef = escParts.slice(-2).join("/"); 
+    const envRef = project && env ? `${project}/${env}` : escEnv;
     const stackArgs: automation.InlineProgramArgs = {
       stackName,
       projectName,
