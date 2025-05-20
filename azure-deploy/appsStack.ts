@@ -2,7 +2,9 @@ import * as pulumi from "@pulumi/pulumi";
 import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 
 // Debug: Print Pulumi config at stack start
-pulumi.runtime.allConfig().then(cfg => console.log("[appsStack] Pulumi config at stack start:", cfg));
+pulumi.runtime.allConfig().then((cfg: Record<string, pulumi.ConfigValue>) => {
+  console.log("[appsStack] Pulumi config at stack start:", cfg);
+});
 
 const { mauticWeb, mauticNginx } = require("./infrastructure/containerApps/mauticApps");
 const { strapiApp } = require("./infrastructure/containerApps/strapiApp");
