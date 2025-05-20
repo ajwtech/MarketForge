@@ -31,11 +31,11 @@ jobs:
         uses: pulumi/auth-actions@v1
         with:
           organization: ajwtech
-          requested-token-type: urn:pulumi:token-type:access_token:personal
       - name: Install and inject ESC environment variables
         uses: pulumi/esc-action@v1
         with:
-          environment: 'tinyco/someProject/myEnv'
+          environment: ${ENV_ESC}
+          export-environment-variables: true
       - name: Set shared stack/environment variables
         id: set-stack-vars
         run: |
