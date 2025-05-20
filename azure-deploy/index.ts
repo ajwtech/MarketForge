@@ -4,17 +4,15 @@ import * as fs from "fs";
 import * as path from "path";
 
 // Helper to read project name from Pulumi.yaml
-function getProjectName(escEnv: String): string {
-  try {
-    const project = escEnv.split("/").pop();
-    if (!project) {
-      throw new Error("Project name not found in ESC environment");
-    }
-    return project;
-  } catch (error) {
-    console.error("Error getting project name:", error);
-    throw new Error("Failed to get project name");
+function getProjectName(escEnv: string | undefined): string {
+  if (!escEnv) {
+    throw new Error("ESC environment is undefined");
   }
+  const project = escEnv.split("/").pop();
+  if (!project) {
+    throw new Error("Project name not found in ESC environment");
+  }
+  return project;
 }
 
 // Dynamically add the ESC environment to the Pulumi config if running in CI
