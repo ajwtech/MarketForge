@@ -4,7 +4,7 @@ import * as pulumi from "@pulumi/pulumi";
 import { mauticAppFilesStorage, storageAccountKey, storageAccountName, storageAccount } from "../storage/storageAccount";
 import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 
-import { imageBuilds } from "../dockerImages"; // Ensure correct import
+import { imageBuilds } from "../dockerImages"; 
 
 const config = new pulumi.Config(); 
 const nginxServerName = config.get("nginxServerName") || "mautic-nginx";

@@ -515,16 +515,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pulumi/docker@npm:^4.6.2":
-  version: 4.6.2
-  resolution: "@pulumi/docker@npm:4.6.2"
-  dependencies:
-    "@pulumi/pulumi": "npm:^3.142.0"
-    semver: "npm:^5.4.0"
-  checksum: 10c0/a7e2285b02ea008c3ec6a0140992f185d53125cd33dc5b64e149cde0aa5f2004bd6d188dc8e29606fbd0aad722ec6ab5e0a22c539299190ddb13965be76896ff
-  languageName: node
-  linkType: hard
-
 "@pulumi/pulumi@npm:^3.142.0, @pulumi/pulumi@npm:^3.147.0":
   version: 3.170.0
   resolution: "@pulumi/pulumi@npm:3.170.0"
@@ -850,7 +840,6 @@ __metadata:
     "@pulumi/azure-native": "npm:^2.84.0"
     "@pulumi/cloudflare": "npm:^5.49.0"
     "@pulumi/command": "npm:^1.0.1"
-    "@pulumi/docker": "npm:^4.6.2"
     "@pulumi/pulumi": "npm:^3.147.0"
     "@pulumi/random": "npm:^4.17.0"
     "@types/fs-extra": "npm:^11.0.4"
@@ -2238,15 +2227,6 @@ __metadata:
   version: 2.1.2
   resolution: "safer-buffer@npm:2.1.2"
   checksum: 10c0/7e3c8b2e88a1841c9671094bbaeebd94448111dd90a81a1f606f3f67708a6ec57763b3b47f06da09fc6054193e0e6709e77325415dc8422b04497a8070fa02d4
-  languageName: node
-  linkType: hard
-
-"semver@npm:^5.4.0":
-  version: 5.7.2
-  resolution: "semver@npm:5.7.2"
-  bin:
-    semver: bin/semver
-  checksum: 10c0/e4cf10f86f168db772ae95d86ba65b3fd6c5967c94d97c708ccb463b778c2ee53b914cd7167620950fc07faf5a564e6efe903836639e512a1aa15fbc9667fa25
   languageName: node
   linkType: hard
 
