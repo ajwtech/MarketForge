@@ -22,22 +22,6 @@ jobs:
       ESC_ENVIRONMENT: ${{ steps.set-stack-vars.outputs.ESC_ENVIRONMENT }}
       ORGANIZATION: ${{ steps.set-stack-vars.outputs.ORGANIZATION }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - uses: ./.github/actions/setup-node-yarn
-
-      - name: Authenticate with Pulumi Cloud
-        uses: pulumi/auth-actions@v1
-        with:
-          organization: ajwtech
-          requested-token-type: urn:pulumi:token-type:access_token:personal
-          scope: user:${ORGANIZATION}
-      - name: Install and inject ESC environment variables
-        uses: pulumi/esc-action@v1
-        with:
-          environment: ${ENV_ESC}
-          export-environment-variables: true
       - name: Set shared stack/environment variables
         id: set-stack-vars
         run: |
@@ -54,7 +38,21 @@ jobs:
           echo "TRIMMED_STACK=$trimmed_stack" >> $GITHUB_OUTPUT
           echo "ESC_ENVIRONMENT=$esc_environment" >> $GITHUB_OUTPUT
           echo "ORGANIZATION=$esc_organization" >> $GITHUB_OUTPUT
-      # Add any other shared setup steps here as needed
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/setup-node-yarn
+      - name: Authenticate with Pulumi Cloud
+        uses: pulumi/auth-actions@v1
+        with:
+          organization: ${{ steps.set-stack-vars.outputs.ORGANIZATION }}
+          requested-token-type: urn:pulumi:token-type:access_token:personal
+          scope: user:${{ steps.set-stack-vars.outputs.ORGANIZATION }}
+      - name: Install and inject ESC environment variables
+        uses: pulumi/esc-action@v1
+        with:
+          environment: ${ENV_ESC}
+          export-environment-variables: true
       - name: Install Dependencies
         run: yarn install --immutable
         working-directory: ./azure-deploy
