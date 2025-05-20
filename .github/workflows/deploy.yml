@@ -9,7 +9,6 @@ on:
 jobs:
   setup-environment:
     runs-on: ubuntu-latest
-
     container:
       image: ghcr.io/catthehacker/ubuntu:act-22.04
     strategy:
@@ -21,23 +20,39 @@ jobs:
       FULL_STACK: ${{ steps.set-stack-vars.outputs.FULL_STACK }}
       TRIMMED_STACK: ${{ steps.set-stack-vars.outputs.TRIMMED_STACK }}
       ESC_ENVIRONMENT: ${{ steps.set-stack-vars.outputs.ESC_ENVIRONMENT }}
+      ORGANIZATION: ${{ steps.set-stack-vars.outputs.ORGANIZATION }}
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
       - uses: ./.github/actions/setup-node-yarn
-      - name: Set stack variables
+
+      - name: Authenticate with Pulumi Cloud
+        uses: pulumi/auth-actions@v1
+        with:
+          organization: ajwtech
+          requested-token-type: urn:pulumi:token-type:access_token:personal
+      - name: Install and inject ESC environment variables
+        uses: pulumi/esc-action@v1
+        with:
+          environment: 'tinyco/someProject/myEnv'
+      - name: Set shared stack/environment variables
         id: set-stack-vars
         run: |
-          echo "FULL_STACK=${ENV_ESC}"
+          # Set and export all shared variables for downstream jobs
           echo "FULL_STACK=${ENV_ESC}" >> $GITHUB_ENV
           trimmed_stack="${ENV_ESC##*/}"
           esc_environment="${ENV_ESC#*/}"
+          esc_organization="${ENV_ESC%%/*}"
           echo "TRIMMED_STACK=$trimmed_stack" >> $GITHUB_ENV
           echo "ESC_ENVIRONMENT=$esc_environment" >> $GITHUB_ENV
+          echo "ORGANIZATION=$esc_organization" >> $GITHUB_ENV
+          # Set outputs for downstream jobs
           echo "FULL_STACK=$ENV_ESC" >> $GITHUB_OUTPUT
           echo "TRIMMED_STACK=$trimmed_stack" >> $GITHUB_OUTPUT
           echo "ESC_ENVIRONMENT=$esc_environment" >> $GITHUB_OUTPUT
+          echo "ORGANIZATION=$esc_organization" >> $GITHUB_OUTPUT
+      # Add any other shared setup steps here as needed
       - name: Install Dependencies
         run: yarn install --immutable
         working-directory: ./azure-deploy
@@ -78,7 +93,7 @@ jobs:
         working-directory: ./azure-deploy
       - name: Select Pulumi stack
         working-directory: ./azure-deploy
-        run: pulumi stack select ${{ env.ENV_ESC }}
+        run: pulumi stack select acr-infra
       - name: Run Pulumi for ACR infra only
         working-directory: ./azure-deploy
         env:
