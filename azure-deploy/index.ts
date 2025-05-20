@@ -22,7 +22,9 @@ async function ensureEscEnvironment() {
   const projectName = getProjectName(escEnv);
 
   if (escEnv && stackName) {
-    // Use Automation API to add the ESC environment to the stack config
+    // Only use the last two segments for the environment reference (project/environment)
+    const escParts = escEnv.split("/");
+    const envRef = escParts.slice(-2).join("/"); 
     const stackArgs: automation.InlineProgramArgs = {
       stackName,
       projectName,
@@ -31,9 +33,9 @@ async function ensureEscEnvironment() {
     const stack = await automation.LocalWorkspace.createOrSelectStack(stackArgs);
     // Add the ESC environment if not already present
     const currentEnvs = await stack.listEnvironments();
-    if (!currentEnvs.includes(escEnv)) {
-      await stack.addEnvironments(escEnv);
-      console.log(`Added ESC environment '${escEnv}' to stack '${stackName}'.`);
+    if (!currentEnvs.includes(envRef)) {
+      await stack.addEnvironments(envRef);
+      console.log(`Added ESC environment '${envRef}' to stack '${stackName}'.`);
     }
   }
 }
