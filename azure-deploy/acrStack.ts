@@ -1,7 +1,7 @@
 import * as pulumi from "@pulumi/pulumi";
 
 // Debug: Print Pulumi config at stack start
-pulumi.runtime.allConfig().then((cfg: Record<string, pulumi.ConfigValue>) => {
+pulumi.runtime.allConfig().then(cfg => {
   console.log("[acrStack] Pulumi config at stack start:", cfg);
 });
 
