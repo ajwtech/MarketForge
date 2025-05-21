@@ -1,11 +1,12 @@
 import * as pulumi from "@pulumi/pulumi";
+// ACR and Resource Group stack
+import { acrUsername, acrPassword, registryUrl } from "./infrastructure/registries/acrRegistry"
+import { ResourceGroup } from "./infrastructure/resourceGroup"
 
 // Debug: Print Pulumi config at stack start
-  console.log("[acrStack] Pulumi config at stack start:", pulumi.runtime.allConfig());
+  console.log("[acrStack] Pulumi config at stack start:", JSON.stringify(pulumi.runtime.allConfig(), null, 2));
 
 
-// ACR and Resource Group stack
-const { acrUsername, acrPassword, registryUrl } = require("./infrastructure/registries/acrRegistry");
-const { ResourceGroup } = require("./infrastructure/resourceGroup");
+
 
 export { acrUsername, acrPassword, registryUrl, ResourceGroup };

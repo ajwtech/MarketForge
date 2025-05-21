@@ -1,7 +1,7 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as azure_native from "@pulumi/azure-native";
 
-const config = new pulumi.Config();
+const config = new pulumi.Config("marketforge")
 const location = config.require("location");
 const resourceGroupName = config.require("resourceGroupName");
 
