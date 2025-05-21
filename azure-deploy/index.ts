@@ -38,6 +38,7 @@ async function ensureEscEnvironment() {
     if (!currentEnvs.includes(envRef)) {
       await stack.addEnvironments(envRef);
       console.log(`Added ESC environment '${envRef}' to stack '${stackName}'.`);
+      console.log(await stack.getAllConfig().then((config) => JSON.stringify(config, null, 2)));
     }
   }
 }

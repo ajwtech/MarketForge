@@ -1,0 +1,16 @@
+{
+  "name": "marketforge",
+  "packageManager": "yarn@4.6.0",
+  "private": true,
+  "workspaces": [
+    "suitecrm",
+    "mautic",
+    "azure-deploy",
+    "launchpad/strapi",
+    "launchpad/next"
+  ],
+  "devDependencies": {
+    "@types/node": "^20.5.1",
+    "typescript": "^5.8.3"
+  }
+}

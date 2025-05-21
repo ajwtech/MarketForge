@@ -1,0 +1,8 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./azure-deploy" },
+    { "path": "./launchpad/strapi" },
+    { "path": "./launchpad/next" }
+  ]
+}
