@@ -32,7 +32,7 @@ const BoolSubdomains = config.getBoolean("createSubdomains") || false;
 const imageTag = config.get("imageTag") || "latest";
 let createSubdomains: pulumi.Output<boolean> = pulumi.output(false).apply(unwrapped => unwrapped);
 const storageAccountName = infra.getOutput("storageAccountName");
-const resourceGroupName = infra.getOutput("ResourceGroup").apply((rg: any) => rg.name || rg);
+const resourceGroupName = acr.getOutput("resourceGroup").apply((rg: any) => rg.name || rg);
 const registryUrl = acr.getOutput("registryUrl");
 const acrUsername = acr.getOutput("acrUsername");
 const acrPassword = acr.getOutput("acrPassword");
