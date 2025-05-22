@@ -6,23 +6,13 @@ import { suitecrmApp } from "./infrastructure/containerApps/suiteCrmApp";
 import { setupDns } from "./infrastructure/dns/customDomains";
 import { nginxCerts } from "./infrastructure/certificates/nginxCerts";
 import { jumpBox as jumpbox} from "./infrastructure/containerApps/jumpbox";
+import { getStackRefName } from "./utils/stackRef";
 
 
 const config = new pulumi.Config();
 
-// Helper to get org/project from ENV_ESC and build fully qualified stack names
-function getStackRefName(stackNameConfigKey: string): string {
-    const envEsc = process.env.ENV_ESC;
-    if (!envEsc) {
-        throw new Error("ENV_ESC environment variable is required");
-    }
-    const orgProject = envEsc.slice(0, envEsc.lastIndexOf("/"));
-    const stack = config.require(stackNameConfigKey);
-    return `${orgProject}/${stack}`;
-}
-
-const infra = new pulumi.StackReference(getStackRefName("infraStack"));
-const acr = new pulumi.StackReference(getStackRefName("acrStack"));
+const infra = new pulumi.StackReference(getStackRefName(config, "setup-infra"));
+const acr = new pulumi.StackReference(getStackRefName(config, "setup-acr-infra"));
 
 const appEnv = config.get("appEnv") || "prod";
 const dbHost = infra.getOutput("marketing_mysql").apply((mysql: any) => mysql.fullyQualifiedDomainName);
