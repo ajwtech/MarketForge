@@ -9,8 +9,20 @@ import { jumpBox as jumpbox} from "./infrastructure/containerApps/jumpbox";
 
 
 const config = new pulumi.Config();
-const infra = new pulumi.StackReference(config.require("infraStack"));
-const acr = new pulumi.StackReference(config.require("acrStack"));
+
+// Helper to get org/project from ENV_ESC and build fully qualified stack names
+function getStackRefName(stackNameConfigKey: string): string {
+    const envEsc = process.env.ENV_ESC;
+    if (!envEsc) {
+        throw new Error("ENV_ESC environment variable is required");
+    }
+    const orgProject = envEsc.slice(0, envEsc.lastIndexOf("/"));
+    const stack = config.require(stackNameConfigKey);
+    return `${orgProject}/${stack}`;
+}
+
+const infra = new pulumi.StackReference(getStackRefName("infraStack"));
+const acr = new pulumi.StackReference(getStackRefName("acrStack"));
 
 const appEnv = config.get("appEnv") || "prod";
 const dbHost = infra.getOutput("marketing_mysql").apply((mysql: any) => mysql.fullyQualifiedDomainName);
