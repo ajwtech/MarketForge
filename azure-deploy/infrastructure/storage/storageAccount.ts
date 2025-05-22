@@ -1,11 +1,14 @@
+import { getStackRefName } from "../../utils/stackRef";
 import * as pulumi from "@pulumi/pulumi";
 import * as azure_native from "@pulumi/azure-native";
-import { ResourceGroup } from "../resourceGroup";
 import * as fs from "fs";
 import * as path from "path";
 import * as command from "@pulumi/command";
 
 const config = new pulumi.Config();
+const acrInfraStack = new pulumi.StackReference(getStackRefName(config, "setup-acr-infra"));
+const resourceGroupName = acrInfraStack.getOutput("resourceGroup").apply((rg: any) => rg.name || rg);
+
 const configStorageAccountName = config.require("storageAccountName"); 
 const ipAddressOrRange = config.get("ipAddressOrRange");
 const domain = config.require("domain");
@@ -34,7 +37,7 @@ export const storageAccount = new azure_native.storage.StorageAccount(configStor
         ipRules: [],
     },
     publicNetworkAccess: azure_native.storage.PublicNetworkAccess.Enabled,
-    resourceGroupName: ResourceGroup.name,
+    resourceGroupName: resourceGroupName,
     routingPreference: {
         publishInternetEndpoints: true, // Publish internet endpoints for static web content
         publishMicrosoftEndpoints: true,
@@ -50,7 +53,7 @@ export const storageAccount = new azure_native.storage.StorageAccount(configStor
 
 export const blobServiceProperties = new azure_native.storage.BlobServiceProperties("blob-service-properties", {
     accountName: storageAccount.name,
-    resourceGroupName: ResourceGroup.name,  
+    resourceGroupName: resourceGroupName,  
     blobServicesName: "default",
     cors: {
         corsRules: [
@@ -69,7 +72,7 @@ export const blobServiceProperties = new azure_native.storage.BlobServicePropert
 });
 
 // Export the storage account key
-export const storageAccountKey = pulumi.all([storageAccount.name, ResourceGroup.name]).apply(([name, rgName]) =>
+export const storageAccountKey = pulumi.all([storageAccount.name, resourceGroupName]).apply(([name, rgName]) =>
     azure_native.storage.listStorageAccountKeys({
         accountName: name,
         resourceGroupName: rgName,
@@ -78,27 +81,27 @@ export const storageAccountKey = pulumi.all([storageAccount.name, ResourceGroup.
 
 export const mauticAppFilesStorage = new azure_native.storage.FileShare("mautic-app-files", {
     accountName: storageAccount.name,
-    resourceGroupName: ResourceGroup.name,
+    resourceGroupName: resourceGroupName,
     shareName: "mautic-app-files",
 });
 
 export const strapiAppFilesStorage = new azure_native.storage.FileShare("strapi-app-files", {
     accountName: storageAccount.name,
-    resourceGroupName: ResourceGroup.name,
+    resourceGroupName: resourceGroupName,
     shareName: "strapi-app-files",
 });
 
 
 export const suiteCrmAppFilesStorage = new azure_native.storage.FileShare("suitecrm-app-files", {
     accountName: storageAccount.name,
-    resourceGroupName: ResourceGroup.name,
+    resourceGroupName: resourceGroupName,
     shareName: "suitecrm-app-files",
 });
 
 // Add the Jumpbox FileShare
 export const jumpboxFilesStorage = new azure_native.storage.FileShare("jumpbox-files", {
     accountName: storageAccount.name,
-    resourceGroupName: ResourceGroup.name,
+    resourceGroupName: resourceGroupName,
     shareName: "jumpbox-files",
 });
 
@@ -106,14 +109,14 @@ export const jumpboxFilesStorage = new azure_native.storage.FileShare("jumpbox-f
 export const strapiPublicAssetsContainer = new azure_native.storage.BlobContainer("assets", {
     accountName: storageAccount.name,
     containerName: "assets",
-    resourceGroupName: ResourceGroup.name,
+    resourceGroupName: resourceGroupName,
     publicAccess: azure_native.storage.PublicAccess.Container, // Make it publicly accessible
 });
 
 export const strapiPrivateAssetsContainer = new azure_native.storage.BlobContainer("private-assets", {
     accountName: storageAccount.name,
     containerName: "private-assets",
-    resourceGroupName: ResourceGroup.name,
+    resourceGroupName: resourceGroupName,
     publicAccess: azure_native.storage.PublicAccess.None, // Keep it private
 });
 

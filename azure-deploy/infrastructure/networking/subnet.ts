@@ -1,10 +1,12 @@
-
+import { getStackRefName } from "../../utils/stackRef";
 import * as pulumi from "@pulumi/pulumi";
 import * as azure_native from "@pulumi/azure-native";
-import { ResourceGroup } from "../resourceGroup";
 import { vnet } from "./vnet";
 
 const config = new pulumi.Config();
+const acrInfraStack = new pulumi.StackReference(getStackRefName(config, "setup-acr-infra"));
+const resourceGroupName = acrInfraStack.getOutput("resourceGroup").apply((rg: any) => rg.name || rg);
+
 const subnetName = config.get("subnetName") || "marketing-subnet";
 const subnetAddressPrefix = config.get("subnetAddressPrefix") || "10.0.0.0/23";
 const mysqlSubnetName = config.get("mysqlSubnetName") || "mysql-subnet";
@@ -12,7 +14,7 @@ const mysqlSubnetAddressPrefix = config.get("mysqlSubnetAddressPrefix") || "10.0
 
 
 export const subnet = new azure_native.network.Subnet(subnetName, {
-    resourceGroupName: ResourceGroup.name,
+    resourceGroupName: resourceGroupName,
     virtualNetworkName: vnet.name,
     addressPrefix: subnetAddressPrefix,
     delegations: [
@@ -21,7 +23,7 @@ export const subnet = new azure_native.network.Subnet(subnetName, {
 });
 
 export const mysqlSubnet  = new azure_native.network.Subnet(mysqlSubnetName, {
-    resourceGroupName: ResourceGroup.name,
+    resourceGroupName: resourceGroupName,
     virtualNetworkName: vnet.name,
     addressPrefix: mysqlSubnetAddressPrefix,
     delegations: [

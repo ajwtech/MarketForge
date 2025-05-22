@@ -1,10 +1,12 @@
+import { getStackRefName } from "../../utils/stackRef";
 import * as pulumi from "@pulumi/pulumi";
-import {v20241001preview as azure_mysqldb}  from "@pulumi/azure-native/dbformysql";
+import { v20241001preview as azure_mysqldb } from "@pulumi/azure-native/dbformysql";
 import * as azure_native from "@pulumi/azure-native";
-import { ResourceGroup } from "../resourceGroup";
 import { mysqlSubnet } from "../networking/subnet";
 
 const config = new pulumi.Config();
+const acrInfraStack = new pulumi.StackReference(getStackRefName(config, "setup-acr-infra"));
+const resourceGroupName = acrInfraStack.getOutput("resourceGroup").apply((rg: any) => rg.name || rg);
 const location = config.require("location");
 const mysqlPassword = config.requireSecret("mysqlAdminPassword");
 
@@ -43,7 +45,7 @@ export const marketing_mysql = new azure_mysqldb.Server(mysqlServerName, {
         startMinute: 0,
     },
     replicationRole: azure_mysqldb.ReplicationRole.None,
-    resourceGroupName: ResourceGroup.name,
+    resourceGroupName: resourceGroupName,
     serverName: mysqlServerName, 
     sku: {
         name: mysqlSkuName, 
@@ -70,7 +72,7 @@ export const marketing_mysql = new azure_mysqldb.Server(mysqlServerName, {
 );
 export const configurationRequire_secure_transport = new azure_native.dbformysql.Configuration("configuration",
     {
-        resourceGroupName: ResourceGroup.name,
+        resourceGroupName: resourceGroupName,
         configurationName: "require_secure_transport",
         serverName: mysqlServerName,
         source: "user-override",
@@ -79,7 +81,7 @@ export const configurationRequire_secure_transport = new azure_native.dbformysql
 
 // Set `NO_ENGINE_SUBSTITUTION` SQL mode
 export const configurationSqlMode = new azure_native.dbformysql.Configuration("sqlModeConfig", {
-    resourceGroupName: ResourceGroup.name,
+    resourceGroupName: resourceGroupName,
     serverName: mysqlServerName,
     configurationName: "sql_mode",
     source: "user-override",
@@ -90,7 +92,7 @@ export const configurationSqlMode = new azure_native.dbformysql.Configuration("s
 export const marketing_database = new azure_native.dbformysql.Database(mysqlDbName, {
     charset: "utf8",
     collation: "utf8_unicode_ci",
-    resourceGroupName: ResourceGroup.name,
+    resourceGroupName: resourceGroupName,
     serverName: mysqlServerName,
 }, { dependsOn: [marketing_mysql] });
 
@@ -98,7 +100,7 @@ export const marketing_database = new azure_native.dbformysql.Database(mysqlDbNa
 export const strapi_database = new azure_native.dbformysql.Database(strapiDbName, {
     charset: "utf8",
     collation: "utf8_unicode_ci",
-    resourceGroupName: ResourceGroup.name,
+    resourceGroupName: resourceGroupName,
     serverName: mysqlServerName,
 }, { dependsOn: [marketing_mysql] });
 
@@ -106,7 +108,7 @@ export const strapi_database = new azure_native.dbformysql.Database(strapiDbName
 export const dev_strapi_database = new azure_native.dbformysql.Database(devStrapiDbName, {
     charset: "utf8",
     collation: "utf8_unicode_ci",
-    resourceGroupName: ResourceGroup.name,
+    resourceGroupName: resourceGroupName,
     serverName: mysqlServerName,
 }, { dependsOn: [marketing_mysql] });
 
@@ -115,6 +117,6 @@ export const suitecrm_database = new azure_native.dbformysql.Database(suiteCrmDb
     charset: "utf8",
     collation: "utf8mb3_unicode_520_ci",
     databaseName: suiteCrmDbName,
-    resourceGroupName: ResourceGroup.name,
+    resourceGroupName: resourceGroupName,
     serverName: mysqlServerName,
 }, { dependsOn: [marketing_mysql] });
