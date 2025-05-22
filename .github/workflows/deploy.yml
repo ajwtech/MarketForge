@@ -55,16 +55,17 @@ jobs:
         working-directory: ./azure-deploy
       - name: Install Pulumi CLI
         uses: pulumi/setup-pulumi@v2
-      - name: Install Azure CLI
-        run: |
-          curl -sL https://aka.ms/InstallAzureCLIDeb | bash
-        shell: bash
+
       - name: Run Pulumi Automation API for ACR infra
         working-directory: ./azure-deploy
         env:
           GITHUB_JOB: setup-acr-infra
           ENV_ESC: ${{ matrix.env_esc }}
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
           yarn ts-node index.ts --stack acr-infra
       - name: Export ACR credentials for next job
@@ -106,29 +107,16 @@ jobs:
       - name: Install Pulumi CLI
         uses: pulumi/setup-pulumi@v2
 
-      - name: Check for Azure CLI
-        id: azcli-check
-        run: |
-          if command -v az >/dev/null 2>&1; then
-            echo "found=true" >> $GITHUB_OUTPUT
-          else
-            echo "found=false" >> $GITHUB_OUTPUT
-          fi
-    
-      - name: Install Azure CLI
-        if: steps.azcli-check.outputs.found == 'false'
-        uses: pietrobolcato/install-azure-cli-action@main
-      - name: Azure CLI Login
-        uses: azure/login@v2
-        with:
-          creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","subscriptionId":"${{ secrets.ARM_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
-
       - name: Run Pulumi Automation API for infra
         working-directory: ./azure-deploy
         env:
           GITHUB_JOB: setup-infra
           ENV_ESC: ${{ matrix.env_esc }}
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
           yarn ts-node index.ts --stack setup-infra
 
@@ -219,6 +207,10 @@ jobs:
           GITHUB_JOB: setup-apps
           ENV_ESC: ${{ matrix.env_esc }}
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
           yarn ts-node index.ts --stack setup-apps
 
