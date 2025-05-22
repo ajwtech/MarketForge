@@ -1,32 +1,36 @@
-import * as pulumi from "@pulumi/pulumi";
 import * as automation from "@pulumi/pulumi/automation";
-import * as fs from "fs";
-import * as path from "path";
 
-// Helper to read project name from Pulumi.yaml
-function getProjectName(escEnv: string | undefined): string {
+// Helper to extract project and environment from escEnv format is "project/environment"
+function parseEscEnv(escEnv: string | undefined): { project: string, env: string } {
   if (!escEnv) {
     throw new Error("ESC environment is undefined");
   }
-  const project = escEnv.split("/").pop();
-  if (!project) {
-    throw new Error("Project name not found in ESC environment");
+  const escParts = escEnv.split("/");
+  if (escParts.length < 2) {
+    throw new Error(`Invalid ESC environment format: ${escEnv}`);
   }
+  return {
+    project: escParts[escParts.length - 2],
+    env: escParts[escParts.length - 1],
+  };
+}
+
+const escEnv = process.env.ENV_ESC;
+const { project, env } = parseEscEnv(escEnv);
+
+function getProjectName(): string {
   return project;
 }
 
 // Run the stack code inside the Automation API program so ESC config is merged
 async function runStackWithEscEnv(stackName: string, projectName: string, stackModule: string) {
-  const escEnv = process.env.ENV_ESC;
-  const escParts = escEnv ? escEnv.split("/") : [];
-  const project = escParts.length >= 2 ? escParts[escParts.length - 2] : undefined;
-  const env = escParts.length >= 1 ? escParts[escParts.length - 1] : undefined;
-  const envRef = project && env ? `${project}/${env}` : escEnv || "";
+  const envRef = `${project}/${env}`;
   const stackArgs: automation.InlineProgramArgs = {
     stackName,
     projectName,
     program: async () => {
-      require(stackModule);
+      // Use import instead of require for stack modules
+      await import(stackModule);
     },
   };
   const stack = await automation.LocalWorkspace.createOrSelectStack(stackArgs);
@@ -36,15 +40,13 @@ async function runStackWithEscEnv(stackName: string, projectName: string, stackM
     await stack.addEnvironments(envRef);
     console.log(`Added ESC environment '${envRef}' to stack '${stackName}'.`);
   }
-
   await stack.up({ onOutput: (msg) => process.stdout.write("[pulumi] " + msg) });
 }
 
 // Entrypoint for modular Pulumi stacks
 async function main() {
   const job = process.env.GITHUB_JOB;
-  const escEnv = process.env.ENV_ESC;
-  const projectName = getProjectName(escEnv);
+  const projectName = getProjectName();
   switch (job) {
     case "setup-acr-infra":
       await runStackWithEscEnv(job, projectName, "./acrStack");

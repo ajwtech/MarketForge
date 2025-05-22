@@ -1,12 +1,12 @@
 import * as pulumi from "@pulumi/pulumi";
 import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
+import { mauticWeb, mauticNginx } from "./infrastructure/containerApps/mauticApps";
+import { strapiApp } from "./infrastructure/containerApps/strapiApp";
+import { suitecrmApp } from "./infrastructure/containerApps/suiteCrmApp";
+import { setupDns } from "./infrastructure/dns/customDomains";
+import { nginxCerts } from "./infrastructure/certificates/nginxCerts";
+import { jumpBox as jumpbox} from "./infrastructure/containerApps/jumpbox";
 
-const { mauticWeb, mauticNginx } = require("./infrastructure/containerApps/mauticApps");
-const { strapiApp } = require("./infrastructure/containerApps/strapiApp");
-const { suitecrmApp } = require("./infrastructure/containerApps/suiteCrmApp");
-const { setupDns } = require("./infrastructure/dns/customDomains");
-const { nginxCerts } = require("./infrastructure/certificates/nginxCerts");
-const { jumpBox: jumpbox } = require("./infrastructure/containerApps/jumpbox");
 
 const config = new pulumi.Config();
 const infra = new pulumi.StackReference(config.require("infraStack"));
@@ -43,69 +43,78 @@ const strapiAppFilesStorage = infra.getOutput("strapiAppFilesStorage");
 const jumpboxFilesStorage = infra.getOutput("jumpboxFilesStorage");
 const storageAccountKey = infra.getOutput("storageAccountKey");
 
+// Ensure registryUrl is Output<string>
+const registryUrlString: pulumi.Output<string> = registryUrl.apply(url => String(url));
+
+// Helper to get .id from Output<any>
+const getId = (output: pulumi.Output<any>) => output.apply((x: any) => x.id);
+const getName = (output: pulumi.Output<any>) => output.apply((x: any) => x.name);
+
 function getImageName(registryUrl: pulumi.Output<string>, imageTag: string, imageName: string): pulumi.Output<string> {
     return registryUrl.apply(url => `${url}/${imageName}:${imageTag}`);
 }
 
-const mauticStorage = new azure_app.ManagedEnvironmentsStorage("mautic-app-files-storage", {
-    environmentName: marketing_env.name,
+const mauticStorage = marketing_env.apply(env => new azure_app.ManagedEnvironmentsStorage("mautic-app-files-storage", {
+    environmentName: env.name,
     resourceGroupName: resourceGroupName,
     properties: {
         azureFile: {
             accountName: storageAccountName,
-            shareName: mauticAppFilesStorage.name,
+            shareName: mauticAppFilesStorage.apply(s => s.name),
             accessMode: "ReadWrite",
             accountKey: storageAccountKey,
         },
     },
-}, { protect: false, dependsOn: [mauticAppFilesStorage] });
+}, { protect: false, dependsOn: [mauticAppFilesStorage] }));
 
-const strapiStorage = new azure_app.ManagedEnvironmentsStorage("strapi-app-files-storage", {
-    environmentName: marketing_env.name,
+const strapiStorage = marketing_env.apply(env => new azure_app.ManagedEnvironmentsStorage("strapi-app-files-storage", {
+    environmentName: env.name,
     resourceGroupName: resourceGroupName,
     properties: {
         azureFile: {
             accountName: storageAccountName,
-            shareName: strapiAppFilesStorage.name,
+            shareName: strapiAppFilesStorage.apply(s => s.name),
             accessMode: "ReadWrite",
             accountKey: storageAccountKey,
         },
     },
-}, { protect: false, dependsOn: [strapiAppFilesStorage] });
+}, { protect: false, dependsOn: [strapiAppFilesStorage] }));
 
-const suitecrmStorage = new azure_app.ManagedEnvironmentsStorage("suitecrm-app-files-storage", {
-    environmentName: marketing_env.name,
+const suitecrmStorage = marketing_env.apply(env => new azure_app.ManagedEnvironmentsStorage("suitecrm-app-files-storage", {
+    environmentName: env.name,
     resourceGroupName: resourceGroupName,
     properties: {
         azureFile: {
             accountName: storageAccountName,
-            shareName: suiteCrmAppFilesStorage.name,
+            shareName: suiteCrmAppFilesStorage.apply(s => s.name),
             accessMode: "ReadWrite",
             accountKey: storageAccountKey,
         },
     },
-}, { protect: false, dependsOn: [suiteCrmAppFilesStorage] });
+}, { protect: false, dependsOn: [suiteCrmAppFilesStorage] }));
 
-const jumpboxStorage = new azure_app.ManagedEnvironmentsStorage("jumpbox-files-storage", {
-    environmentName: marketing_env.name,
+const jumpboxStorage = marketing_env.apply(env => new azure_app.ManagedEnvironmentsStorage("jumpbox-files-storage", {
+    environmentName: env.name,
     resourceGroupName: resourceGroupName,
     properties: {
         azureFile: {
             accountName: storageAccountName,
-            shareName: jumpboxFilesStorage.name,
+            shareName: jumpboxFilesStorage.apply(s => s.name),
             accessMode: "ReadWrite",
             accountKey: storageAccountKey,
         },
     },
-}, { protect: false, dependsOn: [jumpboxFilesStorage] });
+}, { protect: false, dependsOn: [jumpboxFilesStorage] }));
+
+const managedEnvironmentId = marketing_env.apply(env => env.id);
 
 const mauticNginxApp = mauticNginx({
     env: appEnv,
-    image: getImageName(registryUrl, imageTag, "marketing-nginx"),
+    image: getImageName(registryUrlString, imageTag, "marketing-nginx"),
     registryUrl,
     registryUsername: acrUsername,
     registryPassword: acrPassword,
-    managedEnvironmentId: marketing_env.id,
+    managedEnvironmentId: managedEnvironmentId,
     storageName: mauticStorage.name,
     suiteCrmStorageName: suitecrmStorage.name,
     dbHost,
@@ -114,16 +123,16 @@ const mauticNginxApp = mauticNginx({
     resourceGroupName,
     createSubdomains,
 });
-const siteFQDN = mauticNginxApp.configuration.apply((fqdn: any) => fqdn?.ingress?.fqdn ?? "localhost");
-const nginxCvid = mauticNginxApp.customDomainVerificationId.apply((cvid: any) => cvid);
+const siteFQDN = mauticNginxApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost");
+const nginxCvid = mauticNginxApp.customDomainVerificationId.apply(cvid => cvid);
 
 const mauticWebApp = mauticWeb({
     env: appEnv,
-    image: getImageName(registryUrl, imageTag, "marketing-mautic-app"),
+    image: getImageName(registryUrlString, imageTag, "marketing-mautic-app"),
     registryUrl,
     registryUsername: acrUsername,
     registryPassword: acrPassword,
-    managedEnvironmentId: marketing_env.id,
+    managedEnvironmentId: managedEnvironmentId,
     storageName: mauticStorage.name,
     dbHost,
     dbPort,
@@ -138,18 +147,18 @@ const mauticWebApp = mauticWeb({
 
 const deployedStrapiApp = strapiApp({
     env: appEnv,
-    image: getImageName(registryUrl, imageTag, "marketing-strapi-app"),
+    image: getImageName(registryUrlString, imageTag, "marketing-strapi-app"),
     registryUrl,
     registryUsername: acrUsername,
     registryPassword: acrPassword,
-    managedEnvironmentId: marketing_env.id,
+    managedEnvironmentId: managedEnvironmentId,
     storageName: strapiStorage.name,
     dbHost,
     dbPort,
     dbName: strapiDbName,
     dbUser,
     dbPassword,
-    dbClient: pulumi.output("postgres"),
+    dbClient: dbType,
     jwtSecret: pulumi.output("jwtSecret"),
     adminJwtSecret: pulumi.output("adminJwtSecret"),
     appKeys: pulumi.output("appKeys"),
@@ -164,11 +173,11 @@ const deployedSuitecrmApp = suitecrmApp({
     env: appEnv,
     appSecret,
     siteFQDN,
-    image: getImageName(registryUrl, imageTag, "marketing-suitecrm-app"),
+    image: getImageName(registryUrlString, imageTag, "marketing-suitecrm-app"),
     registryUrl,
     registryUsername: acrUsername,
     registryPassword: acrPassword,
-    managedEnvironmentId: marketing_env.id,
+    managedEnvironmentId: managedEnvironmentId,
     storageName: suitecrmStorage.name,
     dbHost,
     dbPort,
@@ -189,20 +198,25 @@ const cloudflareDNSentries = BoolSubdomains ? setupDns({
     cmsSubdomain,
     crmSubdomain,
     mapSubdomain,
-    siteFQDN,
-    nginxCvid,
-    mauticNginxApp,
-    strapiApp: deployedStrapiApp,
-    strapiFQDN: deployedStrapiApp.configuration.apply((fqdn: any) => fqdn?.ingress?.fqdn ?? "localhost"),
-    suiteCrmApp: deployedSuitecrmApp,
-    suiteCrmFQDN: deployedSuitecrmApp.configuration.apply((fqdn: any) => fqdn?.ingress?.fqdn ?? "localhost"),
+    siteFQDN: siteFQDN.apply(fqdn => String(fqdn)),
+    nginxCvid: nginxCvid.apply(id => String(id)),
+    mauticNginxApp, // If setupDns expects the resource, this is correct
+    strapiApp: deployedStrapiApp, // If setupDns expects the resource, this is correct
+    strapiFQDN: deployedStrapiApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
+    suiteCrmApp: deployedSuitecrmApp, // If setupDns expects the resource, this is correct
+    suiteCrmFQDN: deployedSuitecrmApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
 }) : undefined;
 
-const customDomains = nginxCerts(mauticNginxApp, deployedStrapiApp, marketing_env, cloudflareDNSentries);
+const customDomains = nginxCerts(
+    mauticNginxApp,
+    deployedStrapiApp,
+    marketing_env.apply(env => env.name), // Pass environment name as Output<string>
+    cloudflareDNSentries
+);
 
 const jumpboxApp = jumpbox({
     env: appEnv,
-    managedEnvironmentId: marketing_env.id,
+    managedEnvironmentId: marketing_env.apply(env => env.id),
     storageName: jumpboxStorage.name,
     dbHost,
     dbPort,
