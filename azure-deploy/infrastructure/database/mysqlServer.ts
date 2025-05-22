@@ -1,29 +1,20 @@
-import { getStackRefName } from "../../utils/stackRef";
 import * as pulumi from "@pulumi/pulumi";
 import { v20241001preview as azure_mysqldb } from "@pulumi/azure-native/dbformysql";
 import * as azure_native from "@pulumi/azure-native";
 import { mysqlSubnet } from "../networking/subnet";
 
 const config = new pulumi.Config();
-const acrInfraStack = new pulumi.StackReference(getStackRefName(config, "setup-acr-infra"));
-const resourceGroupName = acrInfraStack.getOutput("resourceGroup").apply((rg: any) => rg.name || rg);
+const resourceGroupName = config.require("resourceGroupName");
 const location = config.require("location");
 const mysqlPassword = config.requireSecret("mysqlAdminPassword");
-
-// Add configurable administrator login
 const mysqlAdminUser = config.require("mysqlAdminUser"); 
-
-// Add configurable server name
-const mysqlServerName = config.require("mysqlServerName"); // Use config value
-const mysqlDbName = config.get("mysqlDbName") || "mautic"; // Use config value
-const strapiDbName = config.get("strapiDbName") || "strapi"; // Use config value
-const devStrapiDbName = config.get("devStrapiDbName") || "dev-strapi"; // Use config value
-const suiteCrmDbName = config.get("suiteCrmDbName") || "suitecrm"; // Use config value
-// Add configurable SKU name and tier
-const mysqlSkuName = config.require("mysqlSkuName")
+const mysqlServerName = config.require("mysqlServerName");
+const mysqlDbName = config.get("mysqlDbName") || "mautic";
+const strapiDbName = config.get("strapiDbName") || "strapi";
+const devStrapiDbName = config.get("devStrapiDbName") || "dev-strapi";
+const suiteCrmDbName = config.get("suiteCrmDbName") || "suitecrm";
+const mysqlSkuName = config.require("mysqlSkuName");
 const mysqlSkuTier = config.require("mysqlSkuTier") as keyof typeof azure_mysqldb.ServerSkuTier;
-
-
 
 export const marketing_mysql = new azure_mysqldb.Server(mysqlServerName, {
     administratorLogin: mysqlAdminUser, 
@@ -61,15 +52,12 @@ export const marketing_mysql = new azure_mysqldb.Server(mysqlServerName, {
     version: azure_mysqldb.ServerVersion.ServerVersion_8_0_21,
     network: {
         delegatedSubnetResourceId: mysqlSubnet.id,
-        // privateDnsZoneResourceId: privateDnsZone.id,
         publicNetworkAccess: "Disabled",
-      },
-    
-
+    },
 }, {
     protect: false,
-}
-);
+});
+
 export const configurationRequire_secure_transport = new azure_native.dbformysql.Configuration("configuration",
     {
         resourceGroupName: resourceGroupName,
@@ -79,7 +67,6 @@ export const configurationRequire_secure_transport = new azure_native.dbformysql
         value: "OFF",
     }, { dependsOn: [marketing_mysql] });
 
-// Set `NO_ENGINE_SUBSTITUTION` SQL mode
 export const configurationSqlMode = new azure_native.dbformysql.Configuration("sqlModeConfig", {
     resourceGroupName: resourceGroupName,
     serverName: mysqlServerName,
@@ -88,7 +75,6 @@ export const configurationSqlMode = new azure_native.dbformysql.Configuration("s
     value: "NO_ENGINE_SUBSTITUTION"
 }, { dependsOn: [marketing_mysql] }); 
 
-// Create a database in the server
 export const marketing_database = new azure_native.dbformysql.Database(mysqlDbName, {
     charset: "utf8",
     collation: "utf8_unicode_ci",
@@ -96,7 +82,6 @@ export const marketing_database = new azure_native.dbformysql.Database(mysqlDbNa
     serverName: mysqlServerName,
 }, { dependsOn: [marketing_mysql] });
 
-// Create a database in the server
 export const strapi_database = new azure_native.dbformysql.Database(strapiDbName, {
     charset: "utf8",
     collation: "utf8_unicode_ci",
@@ -104,7 +89,6 @@ export const strapi_database = new azure_native.dbformysql.Database(strapiDbName
     serverName: mysqlServerName,
 }, { dependsOn: [marketing_mysql] });
 
-// Create a database in the server
 export const dev_strapi_database = new azure_native.dbformysql.Database(devStrapiDbName, {
     charset: "utf8",
     collation: "utf8_unicode_ci",
@@ -112,7 +96,6 @@ export const dev_strapi_database = new azure_native.dbformysql.Database(devStrap
     serverName: mysqlServerName,
 }, { dependsOn: [marketing_mysql] });
 
-// Create a database in the server
 export const suitecrm_database = new azure_native.dbformysql.Database(suiteCrmDbName, {
     charset: "utf8",
     collation: "utf8mb3_unicode_520_ci",
