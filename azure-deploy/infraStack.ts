@@ -16,6 +16,5 @@ export {
     strapiAppFilesStorage,
     jumpboxFilesStorage,
     marketing_env,
-    marketing_mysql,
-    resourceGroup
+    marketing_mysql
 };
