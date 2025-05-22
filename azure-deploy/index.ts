@@ -15,56 +15,50 @@ function getProjectName(escEnv: string | undefined): string {
   return project;
 }
 
-// Dynamically add the ESC environment to the Pulumi config if running in CI
-async function ensureEscEnvironment() {
+// Run the stack code inside the Automation API program so ESC config is merged
+async function runStackWithEscEnv(stackName: string, projectName: string, stackModule: string) {
   const escEnv = process.env.ENV_ESC;
   const escParts = escEnv ? escEnv.split("/") : [];
   const project = escParts.length >= 2 ? escParts[escParts.length - 2] : undefined;
   const env = escParts.length >= 1 ? escParts[escParts.length - 1] : undefined;
-  const job = process.env.GITHUB_JOB;
-  // Use just the job name as the stack name for Automation API
-  const stackName = job;
-  const projectName = getProjectName(escEnv);
-
-  if (escEnv && stackName) {
-    const envRef = project && env ? `${project}/${env}` : escEnv;
-    const stackArgs: automation.InlineProgramArgs = {
-      stackName,
-      projectName,
-      program: async () => {}, // No-op, just managing config
-    };
-    const stack = await automation.LocalWorkspace.createOrSelectStack(stackArgs);
-    const currentEnvs = await stack.listEnvironments();
-    if (!currentEnvs.includes(envRef)) {
-      await stack.addEnvironments(envRef);
-      console.log(`Added ESC environment '${envRef}' to stack '${stackName}'.`);
-      console.log(await stack.getAllConfig().then((config) => JSON.stringify(config, null, 2)));
-    }
+  const envRef = project && env ? `${project}/${env}` : escEnv || "";
+  const stackArgs: automation.InlineProgramArgs = {
+    stackName,
+    projectName,
+    program: async () => {
+      require(stackModule);
+    },
+  };
+  const stack = await automation.LocalWorkspace.createOrSelectStack(stackArgs);
+  await stack.refresh();
+  const currentEnvs = await stack.listEnvironments();
+  if (envRef && !currentEnvs.includes(envRef)) {
+    await stack.addEnvironments(envRef);
+    console.log(`Added ESC environment '${envRef}' to stack '${stackName}'.`);
   }
+
+  await stack.up({ onOutput: (msg) => process.stdout.write("[pulumi] " + msg) });
 }
 
 // Entrypoint for modular Pulumi stacks
 async function main() {
   const job = process.env.GITHUB_JOB;
-  await ensureEscEnvironment();
-  // Debug: Print ENV_ESC and GITHUB_JOB
-  console.log("[index.ts] ENV_ESC:", process.env.ENV_ESC);
-  console.log("[index.ts] GITHUB_JOB:", job);
+  const escEnv = process.env.ENV_ESC;
+  const projectName = getProjectName(escEnv);
   switch (job) {
     case "setup-acr-infra":
-      require("./acrStack");
+      await runStackWithEscEnv(job, projectName, "./acrStack");
       break;
     case "setup-infra":
-      require("./infraStack");
+      await runStackWithEscEnv(job, projectName, "./infraStack");
       break;
     case "setup-apps":
-      require("./appsStack");
+      await runStackWithEscEnv(job, projectName, "./appsStack");
       break;
     default:
-      // For local/dev, run all
-      require("./acrStack");
-      require("./infraStack");
-      require("./appsStack");
+      await runStackWithEscEnv("setup-acr-infra", projectName, "./acrStack");
+      await runStackWithEscEnv("setup-infra", projectName, "./infraStack");
+      await runStackWithEscEnv("setup-apps", projectName, "./appsStack");
   }
 }
 
