@@ -55,6 +55,10 @@ jobs:
         working-directory: ./azure-deploy
       - name: Install Pulumi CLI
         uses: pulumi/setup-pulumi@v2
+      - name: Install Azure CLI
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+        shell: bash
       - name: Run Pulumi Automation API for ACR infra
         working-directory: ./azure-deploy
         env:
