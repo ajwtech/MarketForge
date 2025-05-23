@@ -74,7 +74,7 @@ jobs:
       - name: Export ACR credentials for next job
         id: acr-creds
         run: |
-          pulumi stack select "$ENV_ESC"
+          pulumi stack select acr-infra
           echo "ACR_USERNAME=$(pulumi stack output acrUsernameOut)" >> $GITHUB_OUTPUT
           echo "ACR_PASSWORD=$(pulumi stack output acrPasswordOut)" >> $GITHUB_OUTPUT
           echo "ACR_URL=$(pulumi stack output registryUrlOut)" >> $GITHUB_OUTPUT
