@@ -74,6 +74,8 @@ jobs:
           echo "ACR_USERNAME=$(pulumi stack output acrUsernameOut)" >> $GITHUB_OUTPUT
           echo "ACR_PASSWORD=$(pulumi stack output acrPasswordOut)" >> $GITHUB_OUTPUT
           echo "ACR_URL=$(pulumi stack output registryUrlOut)" >> $GITHUB_OUTPUT
+        working-directory: azure-deploy
+        shell: bash
 
   setup-infra:
     needs: setup-acr-infra

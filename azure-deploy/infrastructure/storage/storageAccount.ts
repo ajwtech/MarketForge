@@ -4,236 +4,220 @@ import * as fs from "fs";
 import * as path from "path";
 import * as command from "@pulumi/command";
 
-// Refactored: Accept resourceGroupName as parameter
-export function createStorageResources(resourceGroupName: pulumi.Input<string>) {
-    const config = new pulumi.Config();
-    const configStorageAccountName = config.require("storageAccountName"); 
-    const ipAddressOrRange = config.get("ipAddressOrRange");
-    const domain = config.require("domain");
-    const cmsSubdomain = config.get("cmsSubdomain") || "cms";
-    const crmSubdomain = config.get("crmSubdomain") || "crm";
-    const allowedOrigins = [`https://${cmsSubdomain}.${domain}`];
-    const suiteCrmSiteUrl = `${crmSubdomain}.${domain}`;
+const config = new pulumi.Config();
+const configStorageAccountName = config.require("storageAccountName");
+const ipAddressOrRange = config.get("ipAddressOrRange");
+const domain = config.require("domain");
+const cmsSubdomain = config.get("cmsSubdomain") || "cms";
+const crmSubdomain = config.get("crmSubdomain") || "crm";
+const allowedOrigins = [`https://${cmsSubdomain}.${domain}`];
+const suiteCrmSiteUrl = `${crmSubdomain}.${domain}`;
 
-    const storageAccount = new azure_native.storage.StorageAccount(configStorageAccountName, {
-        accessTier: azure_native.storage.AccessTier.Hot,
-        accountName: configStorageAccountName, 
-        allowCrossTenantReplication: false,
-        kind: azure_native.storage.Kind.StorageV2,
-        allowBlobPublicAccess: true, 
-        minimumTlsVersion: azure_native.storage.MinimumTlsVersion.TLS1_2,
-        networkRuleSet: ipAddressOrRange ? {
-            bypass: azure_native.storage.Bypass.AzureServices,
-            defaultAction: azure_native.storage.DefaultAction.Deny,
-            ipRules: [{
-                action: azure_native.storage.Action.Allow,
-                iPAddressOrRange: ipAddressOrRange,
-            }],
-        } : {
-            bypass: azure_native.storage.Bypass.AzureServices,
-            defaultAction: azure_native.storage.DefaultAction.Allow,
-            ipRules: [],
-        },
-        publicNetworkAccess: azure_native.storage.PublicNetworkAccess.Enabled,
-        resourceGroupName: resourceGroupName,
-        routingPreference: {
-            publishInternetEndpoints: true, // Publish internet endpoints for static web content
-            publishMicrosoftEndpoints: true,
-            routingChoice: azure_native.storage.RoutingChoice.MicrosoftRouting,
-        },
-        sku: {
-            name: azure_native.storage.SkuName.Standard_LRS,
-        },
-    }, {
-        ignoreChanges: ["networkRuleSet"],
-        protect: false,
-    });
+export const storageAccount = new azure_native.storage.StorageAccount(configStorageAccountName, {
+    accessTier: azure_native.storage.AccessTier.Hot,
+    accountName: configStorageAccountName,
+    allowCrossTenantReplication: false,
+    kind: azure_native.storage.Kind.StorageV2,
+    allowBlobPublicAccess: true,
+    minimumTlsVersion: azure_native.storage.MinimumTlsVersion.TLS1_2,
+    networkRuleSet: ipAddressOrRange ? {
+        bypass: azure_native.storage.Bypass.AzureServices,
+        defaultAction: azure_native.storage.DefaultAction.Deny,
+        ipRules: [{
+            action: azure_native.storage.Action.Allow,
+            iPAddressOrRange: ipAddressOrRange,
+        }],
+    } : {
+        bypass: azure_native.storage.Bypass.AzureServices,
+        defaultAction: azure_native.storage.DefaultAction.Allow,
+        ipRules: [],
+    },
+    publicNetworkAccess: azure_native.storage.PublicNetworkAccess.Enabled,
+    resourceGroupName: config.require("resourceGroupName"),
+    routingPreference: {
+        publishInternetEndpoints: true,
+        publishMicrosoftEndpoints: true,
+        routingChoice: azure_native.storage.RoutingChoice.MicrosoftRouting,
+    },
+    sku: {
+        name: azure_native.storage.SkuName.Standard_LRS,
+    },
+}, {
+    ignoreChanges: ["networkRuleSet"],
+    protect: false,
+});
 
-    const blobServiceProperties = new azure_native.storage.BlobServiceProperties("blob-service-properties", {
-        accountName: storageAccount.name,
-        resourceGroupName: resourceGroupName,  
-        blobServicesName: "default",
-        cors: {
-            corsRules: [
-                {
-                    allowedOrigins: allowedOrigins,
-                    allowedMethods: ["GET", "HEAD", "OPTIONS"],
-                    allowedHeaders: ["*"],
-                    exposedHeaders: ["Content-Length", "Content-Type", "Content-Disposition", "Content-MD5"],
-                    maxAgeInSeconds: 3600
-                }
-            ]
-        },
-    }, 
-    {
-        dependsOn: [storageAccount],
-    });
+export const storageAccountKey = pulumi.all([storageAccount.name, config.require("resourceGroupName")]).apply(([name, rgName]) =>
+    azure_native.storage.listStorageAccountKeys({
+        accountName: name,
+        resourceGroupName: rgName,
+    }).then(keys => keys.keys[0].value)
+);
 
-    // Export the storage account key
-    const storageAccountKey = pulumi.all([storageAccount.name, resourceGroupName]).apply(([name, rgName]) =>
-        azure_native.storage.listStorageAccountKeys({
-            accountName: name,
-            resourceGroupName: rgName,
-        }).then(keys => keys.keys[0].value)
-    );
+export const storageAccountName = storageAccount.name;
 
-    const mauticAppFilesStorage = new azure_native.storage.FileShare("mautic-app-files", {
-        accountName: storageAccount.name,
-        resourceGroupName: resourceGroupName,
-        shareName: "mautic-app-files",
-    });
+const blobServiceProperties = new azure_native.storage.BlobServiceProperties("blob-service-properties", {
+    accountName: storageAccount.name,
+    resourceGroupName: config.require("resourceGroupName"),  
+    blobServicesName: "default",
+    cors: {
+        corsRules: [
+            {
+                allowedOrigins: allowedOrigins,
+                allowedMethods: ["GET", "HEAD", "OPTIONS"],
+                allowedHeaders: ["*"],
+                exposedHeaders: ["Content-Length", "Content-Type", "Content-Disposition", "Content-MD5"],
+                maxAgeInSeconds: 3600
+            }
+        ]
+    },
+}, 
+{
+    dependsOn: [storageAccount],
+});
 
-    const strapiAppFilesStorage = new azure_native.storage.FileShare("strapi-app-files", {
-        accountName: storageAccount.name,
-        resourceGroupName: resourceGroupName,
-        shareName: "strapi-app-files",
-    });
+export const mauticAppFilesStorage = new azure_native.storage.FileShare("mautic-app-files", {
+    accountName: storageAccount.name,
+    resourceGroupName: config.require("resourceGroupName"),
+    shareName: "mautic-app-files",
+});
 
-    const suiteCrmAppFilesStorage = new azure_native.storage.FileShare("suitecrm-app-files", {
-        accountName: storageAccount.name,
-        resourceGroupName: resourceGroupName,
-        shareName: "suitecrm-app-files",
-    });
+export const strapiAppFilesStorage = new azure_native.storage.FileShare("strapi-app-files", {
+    accountName: storageAccount.name,
+    resourceGroupName: config.require("resourceGroupName"),
+    shareName: "strapi-app-files",
+});
 
-    // Add the Jumpbox FileShare
-    const jumpboxFilesStorage = new azure_native.storage.FileShare("jumpbox-files", {
-        accountName: storageAccount.name,
-        resourceGroupName: resourceGroupName,
-        shareName: "jumpbox-files",
-    });
+export const suiteCrmAppFilesStorage = new azure_native.storage.FileShare("suitecrm-app-files", {
+    accountName: storageAccount.name,
+    resourceGroupName: config.require("resourceGroupName"),
+    shareName: "suitecrm-app-files",
+});
 
-    const strapiPublicAssetsContainer = new azure_native.storage.BlobContainer("assets", {
-        accountName: storageAccount.name,
-        containerName: "assets",
-        resourceGroupName: resourceGroupName,
-        publicAccess: azure_native.storage.PublicAccess.Container, // Make it publicly accessible
-    });
+export const jumpboxFilesStorage = new azure_native.storage.FileShare("jumpbox-files", {
+    accountName: storageAccount.name,
+    resourceGroupName: config.require("resourceGroupName"),
+    shareName: "jumpbox-files",
+});
 
-    const strapiPrivateAssetsContainer = new azure_native.storage.BlobContainer("private-assets", {
-        accountName: storageAccount.name,
-        containerName: "private-assets",
-        resourceGroupName: resourceGroupName,
-        publicAccess: azure_native.storage.PublicAccess.None, // Keep it private
-    });
+export const strapiPublicAssetsContainer = new azure_native.storage.BlobContainer("assets", {
+    accountName: storageAccount.name,
+    containerName: "assets",
+    resourceGroupName: config.require("resourceGroupName"),
+    publicAccess: azure_native.storage.PublicAccess.Container, // Make it publicly accessible
+});
 
-    // Add creation of the base "config" directory for SuiteCRM
-    const createSuiteCrmBaseConfigDirectory = new command.local.Command("CreateSuiteCrmBaseConfigDirectory", {
-        create: pulumi.interpolate`az storage directory create --account-name ${storageAccount.name} \
-          --share-name ${suiteCrmAppFilesStorage.name} \
-          --auth-mode key \
-          --account-key ${storageAccountKey} \
-          --name config`,
-        triggers: [new Date().toISOString()],
-    }, {
-        dependsOn: [suiteCrmAppFilesStorage],
-    });
+export const strapiPrivateAssetsContainer = new azure_native.storage.BlobContainer("private-assets", {
+    accountName: storageAccount.name,
+    containerName: "private-assets",
+    resourceGroupName: config.require("resourceGroupName"),
+    publicAccess: azure_native.storage.PublicAccess.None, // Keep it private
+});
 
-    // Create the "config/suitecrm" subdirectory
-    const createSuiteCrmConfigSubDirectory = new command.local.Command("CreateSuiteCrmConfigSubDirectory", {
-        create: pulumi.interpolate`az storage directory create --account-name ${storageAccount.name} \
-          --share-name ${suiteCrmAppFilesStorage.name} \
-          --auth-mode key \
-          --account-key ${storageAccountKey} \
-          --name config/suitecrm`,
-        triggers: [createSuiteCrmBaseConfigDirectory.stdout],
-    }, {
-        dependsOn: [suiteCrmAppFilesStorage, createSuiteCrmBaseConfigDirectory],
-    });
+// Add creation of the base "config" directory for SuiteCRM
+const createSuiteCrmBaseConfigDirectory = new command.local.Command("CreateSuiteCrmBaseConfigDirectory", {
+    create: pulumi.interpolate`az storage directory create --account-name ${storageAccount.name} \
+      --share-name ${suiteCrmAppFilesStorage.name} \
+      --auth-mode key \
+      --account-key ${storageAccountKey} \
+      --name config`,
+    triggers: [new Date().toISOString()],
+}, {
+    dependsOn: [suiteCrmAppFilesStorage],
+});
 
-    const mauticConfigFileName = "local.php";
-    const mauticlocalPhpFilePath = path.join(__dirname, mauticConfigFileName);
-    fs.writeFileSync(mauticlocalPhpFilePath,"");
+// Create the "config/suitecrm" subdirectory
+const createSuiteCrmConfigSubDirectory = new command.local.Command("CreateSuiteCrmConfigSubDirectory", {
+    create: pulumi.interpolate`az storage directory create --account-name ${storageAccount.name} \
+      --share-name ${suiteCrmAppFilesStorage.name} \
+      --auth-mode key \
+      --account-key ${storageAccountKey} \
+      --name config/suitecrm`,
+    triggers: [createSuiteCrmBaseConfigDirectory.stdout],
+}, {
+    dependsOn: [suiteCrmAppFilesStorage, createSuiteCrmBaseConfigDirectory],
+});
 
-    const configFileExists = new command.local.Command("Check for Config File Exists", {
-        create: pulumi.interpolate`az storage file exists --account-name ${storageAccount.name} \
-          --share-name ${mauticAppFilesStorage.name} \
-          --auth-mode key \
-          --account-key ${storageAccountKey} \
-          --path config/${mauticConfigFileName}`,
-          triggers: [new Date().toISOString()],
-      },{
-            dependsOn: [mauticAppFilesStorage]
-      });
+const mauticConfigFileName = "local.php";
+const mauticlocalPhpFilePath = path.join(__dirname, mauticConfigFileName);
+fs.writeFileSync(mauticlocalPhpFilePath,"");
 
-    // Command to create the config directory
-    const createConfigDirectory = new command.local.Command("CreateConfigDirectory", {
-        create: pulumi.interpolate`az storage directory create --account-name ${storageAccount.name} \
-          --share-name ${mauticAppFilesStorage.name} \
-          --auth-mode key \
-          --account-key ${storageAccountKey} \
-          --name config`,
-        triggers: [configFileExists],
-    }, {
-        
-        dependsOn: [mauticAppFilesStorage],
-    });
+const configFileExists = new command.local.Command("Check for Config File Exists", {
+    create: pulumi.interpolate`az storage file exists --account-name ${storageAccount.name} \
+      --share-name ${mauticAppFilesStorage.name} \
+      --auth-mode key \
+      --account-key ${storageAccountKey} \
+      --path config/${mauticConfigFileName}`,
+      triggers: [new Date().toISOString()],
+  },{
+        dependsOn: [mauticAppFilesStorage]
+  });
 
-    const configFilePlaceholder = new command.local.Command("uploadFile", {
-        create: configFileExists.stdout.apply(out => 
-            out.includes('"exists": false') ? pulumi.interpolate` \
-                az storage file upload --account-name ${storageAccount.name} \
-                --source ${mauticlocalPhpFilePath} \
-                --share-name ${mauticAppFilesStorage.name} \
+// Command to create the config directory
+const createConfigDirectory = new command.local.Command("CreateConfigDirectory", {
+    create: pulumi.interpolate`az storage directory create --account-name ${storageAccount.name} \
+      --share-name ${mauticAppFilesStorage.name} \
+      --auth-mode key \
+      --account-key ${storageAccountKey} \
+      --name config`,
+    triggers: [configFileExists],
+}, {
+    
+    dependsOn: [mauticAppFilesStorage],
+});
+
+const configFilePlaceholder = new command.local.Command("uploadFile", {
+    create: configFileExists.stdout.apply(out => 
+        out.includes('"exists": false') ? pulumi.interpolate` \
+            az storage file upload --account-name ${storageAccount.name} \
+            --source ${mauticlocalPhpFilePath} \
+            --share-name ${mauticAppFilesStorage.name} \
+            --auth-mode key \
+            --account-key ${storageAccountKey} \
+            --path config/${mauticConfigFileName}` 
+            : pulumi.interpolate`echo "File already exists. Skipping upload. File exists: ${out}"`,
+    ),
+    triggers: [createConfigDirectory.stdout],
+}, {
+    dependsOn: [mauticAppFilesStorage, createConfigDirectory, configFileExists],
+});
+
+// Define the file name and local path for SuiteCRM’s config_override file.
+const suiteCrmOverrideFileName = "config_override.php";
+const suiteCrmLocalOverrideFilePath = path.join(__dirname, suiteCrmOverrideFileName);
+
+// Create config_override.php with dynamic content
+const suiteCrmOverrideContent = `<?php\n$sugar_config['http_referer']['list'][] = '${suiteCrmSiteUrl}';\n`;
+fs.writeFileSync(suiteCrmLocalOverrideFilePath, suiteCrmOverrideContent, {encoding: 'utf8'});
+
+// Generate a hash for the override content too
+const overrideContentHash = require("crypto").createHash("md5").update(suiteCrmOverrideContent).digest("hex");
+
+// Check if the SuiteCRM config_override file already exists in the file share.
+const suiteCrmOverrideFileExists = new command.local.Command("CheckForSuiteCrmOverrideFileExists", {
+    create: pulumi.interpolate`az storage file exists --account-name ${storageAccount.name} \
+      --share-name ${suiteCrmAppFilesStorage.name} \
+      --auth-mode key \
+      --account-key ${storageAccountKey} \
+      --path config/suitecrm/${suiteCrmOverrideFileName}`,
+    triggers: [createSuiteCrmConfigSubDirectory.stdout],
+}, {
+    dependsOn: [suiteCrmAppFilesStorage, createSuiteCrmConfigSubDirectory],
+});
+
+// Upload the config_override.php file ONLY if it doesn't exist
+const suiteCrmOverrideFilePlaceholder = new command.local.Command("UploadSuiteCrmOverrideFilePlaceholder", {
+    create: suiteCrmOverrideFileExists.stdout.apply(out =>
+        out.includes('"exists": false')
+            ? pulumi.interpolate`az storage file upload --account-name ${storageAccount.name} \
+                --source ${suiteCrmLocalOverrideFilePath} \
+                --share-name ${suiteCrmAppFilesStorage.name} \
                 --auth-mode key \
                 --account-key ${storageAccountKey} \
-                --path config/${mauticConfigFileName}` 
-                : pulumi.interpolate`echo "File already exists. Skipping upload. File exists: ${out}"`,
-        ),
-        triggers: [createConfigDirectory.stdout],
-    }, {
-        dependsOn: [mauticAppFilesStorage, createConfigDirectory, configFileExists],
-    });
-
-    // Define the file name and local path for SuiteCRM’s config_override file.
-    const suiteCrmOverrideFileName = "config_override.php";
-    const suiteCrmLocalOverrideFilePath = path.join(__dirname, suiteCrmOverrideFileName);
-
-    // Create config_override.php with dynamic content
-    const suiteCrmOverrideContent = `<?php\n$sugar_config['http_referer']['list'][] = '${suiteCrmSiteUrl}';\n`;
-    fs.writeFileSync(suiteCrmLocalOverrideFilePath, suiteCrmOverrideContent, {encoding: 'utf8'});
-
-    // Generate a hash for the override content too
-    const overrideContentHash = require("crypto").createHash("md5").update(suiteCrmOverrideContent).digest("hex");
-
-    // Check if the SuiteCRM config_override file already exists in the file share.
-    const suiteCrmOverrideFileExists = new command.local.Command("CheckForSuiteCrmOverrideFileExists", {
-        create: pulumi.interpolate`az storage file exists --account-name ${storageAccount.name} \
-          --share-name ${suiteCrmAppFilesStorage.name} \
-          --auth-mode key \
-          --account-key ${storageAccountKey} \
-          --path config/suitecrm/${suiteCrmOverrideFileName}`,
-        triggers: [createSuiteCrmConfigSubDirectory.stdout],
-    }, {
-        dependsOn: [suiteCrmAppFilesStorage, createSuiteCrmConfigSubDirectory],
-    });
-
-    // Upload the config_override.php file ONLY if it doesn't exist
-    const suiteCrmOverrideFilePlaceholder = new command.local.Command("UploadSuiteCrmOverrideFilePlaceholder", {
-        create: suiteCrmOverrideFileExists.stdout.apply(out =>
-            out.includes('"exists": false')
-                ? pulumi.interpolate`az storage file upload --account-name ${storageAccount.name} \
-                    --source ${suiteCrmLocalOverrideFilePath} \
-                    --share-name ${suiteCrmAppFilesStorage.name} \
-                    --auth-mode key \
-                    --account-key ${storageAccountKey} \
-                    --path config/suitecrm/${suiteCrmOverrideFileName}`
-                : pulumi.interpolate`echo "SuiteCRM override config file already exists. Skipping upload."`),
-        triggers: [createSuiteCrmConfigSubDirectory.stdout, overrideContentHash], // Still track content hash for changes
-    }, {
-        dependsOn: [suiteCrmAppFilesStorage, createSuiteCrmConfigSubDirectory, suiteCrmOverrideFileExists],
-    });
-
-    return {
-        storageAccountKey,
-        mauticAppFilesStorage,
-        suiteCrmAppFilesStorage,
-        strapiAppFilesStorage,
-        jumpboxFilesStorage,
-        strapiPublicAssetsContainer,
-        strapiPrivateAssetsContainer,
-        configFilePlaceholder,
-        suiteCrmOverrideFilePlaceholder,
-        storageAccountName: storageAccount.name,
-    };
-}
+                --path config/suitecrm/${suiteCrmOverrideFileName}`
+            : pulumi.interpolate`echo "SuiteCRM override config file already exists. Skipping upload."`),
+    triggers: [createSuiteCrmConfigSubDirectory.stdout, overrideContentHash], // Still track content hash for changes
+}, {
+    dependsOn: [suiteCrmAppFilesStorage, createSuiteCrmConfigSubDirectory, suiteCrmOverrideFileExists],
+});
 

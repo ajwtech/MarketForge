@@ -145,6 +145,9 @@ const mauticWebApp = mauticWeb({
     resourceGroupName,
     siteFQDN,
     siteUrl: pulumi.interpolate`https://${mapSubdomain}.${domain}/`,
+    storageAccountName, // added for cross-stack reference
+    storageAccountKey,  // added for cross-stack reference
+    configFilePlaceholder: infra.getOutput("configFilePlaceholder"), // optional, if needed
 });
 
 const deployedStrapiApp = strapiApp({

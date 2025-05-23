@@ -1,5 +1,4 @@
 import * as pulumi from "@pulumi/pulumi";
-import { storageAccountName, storageAccountKey, storageAccount, configFilePlaceholder } from "../storage/storageAccount";
 import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 
 const config = new pulumi.Config();
@@ -22,7 +21,9 @@ export function mauticWeb(args: {
     resourceGroupName: pulumi.Input<string>;
     siteFQDN: pulumi.Output<string>;
     siteUrl: pulumi.Output<string>;
-
+    storageAccountName: pulumi.Input<string>; // pass from stack reference
+    storageAccountKey: pulumi.Input<string>;  // pass from stack reference
+    configFilePlaceholder?: pulumi.Input<any>; // pass from stack reference if needed
 }) {
     return new azure_app.ContainerApp("mautic-web", {
 
@@ -85,11 +86,11 @@ export function mauticWeb(args: {
                     },
                     {
                         name: "STORAGE_ACCOUNT_KEY",
-                        value: storageAccountKey,
+                        value: args.storageAccountKey,
                     },
                     {
                         name: "STORAGE_ACCOUNT_NAME",
-                        value: storageAccountName,
+                        value: args.storageAccountName,
                     },
                     // Use a dummy variable to force revision updates when the image changes.
                     {
@@ -175,6 +176,6 @@ export function mauticWeb(args: {
         },
     }, {
         protect: false,
-        dependsOn: [storageAccount, configFilePlaceholder],
+        dependsOn: [args.configFilePlaceholder].filter(Boolean), // only depend if provided
     });
 }
