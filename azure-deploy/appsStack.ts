@@ -117,8 +117,8 @@ const mauticNginxApp = mauticNginx({
     registryUsername: acrUsername,
     registryPassword: acrPassword,
     managedEnvironmentId: managedEnvironmentId,
-    storageName: mauticStorage.name,
-    suiteCrmStorageName: suitecrmStorage.name,
+    storageName: mauticAppFilesStorage.apply(s => s.name), // Use stack output for cross-stack reference
+    suiteCrmStorageName: suiteCrmAppFilesStorage.apply(s => s.name), // Use stack output for cross-stack reference
     dbHost,
     dbPort,
     dbName,
@@ -135,7 +135,7 @@ const mauticWebApp = mauticWeb({
     registryUsername: acrUsername,
     registryPassword: acrPassword,
     managedEnvironmentId: managedEnvironmentId,
-    storageName: mauticStorage.name,
+    storageName: mauticAppFilesStorage.apply(s => s.name), // Use stack output for cross-stack reference
     dbHost,
     dbPort,
     dbName,
@@ -157,7 +157,7 @@ const deployedStrapiApp = strapiApp({
     registryUsername: acrUsername,
     registryPassword: acrPassword,
     managedEnvironmentId: managedEnvironmentId,
-    storageName: strapiStorage.name,
+    storageName: strapiAppFilesStorage.apply(s => s.name), // Use stack output for cross-stack reference
     dbHost,
     dbPort,
     dbName: strapiDbName,
@@ -183,7 +183,7 @@ const deployedSuitecrmApp = suitecrmApp({
     registryUsername: acrUsername,
     registryPassword: acrPassword,
     managedEnvironmentId: managedEnvironmentId,
-    storageName: suitecrmStorage.name,
+    storageName: suiteCrmAppFilesStorage.apply(s => s.name), // Use stack output for cross-stack reference
     dbHost,
     dbPort,
     dbName: suitecrmDbName,
@@ -222,7 +222,7 @@ const customDomains = nginxCerts(
 const jumpboxApp = jumpbox({
     env: appEnv,
     managedEnvironmentId: marketing_env.apply(env => env.id),
-    storageName: jumpboxStorage.name,
+    storageName: jumpboxFilesStorage.apply(s => s.name), // Use stack output for cross-stack reference
     dbHost,
     dbPort,
     resourceGroupName,
