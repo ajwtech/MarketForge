@@ -71,9 +71,9 @@ jobs:
       - name: Export ACR credentials for next job
         id: acr-creds
         run: |
-          echo "ACR_USERNAME=$(pulumi stack output acrUsernameOut)" >> $GITHUB_OUTPUT
-          echo "ACR_PASSWORD=$(pulumi stack output acrPasswordOut)" >> $GITHUB_OUTPUT
-          echo "ACR_URL=$(pulumi stack output registryUrlOut)" >> $GITHUB_OUTPUT
+          echo "ACR_USERNAME=$(pulumi stack output acrUsername)" >> $GITHUB_OUTPUT
+          echo "ACR_PASSWORD=$(pulumi stack output acrPassword)" >> $GITHUB_OUTPUT
+          echo "ACR_URL=$(pulumi stack output registryUrl)" >> $GITHUB_OUTPUT
         working-directory: azure-deploy
         shell: bash
 
