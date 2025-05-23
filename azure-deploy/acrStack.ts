@@ -1,7 +1,11 @@
-
 // ACR and Resource Group stack
 import { acrUsername, acrPassword, registryUrl } from "./infrastructure/registries/acrRegistry";
 import { ResourceGroup } from "./infrastructure/resourceGroup";
 
-
-export { acrUsername, acrPassword, registryUrl, ResourceGroup };
+// Export stack outputs for cross-stack reference
+export {
+  acrUsername as acrUsernameOut,
+  acrPassword as acrPasswordOut,
+  registryUrl as registryUrlOut,
+  ResourceGroup as resourceGroup
+};

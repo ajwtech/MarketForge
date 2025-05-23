@@ -55,6 +55,9 @@ jobs:
         working-directory: ./azure-deploy
       - name: Install Pulumi CLI
         uses: pulumi/setup-pulumi@v2
+      - name: Install Azure CLI
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
       - name: Run Pulumi Automation API for ACR infra
         working-directory: ./azure-deploy
@@ -71,9 +74,9 @@ jobs:
       - name: Export ACR credentials for next job
         id: acr-creds
         run: |
-          echo "ACR_USERNAME=$(pulumi stack output acrUsername)" >> $GITHUB_OUTPUT
-          echo "ACR_PASSWORD=$(pulumi stack output acrPassword)" >> $GITHUB_OUTPUT
-          echo "ACR_URL=$(pulumi stack output registryUrl)" >> $GITHUB_OUTPUT
+          echo "ACR_USERNAME=$(pulumi stack output acrUsernameOut)" >> $GITHUB_OUTPUT
+          echo "ACR_PASSWORD=$(pulumi stack output acrPasswordOut)" >> $GITHUB_OUTPUT
+          echo "ACR_URL=$(pulumi stack output registryUrlOut)" >> $GITHUB_OUTPUT
         working-directory: azure-deploy
         shell: bash
 
@@ -108,6 +111,9 @@ jobs:
         working-directory: ./azure-deploy
       - name: Install Pulumi CLI
         uses: pulumi/setup-pulumi@v2
+      - name: Install Azure CLI
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
       - name: Run Pulumi Automation API for infra
         working-directory: ./azure-deploy
@@ -203,6 +209,9 @@ jobs:
         working-directory: ./azure-deploy
       - name: Install Pulumi CLI
         uses: pulumi/setup-pulumi@v2
+      - name: Install Azure CLI
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
       - name: Run Pulumi Automation API for apps
         working-directory: ./azure-deploy
         env:
