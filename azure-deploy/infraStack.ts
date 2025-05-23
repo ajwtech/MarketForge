@@ -10,9 +10,7 @@ const config = new pulumi.Config();
 // Reference the resource group from the ACR infra stack
 const acrInfraStack = new pulumi.StackReference(getStackRefName(config, "setup-acr-infra"));
 
-export const resourceGroup = acrInfraStack.getOutput("resourceGroup");
-// Ensure we get the resource group name as a string
-export const resourceGroupName = resourceGroup.apply(rg => typeof rg === 'string' ? rg : rg.name ?? rg);
+export const resourceGroupName = acrInfraStack.getOutput("resourceGroupName");
 
 export {
     storageAccountKey,

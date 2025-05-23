@@ -7,5 +7,7 @@ export {
   acrUsername as acrUsernameOut,
   acrPassword as acrPasswordOut,
   registryUrl as registryUrlOut,
-  ResourceGroup as resourceGroup
+  ResourceGroup
 };
+
+export const resourceGroupName = ResourceGroup.name;
