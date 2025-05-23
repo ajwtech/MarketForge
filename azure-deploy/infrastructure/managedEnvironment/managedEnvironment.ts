@@ -26,6 +26,7 @@ export const marketing_env = new azure_app.ManagedEnvironment("marketing-env", {
         infrastructureSubnetId: subnet.id,
         internal: false,     
     },
+    
     appLogsConfiguration: {
         destination: "log-analytics",
         logAnalyticsConfiguration: {

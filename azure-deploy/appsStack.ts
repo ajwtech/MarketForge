@@ -56,59 +56,16 @@ function getImageName(registryUrl: pulumi.Output<string>, imageTag: string, imag
     return registryUrl.apply(url => `${url}/${imageName}:${imageTag}`);
 }
 
-const mauticStorage = marketing_env.apply(env => new azure_app.ManagedEnvironmentsStorage("mautic-app-files-storage", {
-    environmentName: env.name,
-    resourceGroupName: resourceGroupName,
-    properties: {
-        azureFile: {
-            accountName: storageAccountName,
-            shareName: mauticAppFilesStorage.apply(s => s.name),
-            accessMode: "ReadWrite",
-            accountKey: storageAccountKey,
-        },
-    },
-}, { protect: false, dependsOn: [mauticAppFilesStorage] }));
-
-const strapiStorage = marketing_env.apply(env => new azure_app.ManagedEnvironmentsStorage("strapi-app-files-storage", {
-    environmentName: env.name,
-    resourceGroupName: resourceGroupName,
-    properties: {
-        azureFile: {
-            accountName: storageAccountName,
-            shareName: strapiAppFilesStorage.apply(s => s.name),
-            accessMode: "ReadWrite",
-            accountKey: storageAccountKey,
-        },
-    },
-}, { protect: false, dependsOn: [strapiAppFilesStorage] }));
-
-const suitecrmStorage = marketing_env.apply(env => new azure_app.ManagedEnvironmentsStorage("suitecrm-app-files-storage", {
-    environmentName: env.name,
-    resourceGroupName: resourceGroupName,
-    properties: {
-        azureFile: {
-            accountName: storageAccountName,
-            shareName: suiteCrmAppFilesStorage.apply(s => s.name),
-            accessMode: "ReadWrite",
-            accountKey: storageAccountKey,
-        },
-    },
-}, { protect: false, dependsOn: [suiteCrmAppFilesStorage] }));
-
-const jumpboxStorage = marketing_env.apply(env => new azure_app.ManagedEnvironmentsStorage("jumpbox-files-storage", {
-    environmentName: env.name,
-    resourceGroupName: resourceGroupName,
-    properties: {
-        azureFile: {
-            accountName: storageAccountName,
-            shareName: jumpboxFilesStorage.apply(s => s.name),
-            accessMode: "ReadWrite",
-            accountKey: storageAccountKey,
-        },
-    },
-}, { protect: false, dependsOn: [jumpboxFilesStorage] }));
-
 const managedEnvironmentId = marketing_env.apply(env => env.id);
+
+// Remove direct import of storage resources from infraStack
+// import { mauticStorage, strapiStorage, suitecrmStorage, jumpboxStorage } from "./infraStack";
+
+// Use StackReference outputs for storage resources
+const mauticStorageName = infra.getOutput("mauticStorage").apply(s => s.name);
+const strapiStorageName = infra.getOutput("strapiStorage").apply(s => s.name);
+const suitecrmStorageName = infra.getOutput("suitecrmStorage").apply(s => s.name);
+const jumpboxStorageName = infra.getOutput("jumpboxStorage").apply(s => s.name);
 
 const mauticNginxApp = mauticNginx({
     env: appEnv,
@@ -117,8 +74,8 @@ const mauticNginxApp = mauticNginx({
     registryUsername: acrUsername,
     registryPassword: acrPassword,
     managedEnvironmentId: managedEnvironmentId,
-    storageName: mauticAppFilesStorage.apply(s => s.name), // Use stack output for cross-stack reference
-    suiteCrmStorageName: suiteCrmAppFilesStorage.apply(s => s.name), // Use stack output for cross-stack reference
+    storageName: mauticStorageName,
+    suiteCrmStorageName: suitecrmStorageName,
     dbHost,
     dbPort,
     dbName,
@@ -135,7 +92,7 @@ const mauticWebApp = mauticWeb({
     registryUsername: acrUsername,
     registryPassword: acrPassword,
     managedEnvironmentId: managedEnvironmentId,
-    storageName: mauticAppFilesStorage.apply(s => s.name), // Use stack output for cross-stack reference
+    storageName: mauticStorageName,
     dbHost,
     dbPort,
     dbName,
@@ -157,7 +114,7 @@ const deployedStrapiApp = strapiApp({
     registryUsername: acrUsername,
     registryPassword: acrPassword,
     managedEnvironmentId: managedEnvironmentId,
-    storageName: strapiAppFilesStorage.apply(s => s.name), // Use stack output for cross-stack reference
+    storageName: strapiStorageName,
     dbHost,
     dbPort,
     dbName: strapiDbName,
@@ -183,7 +140,7 @@ const deployedSuitecrmApp = suitecrmApp({
     registryUsername: acrUsername,
     registryPassword: acrPassword,
     managedEnvironmentId: managedEnvironmentId,
-    storageName: suiteCrmAppFilesStorage.apply(s => s.name), // Use stack output for cross-stack reference
+    storageName: suitecrmStorageName,
     dbHost,
     dbPort,
     dbName: suitecrmDbName,
@@ -222,7 +179,7 @@ const customDomains = nginxCerts(
 const jumpboxApp = jumpbox({
     env: appEnv,
     managedEnvironmentId: marketing_env.apply(env => env.id),
-    storageName: jumpboxFilesStorage.apply(s => s.name), // Use stack output for cross-stack reference
+    storageName: jumpboxStorageName,
     dbHost,
     dbPort,
     resourceGroupName,
@@ -235,5 +192,5 @@ export {
     deployedSuitecrmApp,
     cloudflareDNSentries,
     customDomains,
-    jumpboxApp
+    jumpboxApp,
 };
