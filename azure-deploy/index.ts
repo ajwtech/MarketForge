@@ -38,8 +38,9 @@ async function runStackWithEscEnv(stackName: string, projectName: string, stackM
         console.log(`Added ESC environment '${envRef}' to stack '${stackName}'.`);
       }
       await stack.refresh({ onOutput: console.info });
-       const upRes = await stack.up({ onOutput: console.info });
+       const upRes = await stack.up();
       console.log(`update summary: \n${JSON.stringify(upRes.summary.resourceChanges, null, 4)}`);
+      console.log("Outputs:", upRes.outputs);
     },
   };
 
