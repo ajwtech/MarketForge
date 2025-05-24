@@ -30,17 +30,19 @@ async function runStackWithEscEnv(stackName: string, projectName: string, stackM
     projectName,
     program: async () => {
       // Use import instead of require for stack modules
-      await import(stackModule);
+      const stack = await automation.LocalWorkspace.createOrSelectStack(stackArgs);
+      
+      const currentEnvs = await stack.listEnvironments();
+      if (envRef && !currentEnvs.includes(envRef)) {
+        await stack.addEnvironments(envRef);
+        console.log(`Added ESC environment '${envRef}' to stack '${stackName}'.`);
+      }
+      await stack.refresh({ onOutput: console.info });
+       const upRes = await stack.up({ onOutput: console.info });
+      console.log(`update summary: \n${JSON.stringify(upRes.summary.resourceChanges, null, 4)}`);
     },
   };
-  const stack = await automation.LocalWorkspace.createOrSelectStack(stackArgs);
-  await stack.refresh();
-  const currentEnvs = await stack.listEnvironments();
-  if (envRef && !currentEnvs.includes(envRef)) {
-    await stack.addEnvironments(envRef);
-    console.log(`Added ESC environment '${envRef}' to stack '${stackName}'.`);
-  }
-  await stack.up({ onOutput: (msg) => process.stdout.write("[pulumi] " + msg) });
+
 }
 
 // Entrypoint for modular Pulumi stacks
@@ -63,5 +65,4 @@ async function main() {
       await runStackWithEscEnv("setup-apps", projectName, "./appsStack");
   }
 }
-
-main();
+main().catch(err => console.log(err));
