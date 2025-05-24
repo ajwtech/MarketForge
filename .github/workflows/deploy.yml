@@ -70,12 +70,13 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
-          yarn ts-node index.ts --stack acr-infra
+          ORG_PROJECT=$(echo "$ENV_ESC" | awk -F'/' '{print $1 "/" $2}')
+          yarn ts-node index.ts --stack "$ORG_PROJECT/acr-infra"
       - name: Export ACR credentials for next job
         id: acr-creds
         run: |
-          pulumi stack select $GITHUB_JOB
-          pulumi stack
+          ORG_PROJECT=$(echo "$ENV_ESC" | awk -F'/' '{print $1 "/" $2}')
+          pulumi stack select "$ORG_PROJECT/acr-infra"
           echo "ACR_USERNAME=$(pulumi stack output acrUsernameOut)" >> $GITHUB_OUTPUT
           echo "ACR_PASSWORD=$(pulumi stack output acrPasswordOut)" >> $GITHUB_OUTPUT
           echo "ACR_URL=$(pulumi stack output registryUrlOut)" >> $GITHUB_OUTPUT
