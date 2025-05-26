@@ -25,25 +25,23 @@ function getProjectName(): string {
 // Run the stack code inside the Automation API program so ESC config is merged
 async function runStackWithEscEnv(stackName: string, projectName: string, stackModule: string) {
   const envRef = `${project}/${env}`;
-  const stackArgs: automation.InlineProgramArgs = {
+  const stackArgs = {
     stackName,
     projectName,
     program: async () => {
       // Use import instead of require for stack modules
-      const stack = await automation.LocalWorkspace.createOrSelectStack(stackArgs);
-      
-      const currentEnvs = await stack.listEnvironments();
-      if (envRef && !currentEnvs.includes(envRef)) {
-        await stack.addEnvironments(envRef);
-        console.log(`Added ESC environment '${envRef}' to stack '${stackName}'.`);
-      }
-      await stack.refresh({ onOutput: console.info });
-       const upRes = await stack.up();
-      console.log(`update summary: \n${JSON.stringify(upRes.summary.resourceChanges, null, 4)}`);
-      console.log("Outputs:", upRes.outputs);
-      return upRes.outputs;
+      const { returnOutputs } = await import(`./${stackName}`);
+      return returnOutputs()
     },
-  };
+  };      
+
+  const stack = await automation.LocalWorkspace.createOrSelectStack(stackArgs);
+  
+  await stack.refresh({ onOutput: console.info });
+  
+  const upRes = await stack.up();
+  console.log(`update summary: \n${JSON.stringify(upRes.summary.resourceChanges, null, 4)}`);
+  console.log("Outputs:", upRes.outputs);
 
 }
 

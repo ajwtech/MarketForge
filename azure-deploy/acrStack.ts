@@ -1,25 +1,25 @@
 // ACR and Resource Group stack
 
 import { ResourceGroup } from "./infrastructure/resourceGroup";
-import { acrUsername, acrPassword, registryUrl } from "./infrastructure/registries/acrRegistry";
+import { marketingcr } from "./infrastructure/registries/acrRegistry";
+import * as pulumi from "@pulumi/pulumi";
+import * as azure_native from "@pulumi/azure-native";
 
 export async function returnOutputs() {
-  // Ensure the resource group is created before accessing its properties
-  if (!ResourceGroup) {
-    throw new Error("ResourceGroup is not defined. Ensure it is created before accessing its properties.");
-  }
-
-  // Ensure acrUsername, acrPassword, and registryUrl are defined
-  if (!acrUsername || !acrPassword || !registryUrl) {
-    throw new Error("ACR credentials or registry URL are not defined. Ensure they are set correctly.");
-  }
-
-  return{
-   acrUsernameOut: acrUsername,
-   acrPasswordOut: acrPassword,
-   registryUrlOut: registryUrl,
-   resourceGroupName: ResourceGroup.name,
-  }
+    const acrCredentials = pulumi.all([marketingcr.name, ResourceGroup.name]).apply(
+        ([registryName, resourceGroupName]) => 
+            azure_native.containerregistry.listRegistryCredentials({
+                registryName: registryName,
+                resourceGroupName: resourceGroupName,
+            })
+    );
+   const acrUsername = acrCredentials.username?.apply(user => user || "");
+   const acrPassword = acrCredentials.passwords?.apply(pwds => pwds?.values().next() || "");
+   const registryUrl = marketingcr.loginServer;
+  return {
+    acrUsernameOut: acrUsername,
+    acrPasswordOut: acrPassword,
+    registryUrlOut: registryUrl,
+    resourceGroupName: ResourceGroup.name,
+  };
 }
-
- returnOutputs();
