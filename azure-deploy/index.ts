@@ -41,7 +41,7 @@ async function runStackWithEscEnv(stackName: string, projectName: string, stackM
        const upRes = await stack.up();
       console.log(`update summary: \n${JSON.stringify(upRes.summary.resourceChanges, null, 4)}`);
       console.log("Outputs:", upRes.outputs);
-
+      return upRes.outputs;
     },
   };
 

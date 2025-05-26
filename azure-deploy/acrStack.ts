@@ -14,17 +14,12 @@ export async function returnOutputs() {
     throw new Error("ACR credentials or registry URL are not defined. Ensure they are set correctly.");
   }
 
-  const acrUsernameOut = acrUsername;
-  const acrPasswordOut = acrPassword;
-  const registryUrlOut = registryUrl;
-  const resourceGroupName = ResourceGroup.name;
-
-  return {
-    acrUsername: acrUsernameOut,
-    acrPassword: acrPasswordOut,
-    registryUrl: registryUrlOut,
-    resourceGroupName: resourceGroupName,
-  };
+  return{
+   acrUsernameOut: acrUsername,
+   acrPasswordOut: acrPassword,
+   registryUrlOut: registryUrl,
+   resourceGroupName: ResourceGroup.name,
+  }
 }
 
-returnOutputs();
+ returnOutputs();
