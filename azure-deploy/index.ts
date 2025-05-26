@@ -24,13 +24,13 @@ function getProjectName(): string {
 
 // Run the stack code inside the Automation API program so ESC config is merged
 async function runStackWithEscEnv(stackName: string, projectName: string, stackModule: string) {
-  const envRef = `${project}/${env}`;
+
   const stackArgs = {
     stackName,
     projectName,
     program: async () => {
       // Use import instead of require for stack modules
-      const { returnOutputs } = await import(`./${stackName}`);
+      const { returnOutputs } = await import(stackName);
       return returnOutputs()
     },
   };      
