@@ -22,6 +22,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Install Pulumi CLI
+        uses: pulumi/setup-pulumi@v2
       - name: Enable Corepack (Yarn 4+)
         run: corepack enable
       - uses: actions/cache@v3
@@ -30,6 +32,8 @@ jobs:
           path: |
             .yarn/cache
             .yarn/install-state.gz
+            .yarn/unplugged
+            .yarn/build-state.yml
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
@@ -37,8 +41,6 @@ jobs:
         if: steps.yarn-cache.outputs.cache-hit != 'true'
         run: yarn install --immutable
         working-directory: .
-      - name: Install Pulumi CLI
-        uses: pulumi/setup-pulumi@v2
       - name: Install Azure CLI
         run: |
           curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
@@ -75,6 +77,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Install Pulumi CLI
+        uses: pulumi/setup-pulumi@v2
       - name: Enable Corepack (Yarn 4+)
         run: corepack enable
       - uses: actions/cache@v3
@@ -83,14 +87,14 @@ jobs:
           path: |
             .yarn/cache
             .yarn/install-state.gz
+            .yarn/unplugged
+            .yarn/build-state.yml
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
       - name: Install Node.js dependencies
         if: steps.yarn-cache.outputs.cache-hit != 'true'
         run: yarn install --immutable
-      - name: Install Pulumi CLI
-        uses: pulumi/setup-pulumi@v2
       - name: Install Azure CLI
         run: |
           curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
