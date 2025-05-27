@@ -18,14 +18,19 @@ jobs:
     env:
       ENV_ESC: ${{ matrix.env_esc }}
       PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-    outputs:
-      ACR_USERNAME: ${{ steps.acr-creds.outputs.ACR_USERNAME }}
-      ACR_PASSWORD: ${{ steps.acr-creds.outputs.ACR_PASSWORD }}
-      ACR_URL: ${{ steps.acr-creds.outputs.ACR_URL }}
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            .yarn/cache
+            .yarn/install-state.gz
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
       - name: Install Node.js dependencies
         run: |
           corepack enable
@@ -69,6 +74,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            .yarn/cache
+            .yarn/install-state.gz
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
       - name: Install Node.js dependencies
         run: |
           corepack enable

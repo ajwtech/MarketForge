@@ -30,8 +30,8 @@ async function runStackWithEscEnv(stackName: string, projectName: string, stackM
     projectName,
     program: async () => {
       // Use import instead of require for stack modules
-      const { returnOutputs } = await import(stackModule);
-      return returnOutputs()
+    await import(stackModule);
+
     },
   };      
 
