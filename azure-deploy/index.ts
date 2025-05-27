@@ -51,7 +51,8 @@ async function main() {
   const projectName = getProjectName();
   switch (job) {
     case "setup-acr-infra":
-      await runStackWithEscEnv(job, projectName, "./acrStack");
+      const outputs = await runStackWithEscEnv(job, projectName, "./acrStack");
+      console.log("ACR Outputs:", outputs);
       break;
     case "setup-infra":
       await runStackWithEscEnv(job, projectName, "./infraStack");
