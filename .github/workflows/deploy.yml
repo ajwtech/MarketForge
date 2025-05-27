@@ -53,7 +53,7 @@ jobs:
           ENV=$(echo "$ENV_ESC" | awk -F'/' '{print $3}')
           STACK_NAME="$ORG/$ENV/setup-acr-infra"
           echo "Using stack: $STACK_NAME"
-          yarn ts-node index.ts --stack "$STACK_NAME"
+          npx ts-node index.ts --stack "$STACK_NAME"
       - name: Export ACR credentials for next job
         id: acr-creds
         run: |
