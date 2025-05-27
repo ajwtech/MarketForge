@@ -7653,7 +7653,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:>=13.7.0, @types/node@npm:^22.12.0, @types/node@npm:^22.15.17":
+"@types/node@npm:*, @types/node@npm:>=13.7.0, @types/node@npm:^22.15.17":
   version: 22.15.21
   resolution: "@types/node@npm:22.15.21"
   dependencies:
@@ -9009,10 +9009,6 @@ __metadata:
     "@pulumi/command": "npm:^1.0.1"
     "@pulumi/pulumi": "npm:^3.147.0"
     "@pulumi/random": "npm:^4.17.0"
-    "@types/fs-extra": "npm:^11.0.4"
-    "@types/node": "npm:^22.12.0"
-    fs-extra: "npm:^11.3.0"
-    typescript: "npm:^5.7.3"
   languageName: unknown
   linkType: soft
 
@@ -15989,7 +15985,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "marketforge@workspace:."
   dependencies:
+    "@types/fs-extra": "npm:^11.0.4"
     "@types/node": "npm:^20.5.1"
+    fs-extra: "npm:^11.3.0"
+    ts-node: "npm:^10.9.2"
     typescript: "npm:^5.8.3"
   languageName: unknown
   linkType: soft
@@ -21839,7 +21838,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^5, typescript@npm:^5.7.3, typescript@npm:^5.8.3":
+"typescript@npm:^5, typescript@npm:^5.8.3":
   version: 5.8.3
   resolution: "typescript@npm:5.8.3"
   bin:
@@ -21869,7 +21868,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@npm%3A^5#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A^5.7.3#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A^5.8.3#optional!builtin<compat/typescript>":
+"typescript@patch:typescript@npm%3A^5#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A^5.8.3#optional!builtin<compat/typescript>":
   version: 5.8.3
   resolution: "typescript@patch:typescript@npm%3A5.8.3#optional!builtin<compat/typescript>::version=5.8.3&hash=5786d5"
   bin:

@@ -26,20 +26,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: ./.github/actions/setup-node-yarn
-      - name: Cache node_modules
-        uses: actions/cache@v3
-        with:
-          path: ./azure-deploy/node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('azure-deploy/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
       - name: Install Node.js dependencies
         run: yarn install --immutable
-        working-directory: ./azure-deploy
-      - name: Install ts-node
-        run: yarn add --dev ts-node
-        working-directory: ./azure-deploy
+        working-directory: .
       - name: Install Pulumi CLI
         uses: pulumi/setup-pulumi@v2
       - name: Install Azure CLI
