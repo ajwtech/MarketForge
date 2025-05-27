@@ -13,8 +13,8 @@ const acrCredentials = pulumi.all([marketingcr.name, ResourceGroup.name]).apply(
             resourceGroupName: resourceGroupName,
         })
 );
-const acrUsername = acrCredentials.username?.apply(user => user || "");
-const acrPassword = acrCredentials.passwords?.apply(pwds => pwds?.values().next() || "");
-const registryUrl = marketingcr.loginServer;
-const resourceGroupName = ResourceGroup.name;
+export const acrUsername = acrCredentials.username?.apply(user => user || "");
+export const acrPassword = acrCredentials.passwords?.apply(pwds => pwds?.values().next() || "");
+export const registryUrl = marketingcr.loginServer;
+export const resourceGroupName = ResourceGroup.name;
 
