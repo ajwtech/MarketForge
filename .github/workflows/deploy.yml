@@ -27,7 +27,9 @@ jobs:
         with:
           submodules: recursive
       - name: Install Node.js dependencies
-        run: yarn install --immutable
+        run: |
+          corepack enable
+          yarn install --immutable
         working-directory: .
       - name: Install Pulumi CLI
         uses: pulumi/setup-pulumi@v2
