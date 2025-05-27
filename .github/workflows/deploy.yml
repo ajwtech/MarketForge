@@ -7,24 +7,11 @@ on:
     branches:
       - master
 jobs:
-  setup-environment:
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/catthehacker/ubuntu:act-22.04
-    strategy:
-      matrix:
-        env_esc: ${{ fromJson(vars.ESC) }}
-    env:
-      ENV_ESC: ${{ matrix.env_esc }}
-    steps:
-      - name: No-op
-        run: echo "setup-environment is a matrix/needs anchor only; no steps needed."
-
+  
   setup-acr-infra:
-    needs: setup-environment
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/catthehacker/ubuntu:act-22.04
+      image: ghcr.io/catthehacker/ubuntu:js-22.04
     strategy:
       matrix:
         env_esc: ${{ fromJson(vars.ESC) }}
@@ -58,7 +45,6 @@ jobs:
       - name: Install Azure CLI
         run: |
           curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-
       - name: Run Pulumi Automation API for ACR infra
         working-directory: ./azure-deploy
         env:
@@ -70,160 +56,22 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
-          yarn ts-node index.ts --stack $GITHUB_JOB
+          # Stack name: organization/environment/setup-acr-infra
+          ORG=$(echo "$ENV_ESC" | awk -F'/' '{print $1}')
+          PROJECT=$(echo "$ENV_ESC" | awk -F'/' '{print $2}')
+          ENV=$(echo "$ENV_ESC" | awk -F'/' '{print $3}')
+          STACK_NAME="$ORG/$ENV/setup-acr-infra"
+          echo "Using stack: $STACK_NAME"
+          yarn ts-node index.ts --stack "$STACK_NAME"
       - name: Export ACR credentials for next job
         id: acr-creds
         run: |
-          pulumi stack select $GITHUB_JOB
-          pulumi stack
-          echo "ACR_USERNAME=$(pulumi stack output acrUsernameOut)" >> $GITHUB_OUTPUT
-          echo "ACR_PASSWORD=$(pulumi stack output acrPasswordOut)" >> $GITHUB_OUTPUT
-          echo "ACR_URL=$(pulumi stack output registryUrlOut)" >> $GITHUB_OUTPUT
+          ORG=$(echo "$ENV_ESC" | awk -F'/' '{print $1}')
+          ENV=$(echo "$ENV_ESC" | awk -F'/' '{print $3}')
+          STACK_NAME="$ORG/$ENV/setup-acr-infra"
+          pulumi stack select "$STACK_NAME"
+          echo "ACR_USERNAME=$(pulumi stack output acrUsername)" >> $GITHUB_OUTPUT
+          echo "ACR_PASSWORD=$(pulumi stack output acrPassword)" >> $GITHUB_OUTPUT
+          echo "ACR_URL=$(pulumi stack output registryUrl)" >> $GITHUB_OUTPUT
         working-directory: azure-deploy
         shell: bash
-
-  setup-infra:
-    needs: setup-acr-infra
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/catthehacker/ubuntu:act-22.04
-    strategy:
-      matrix:
-        env_esc: ${{ fromJson(vars.ESC) }}
-    env:
-      ENV_ESC: ${{ matrix.env_esc }}
-      PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - uses: ./.github/actions/setup-node-yarn
-      - name: Cache node_modules
-        uses: actions/cache@v3
-        with:
-          path: ./azure-deploy/node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('azure-deploy/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-      - name: Install Node.js dependencies
-        run: yarn install --immutable
-        working-directory: ./azure-deploy
-      - name: Install ts-node
-        run: yarn add --dev ts-node
-        working-directory: ./azure-deploy
-      - name: Install Pulumi CLI
-        uses: pulumi/setup-pulumi@v2
-      - name: Install Azure CLI
-        run: |
-          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-
-      - name: Run Pulumi Automation API for infra
-        working-directory: ./azure-deploy
-        env:
-          GITHUB_JOB: setup-infra
-          ENV_ESC: ${{ matrix.env_esc }}
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        run: |
-          yarn ts-node index.ts --stack setup-infra
-
-  build-images:
-    needs: setup-environment
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - name: marketing-nginx
-            dockerfile: mautic/marketing-nginx.dockerfile
-          - name: marketing-mautic-app
-            dockerfile: mautic/marketing-mautic-app.dockerfile
-          - name: marketing-strapi-app
-            dockerfile: launchpad/Dockerfile.prod
-          - name: marketing-suitecrm-app
-            dockerfile: suitecrm/marketing-suitecrm-app.dockerfile
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Cache Docker layers
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ matrix.name }}-${{ hashFiles(matrix.dockerfile) }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-      - name: Build Docker image
-        run: |
-          docker buildx create --use
-          docker buildx build \
-            --load \
-            --cache-from=type=local,src=/tmp/.buildx-cache \
-            --cache-to=type=local,dest=/tmp/.buildx-cache \
-            -t ${{ matrix.name }}:build \
-            -f ${{ matrix.dockerfile }} .
-
-  push-images:
-    needs: [build-images, setup-acr-infra]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: Login to Azure Container Registry
-        run: echo ${{ needs.setup-acr-infra.outputs.ACR_PASSWORD }} | docker login ${{ needs.setup-acr-infra.outputs.ACR_URL }} -u ${{ needs.setup-acr-infra.outputs.ACR_USERNAME }} --password-stdin
-      - name: Tag and push Docker images
-        run: |
-          docker tag marketing-nginx:build ${{ needs.setup-acr-infra.outputs.ACR_URL }}/marketing-nginx:latest
-          docker tag marketing-mautic-app:build ${{ needs.setup-acr-infra.outputs.ACR_URL }}/marketing-mautic-app:latest
-          docker tag marketing-strapi-app:build ${{ needs.setup-acr-infra.outputs.ACR_URL }}/marketing-strapi-app:latest
-          docker tag marketing-suitecrm-app:build ${{ needs.setup-acr-infra.outputs.ACR_URL }}/marketing-suitecrm-app:latest
-          docker push ${{ needs.setup-acr-infra.outputs.ACR_URL }}/marketing-nginx:latest
-          docker push ${{ needs.setup-acr-infra.outputs.ACR_URL }}/marketing-mautic-app:latest
-          docker push ${{ needs.setup-acr-infra.outputs.ACR_URL }}/marketing-strapi-app:latest
-          docker push ${{ needs.setup-acr-infra.outputs.ACR_URL }}/marketing-suitecrm-app:latest
-
-  setup-apps:
-    needs: [setup-infra, push-images]
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/catthehacker/ubuntu:act-22.04
-    strategy:
-      matrix:
-        env_esc: ${{ fromJson(vars.ESC) }}
-    env:
-      ENV_ESC: ${{ matrix.env_esc }}
-      PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - uses: ./.github/actions/setup-node-yarn
-      - name: Install Node.js dependencies
-        run: yarn install --immutable
-        working-directory: ./azure-deploy
-      - name: Install ts-node
-        run: yarn add --dev ts-node
-        working-directory: ./azure-deploy
-      - name: Install Pulumi CLI
-        uses: pulumi/setup-pulumi@v2
-      - name: Install Azure CLI
-        run: |
-          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-      - name: Run Pulumi Automation API for apps
-        working-directory: ./azure-deploy
-        env:
-          GITHUB_JOB: setup-apps
-          ENV_ESC: ${{ matrix.env_esc }}
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        run: |
-          yarn ts-node index.ts --stack setup-apps
-

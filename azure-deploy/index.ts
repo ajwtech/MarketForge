@@ -66,4 +66,7 @@ async function main() {
       await runStackWithEscEnv("setup-apps", projectName, "./appsStack");
   }
 }
-main().catch(err => console.log(err));
+main().catch(err => {
+  console.error(err);
+  process.exit(1);
+});
