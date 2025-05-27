@@ -54,15 +54,46 @@ jobs:
           STACK_NAME="$ORG/$ENV/setup-acr-infra"
           echo "Using stack: $STACK_NAME"
           npx ts-node index.ts --stack "$STACK_NAME"
-      - name: Export ACR credentials for next job
-        id: acr-creds
+  setup-infra:
+    needs: setup-acr-infra
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/catthehacker/ubuntu:js-22.04
+    strategy:
+      matrix:
+        env_esc: ${{ fromJson(vars.ESC) }}
+    env:
+      ENV_ESC: ${{ matrix.env_esc }}
+      PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install Node.js dependencies
+        run: |
+          corepack enable
+          yarn install --immutable
+      - name: Install Pulumi CLI
+        uses: pulumi/setup-pulumi@v2
+      - name: Install Azure CLI
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+      - name: Run Pulumi Automation API for infra
+        working-directory: ./azure-deploy
+        env:
+          GITHUB_JOB: setup-infra
+          ENV_ESC: ${{ matrix.env_esc }}
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
           ORG=$(echo "$ENV_ESC" | awk -F'/' '{print $1}')
+          PROJECT=$(echo "$ENV_ESC" | awk -F'/' '{print $2}')
           ENV=$(echo "$ENV_ESC" | awk -F'/' '{print $3}')
           STACK_NAME="$ORG/$ENV/setup-acr-infra"
-          pulumi stack select "$STACK_NAME"
-          echo "ACR_USERNAME=$(pulumi stack output acrUsername)" >> $GITHUB_OUTPUT
-          echo "ACR_PASSWORD=$(pulumi stack output acrPassword)" >> $GITHUB_OUTPUT
-          echo "ACR_URL=$(pulumi stack output registryUrl)" >> $GITHUB_OUTPUT
-        working-directory: azure-deploy
-        shell: bash
+          echo "Using stack: $STACK_NAME"
+          npx ts-node index.ts --stack "$STACK_NAME"
+
