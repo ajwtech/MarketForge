@@ -1,5 +1,5 @@
 import * as automation from "@pulumi/pulumi/automation";
-
+import * as pulumi from "@pulumi/pulumi";
 // Helper to extract project and environment from escEnv format is "project/environment"
 function parseEscEnv(escEnv: string | undefined): { project: string, env: string } {
   if (!escEnv) {
@@ -36,9 +36,9 @@ async function runStackWithEscEnv(stackName: string, projectName: string, stackM
   };      
 
   const stack = await automation.LocalWorkspace.createOrSelectStack(stackArgs);
-  
-  await stack.refresh({ onOutput: console.info });
-  
+  await stack.addEnvironments(`${project}/${env}`);
+  const environments = await stack.listEnvironments();
+  console.log("Current environments:", environments);
   const upRes = await stack.up();
   console.log(`update summary: \n${JSON.stringify(upRes.summary.resourceChanges, null, 4)}`);
   console.log("Outputs:", upRes.outputs);
