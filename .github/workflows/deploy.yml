@@ -25,7 +25,9 @@ jobs:
       
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
-        run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
+        run: |
+          echo "Using yarn cache directory path: $(yarn config get cacheFolder)"
+          echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
       - uses: actions/cache@v3
         id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
         with:
@@ -112,7 +114,7 @@ jobs:
           ORG=$(echo "$ENV_ESC" | awk -F'/' '{print $1}')
           PROJECT=$(echo "$ENV_ESC" | awk -F'/' '{print $2}')
           ENV=$(echo "$ENV_ESC" | awk -F'/' '{print $3}')
-          STACK_NAME="$ORG/$ENV/setup-acr-infra"
+          STACK_NAME="$ORG/$ENV/setup-infra"
           echo "Using stack: $STACK_NAME"
           npx ts-node index.ts --stack "$STACK_NAME"
 
