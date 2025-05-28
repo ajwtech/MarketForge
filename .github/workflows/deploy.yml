@@ -211,3 +211,9 @@ jobs:
           docker push "$ACR_URL"/marketing-mautic-app:latest
           docker push "$ACR_URL"/marketing-strapi-app:latest
           docker push "$ACR_URL"/marketing-suitecrm-app:latest
+      - name: Debug Pulumi stack existence and outputs
+        run: |
+          echo "Checking available Pulumi stacks:"
+          pulumi stack ls
+          echo "Trying to get outputs for stack: $STACK_NAME"
+          pulumi stack output --stack "$STACK_NAME"
