@@ -24,17 +24,17 @@ function getProjectName(): string {
 
 // Run the stack code inside the Automation API program so ESC config is merged
 async function runStackWithEscEnv(stackName: string, projectName: string, stackModule: string) {
-
   const stackArgs = {
     stackName,
     projectName,
     program: async () => {
       // Use import instead of require for stack modules
-    await import(stackModule);
-
+      const mod = await import(stackModule);
+      if (typeof mod.returnOutputs === "function") {
+        return mod.returnOutputs();
+      }
     },
-  };      
-
+  };
   const stack = await automation.LocalWorkspace.createOrSelectStack(stackArgs);
   await stack.addEnvironments(`${project}/${env}`);
   const environments = await stack.listEnvironments();
@@ -42,7 +42,7 @@ async function runStackWithEscEnv(stackName: string, projectName: string, stackM
   const upRes = await stack.up();
   console.log(`update summary: \n${JSON.stringify(upRes.summary.resourceChanges, null, 4)}`);
   console.log("Outputs:", upRes.outputs);
-
+  return upRes.outputs;
 }
 
 // Entrypoint for modular Pulumi stacks

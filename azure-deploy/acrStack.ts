@@ -6,15 +6,22 @@ import * as pulumi from "@pulumi/pulumi";
 import * as azure_native from "@pulumi/azure-native";
 
 
-const acrCredentials = pulumi.all([marketingcr.name, ResourceGroup.name]).apply(
-    ([registryName, resourceGroupName]) => 
-        azure_native.containerregistry.listRegistryCredentials({
-            registryName: registryName,
-            resourceGroupName: resourceGroupName,
-        })
-);
-export const acrUsername = acrCredentials.username?.apply(user => user || "");
-export const acrPassword = acrCredentials.passwords?.apply(pwds => pwds?.values().next() || "");
-export const registryUrl = marketingcr.loginServer;
-export const resourceGroupName = ResourceGroup.name;
+export async function returnOutputs() {
+    const acrCredentials = pulumi.all([marketingcr.name, ResourceGroup.name]).apply(
+        ([registryName, resourceGroupName]) => 
+            azure_native.containerregistry.listRegistryCredentials({
+                registryName: registryName,
+                resourceGroupName: resourceGroupName,
+            })
+    );
+    const acrUsername = acrCredentials.username?.apply(user => user || "");
+    const acrPassword = acrCredentials.passwords?.apply(pwds => pwds?.values().next() || "");
+    const registryUrl = marketingcr.loginServer;
+    return {
+        acrUsernameOut: acrUsername,
+        acrPasswordOut: acrPassword,
+        registryUrlOut: registryUrl,
+        resourceGroupName: ResourceGroup.name,
+    };
+}
 
