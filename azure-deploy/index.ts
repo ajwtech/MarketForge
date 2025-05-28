@@ -1,7 +1,5 @@
 import * as automation from "@pulumi/pulumi/automation";
 import * as pulumi from "@pulumi/pulumi";
-import { JsonMapperElement } from "@pulumi/azure-native/monitor/v20241001preview";
-import { JobStepActionSource } from "@pulumi/azure-native/sql/v20230501preview";
 // Helper to extract project and environment from escEnv format is "project/environment"
 function parseEscEnv(escEnv: string | undefined): { project: string, env: string } {
   if (!escEnv) {
@@ -47,15 +45,18 @@ async function runStackWithEscEnv(stackName: string, projectName: string, stackM
 async function main() {
   const job = process.env.GITHUB_JOB;
   const projectName = getProjectName();
+  let outputs;
   switch (job) {
     case "setup-acr-infra":
-      return await runStackWithEscEnv(job, projectName, "./acrStack");
+      outputs = await runStackWithEscEnv(job, projectName, "./acrStack");
+      break;
     case "setup-infra":
-      return await runStackWithEscEnv(job, projectName, "./infraStack");
+      outputs = await runStackWithEscEnv(job, projectName, "./infraStack");
+      break;
     case "setup-apps":
-      return await runStackWithEscEnv(job, projectName, "./appsStack");
+      outputs = await runStackWithEscEnv(job, projectName, "./appsStack");
+      break;
     default:
-      throw new Error(`Unknown job: ${job}`);
   }
 
 }
