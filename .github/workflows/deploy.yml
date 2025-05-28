@@ -189,6 +189,8 @@ jobs:
           ORG=$(echo "$ENV_ESC" | awk -F'/' '{print $1}')
           ENV=$(echo "$ENV_ESC" | awk -F'/' '{print $3}')
           STACK_NAME="$ORG/$ENV/setup-acr-infra"
+          echo "Using stack: $STACK_NAME"
+          pulumi stack output --stack "$STACK_NAME" --json
           pulumi stack output --stack "$STACK_NAME" --json > acr-outputs.json
           echo "ACR_USERNAME=$(jq -r .acrUsernameOut acr-outputs.json)" >> $GITHUB_ENV
           echo "ACR_PASSWORD=$(jq -r .acrPasswordOut acr-outputs.json)" >> $GITHUB_ENV
