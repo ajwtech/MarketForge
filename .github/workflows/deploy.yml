@@ -193,6 +193,12 @@ jobs:
           echo "ACR_USERNAME=$(jq -r .acrUsernameOut acr-outputs.json)" >> $GITHUB_ENV
           echo "ACR_PASSWORD=$(jq -r .acrPasswordOut acr-outputs.json)" >> $GITHUB_ENV
           echo "ACR_URL=$(jq -r .registryUrlOut acr-outputs.json)" >> $GITHUB_ENV
+      - name: Debug Pulumi ACR outputs
+        run: |
+          echo "Contents of acr-outputs.json:" && cat acr-outputs.json
+          echo "Parsed ACR_USERNAME: $(jq -r .acrUsernameOut acr-outputs.json)"
+          echo "Parsed ACR_PASSWORD: $(jq -r .acrPasswordOut acr-outputs.json)"
+          echo "Parsed ACR_URL: $(jq -r .registryUrlOut acr-outputs.json)"
       - name: Login to Azure Container Registry
         run: echo "$ACR_PASSWORD" | docker login "$ACR_URL" -u "$ACR_USERNAME" --password-stdin
       - name: Tag and push Docker images
