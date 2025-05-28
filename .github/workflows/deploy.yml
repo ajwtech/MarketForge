@@ -63,9 +63,6 @@ jobs:
           echo "Using stack: $STACK_NAME"
           PULUMI_OUTPUTS=$(npx ts-node index.ts --stack "$STACK_NAME")
           echo "PULUMI_OUTPUTS=$PULUMI_OUTPUTS" >> $GITHUB_ENV
-          echo "ACR_USERNAME=$(jq -r .acrUsernameOut $PULUMI_OUTPUTS)" >> $GITHUB_ENV
-          echo "ACR_PASSWORD=$(jq -r .acrPasswordOut $PULUMI_OUTPUTS)" >> $GITHUB_ENV
-          echo "ACR_URL=$(jq -r .registryUrlOut $PULUMI_OUTPUTS)" >> $GITHUB_ENV
   setup-infra:
     needs: setup-acr-infra
     runs-on: ubuntu-latest
