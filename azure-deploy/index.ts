@@ -1,5 +1,7 @@
 import * as automation from "@pulumi/pulumi/automation";
 import * as pulumi from "@pulumi/pulumi";
+import { JsonMapperElement } from "@pulumi/azure-native/monitor/v20241001preview";
+import { JobStepActionSource } from "@pulumi/azure-native/sql/v20230501preview";
 // Helper to extract project and environment from escEnv format is "project/environment"
 function parseEscEnv(escEnv: string | undefined): { project: string, env: string } {
   if (!escEnv) {
@@ -37,12 +39,8 @@ async function runStackWithEscEnv(stackName: string, projectName: string, stackM
   };
   const stack = await automation.LocalWorkspace.createOrSelectStack(stackArgs);
   await stack.addEnvironments(`${project}/${env}`);
-  const environments = await stack.listEnvironments();
-  console.log("Current environments:", environments);
-  const upRes = await stack.up();
-  console.log(`update summary: \n${JSON.stringify(upRes.summary.resourceChanges, null, 4)}`);
-  console.log("Outputs:", upRes.outputs);
-  return upRes.outputs;
+  return await stack.up();
+  
 }
 
 // Entrypoint for modular Pulumi stacks
@@ -51,20 +49,15 @@ async function main() {
   const projectName = getProjectName();
   switch (job) {
     case "setup-acr-infra":
-      const outputs = await runStackWithEscEnv(job, projectName, "./acrStack");
-      console.log("ACR Outputs:", outputs);
-      break;
+      return await runStackWithEscEnv(job, projectName, "./acrStack");
     case "setup-infra":
-      await runStackWithEscEnv(job, projectName, "./infraStack");
-      break;
+      return await runStackWithEscEnv(job, projectName, "./infraStack");
     case "setup-apps":
-      await runStackWithEscEnv(job, projectName, "./appsStack");
-      break;
+      return await runStackWithEscEnv(job, projectName, "./appsStack");
     default:
-      await runStackWithEscEnv("setup-acr-infra", projectName, "./acrStack");
-      await runStackWithEscEnv("setup-infra", projectName, "./infraStack");
-      await runStackWithEscEnv("setup-apps", projectName, "./appsStack");
+      throw new Error(`Unknown job: ${job}`);
   }
+
 }
 main().catch(err => {
   console.error(err);
