@@ -61,7 +61,7 @@ jobs:
           ENV=$(echo "$ENV_ESC" | awk -F'/' '{print $3}')
           STACK_NAME="$ORG/$ENV/setup-acr-infra"
           echo "Using stack: $STACK_NAME"
-          PULUMI_OUTPUTS = npx ts-node index.ts --stack "$STACK_NAME"
+          PULUMI_OUTPUTS=$(npx ts-node index.ts --stack "$STACK_NAME")
           echo "PULUMI_OUTPUTS=$PULUMI_OUTPUTS" >> $GITHUB_ENV
           echo "ACR_USERNAME=$(jq -r .acrUsernameOut $PULUMI_OUTPUTS)" >> $GITHUB_ENV
           echo "ACR_PASSWORD=$(jq -r .acrPasswordOut $PULUMI_OUTPUTS)" >> $GITHUB_ENV
