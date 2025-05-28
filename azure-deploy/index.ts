@@ -59,9 +59,9 @@ async function main() {
       break;
     default:
   }
-
+ return outputs;
 }
-main().catch(err => {
+export default main().catch(err => {
   console.error(err);
   process.exit(1);
 });
