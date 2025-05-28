@@ -1,5 +1,5 @@
 // Infrastructure stack (storage, managed env, DB, etc.)
-import { storageAccountKey, mauticAppFilesStorage, suiteCrmAppFilesStorage, strapiAppFilesStorage, jumpboxFilesStorage, storageAccountName } from "./infrastructure/storage/storageAccount";
+import { storageAccountKey, mauticAppFilesStorage, suiteCrmAppFilesStorage, strapiAppFilesStorage, jumpboxFilesStorage, storageAccountName, frontendFilesStorage } from "./infrastructure/storage/storageAccount";
 import { marketing_env } from "./infrastructure/managedEnvironment/managedEnvironment";
 import { marketing_mysql } from "./infrastructure/database/mysqlServer";
 import * as pulumi from "@pulumi/pulumi";
@@ -66,12 +66,17 @@ export const jumpboxStorage = new azure_app.ManagedEnvironmentsStorage("jumpbox-
     },
 }, { protect: false, dependsOn: [jumpboxFilesStorage, marketing_env] });
 
-export {
-    storageAccountKey,
-    mauticAppFilesStorage,
-    suiteCrmAppFilesStorage,
-    strapiAppFilesStorage,
-    jumpboxFilesStorage,
-    marketing_env,
-    marketing_mysql
-};
+export const frontendStorage = new azure_app.ManagedEnvironmentsStorage("frontend-files-storage", {
+    environmentName: marketing_env.name,
+    resourceGroupName: resourceGroupName,
+    properties: {
+        azureFile: {
+            accountName: storageAccountName,
+            shareName: frontendFilesStorage.name,
+            accessMode: "ReadWrite",
+            accountKey: storageAccountKey,
+        },
+    },
+}, { protect: false, dependsOn: [frontendFilesStorage, marketing_env] });
+
+

@@ -100,6 +100,12 @@ export const jumpboxFilesStorage = new azure_native.storage.FileShare("jumpbox-f
     shareName: "jumpbox-files",
 });
 
+export const frontendFilesStorage = new azure_native.storage.FileShare("frontend-files", {
+    accountName: storageAccount.name,
+    resourceGroupName: config.require("resourceGroupName"),
+    shareName: "frontend-files",
+});
+
 export const strapiPublicAssetsContainer = new azure_native.storage.BlobContainer("assets", {
     accountName: storageAccount.name,
     containerName: "assets",
