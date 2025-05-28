@@ -162,13 +162,15 @@ jobs:
     needs: [build-images, setup-acr-infra]
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/catthehacker/ubuntu:act-22.04
+      image: ghcr.io/catthehacker/ubuntu:js-22.04
     env:
       ENV_ESC: ${{ vars.ESC }}
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Install Pulumi CLI
+        uses: pulumi/setup-pulumi@v2
       - name: Get ACR outputs from Pulumi stack
         id: acr-outputs
         working-directory: ./azure-deploy
@@ -188,7 +190,7 @@ jobs:
           echo "ACR_PASSWORD=$(jq -r .acrPasswordOut acr-outputs.json)" >> $GITHUB_ENV
           echo "ACR_URL=$(jq -r .registryUrlOut acr-outputs.json)" >> $GITHUB_ENV
       - name: Login to Azure Container Registry
-        run: echo ${{ needs.setup-acr-infra.outputs.ACR_PASSWORD }} | docker login ${{ needs.setup-acr-infra.outputs.ACR_URL }} -u ${{ needs.setup-acr-infra.outputs.ACR_USERNAME }} --password-stdin
+        run: echo "$ACR_PASSWORD" | docker login "$ACR_URL" -u "$ACR_USERNAME" --password-stdin
       - name: Tag and push Docker images
         run: |
           docker tag marketing-nginx:build "$ACR_URL"/marketing-nginx:latest
