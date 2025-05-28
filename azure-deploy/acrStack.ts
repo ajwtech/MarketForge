@@ -14,14 +14,16 @@ export async function returnOutputs() {
                 resourceGroupName: resourceGroupName,
             })
     );
-    const acrUsername = acrCredentials.username?.apply(user => user || "");
-    const acrPassword = acrCredentials.passwords?.apply(pwds => pwds?.values().next() || "");
-    const registryUrl = marketingcr.loginServer;
+    
+    const acrUsernameOut = acrCredentials.username?.apply(user => user || "");
+    const acrPasswordOut = acrCredentials.passwords?.apply(pwds => pwds?.values().next() || "");
+    const registryUrlOut = marketingcr.loginServer;
+    const resourceGroupName = ResourceGroup.name;
+
     return {
-        acrUsernameOut: acrUsername,
-        acrPasswordOut: acrPassword,
-        registryUrlOut: registryUrl,
-        resourceGroupName: ResourceGroup.name,
+        acrUsernameOut,
+        acrPasswordOut,
+        registryUrlOut,
+        resourceGroupName,
     };
 }
-

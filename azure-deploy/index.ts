@@ -48,7 +48,8 @@ async function main() {
   let outputs;
   switch (job) {
     case "setup-acr-infra":
-      outputs = await runStackWithEscEnv(job, projectName, "./acrStack");
+      outputs = await runStackWithEscEnv(job, projectName, "./acrStack").then(res => res.outputs);
+      console.log("ACR Infra Outputs returned to index:", outputs);
       break;
     case "setup-infra":
       outputs = await runStackWithEscEnv(job, projectName, "./infraStack");
