@@ -60,7 +60,7 @@ async function main() {
     default:
       throw new Error(`Unknown job: ${job}`);
   }
- return outputs || {};
+ return outputs;
 }
 export default main().catch(err => {
   console.error(err);
