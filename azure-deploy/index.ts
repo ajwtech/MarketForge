@@ -24,7 +24,7 @@ function getProjectName(): string {
 
 // Run the stack code inside the Automation API program so ESC config is merged
 async function runStackWithEscEnv(stackName: string, projectName: string, stackModule: string) {
-  const stackArgs = {
+  const stackArgs: automation.InlineProgramArgs = {
     stackName,
     projectName,
     program: async () => {
@@ -36,7 +36,7 @@ async function runStackWithEscEnv(stackName: string, projectName: string, stackM
     },
   };
   const stack = await automation.LocalWorkspace.createOrSelectStack(stackArgs);
-  await stack.addEnvironments(`${project}/${env}`);
+  await stack.addEnvironments(`${env}/${stackName}`);
   return await stack.up();
   
 }

@@ -55,13 +55,7 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
-          # Stack name: organization/environment/setup-acr-infra
-          ORG=$(echo "$ENV_ESC" | awk -F'/' '{print $1}')
-          PROJECT=$(echo "$ENV_ESC" | awk -F'/' '{print $2}')
-          ENV=$(echo "$ENV_ESC" | awk -F'/' '{print $3}')
-          STACK_NAME="$ORG/$ENV/setup-acr-infra"
-          echo "Using stack: $STACK_NAME"
-          npx ts-node index.ts --stack "$STACK_NAME"
+          npx ts-node index.ts
           
   setup-infra:
     needs: setup-acr-infra
