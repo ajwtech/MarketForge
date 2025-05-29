@@ -52,14 +52,14 @@ async function main() {
       console.log("ACR Infra Outputs returned to index:", outputs);
       break;
     case "setup-infra":
-      outputs = await runStackWithEscEnv(job, projectName, "./infraStack");
+      outputs = await runStackWithEscEnv(job, projectName, "./infraStack").then(res => res.outputs);
       break;
     case "setup-apps":
-      outputs = await runStackWithEscEnv(job, projectName, "./appsStack");
+      outputs = await runStackWithEscEnv(job, projectName, "./appsStack").then(res => res.outputs);
       break;
     default:
   }
- return outputs;
+ return outputs?.outputs || {};
 }
 export default main().catch(err => {
   console.error(err);
