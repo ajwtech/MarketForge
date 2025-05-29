@@ -45,7 +45,7 @@ async function runStackWithEscEnv(stackName: string, projectName: string, stackM
 async function main() {
   const job = process.env.GITHUB_JOB;
   const projectName = getProjectName();
-  let outputs;
+  let outputs: automation.OutputMap;;
   switch (job) {
     case "setup-acr-infra":
       outputs = await runStackWithEscEnv(job, projectName, "./acrStack").then(res => res.outputs);
@@ -58,8 +58,9 @@ async function main() {
       outputs = await runStackWithEscEnv(job, projectName, "./appsStack").then(res => res.outputs);
       break;
     default:
+      throw new Error(`Unknown job: ${job}`);
   }
- return outputs?.outputs || {};
+ return outputs || {};
 }
 export default main().catch(err => {
   console.error(err);
