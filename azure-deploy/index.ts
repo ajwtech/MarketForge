@@ -37,7 +37,6 @@ async function runStackWithEscEnv(stackName: string, projectName: string, stackM
   console.log(`adding environment: ${projectName}/${env}`);
   await stack.addEnvironments(`${projectName}/${env}`);
   return await stack.up();
-  
 }
 
 // Entrypoint for modular Pulumi stacks
