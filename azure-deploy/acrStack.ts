@@ -7,12 +7,13 @@ import * as azure_native from "@pulumi/azure-native";
 
 
 export async function returnOutputs() {
-    const acrCredentials = pulumi.all([marketingcr.name, ResourceGroup.name]).apply(
-        ([registryName, resourceGroupName]) => 
+    const acrCredentials = marketingcr.name.apply(registryName =>
+        ResourceGroup.name.apply(resourceGroupName =>
             azure_native.containerregistry.listRegistryCredentials({
-                registryName: registryName,
-                resourceGroupName: resourceGroupName,
+                registryName,
+                resourceGroupName,
             })
+        )
     );
     
     const acrUsernameOut = acrCredentials.username?.apply(user => user || "");

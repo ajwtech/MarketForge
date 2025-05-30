@@ -158,22 +158,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
-      - name: Install Pulumi CLI
-        uses: pulumi/setup-pulumi@v2
-      - name: Get ACR outputs from Pulumi stack
-        id: acr-outputs
-        working-directory: ./azure-deploy
-        env:
-          ENV_ESC: ${{ matrix.env_esc }}
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          submodules: recursive      
+      - name: Login to Azure Container Registry
+        run: echo ${{ needs.setup-acr-infra.outputs.acrPasswordOut }} | docker login ${{ needs.setup-acr-infra.outputs.registryUrlOut }} -u ${{ needs.setup-acr-infra.outputs.acrUsernameOut }} --password-stdin
+      - name: Tag and push Docker images
         run: |
-          ORG=$(echo "$ENV_ESC" | awk -F'/' '{print $1}')
-          ENV=$(echo "$ENV_ESC" | awk -F'/' '{print $3}')
-          STACK_NAME="$ORG/$ENV/setup-acr-infra"
-          echo "Using stack: $STACK_NAME"
-          pulumi stack output --stack "$STACK_NAME" --json
+          docker tag marketing-nginx:build ${{ needs.setup-acr-infra.outputs.acrUrlOut }}/marketing-nginx:latest
+          docker tag marketing-mautic-app:build ${{ needs.setup-acr-infra.outputs.acrUrlOut }}/marketing-mautic-app:latest
+          docker tag marketing-strapi-app:build ${{ needs.setup-acr-infra.outputs.acrUrlOut }}/marketing-strapi-app:latest
+          docker tag marketing-suitecrm-app:build ${{ needs.setup-acr-infra.outputs.acrUrlOut }}/marketing-suitecrm-app:latest
+          docker push ${{ needs.setup-acr-infra.outputs.acrUrlOut }}/marketing-nginx:latest
+          docker push ${{ needs.setup-acr-infra.outputs.acrUrlOut }}/marketing-mautic-app:latest
+          docker push ${{ needs.setup-acr-infra.outputs.acrUrlOut }}/marketing-strapi-app:latest
+          docker push ${{ needs.setup-acr-infra.outputs.acrUrlOut }}/marketing-suitecrm-app:latest

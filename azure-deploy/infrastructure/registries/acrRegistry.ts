@@ -39,16 +39,3 @@ export const marketingcr = new azure_native.containerregistry.Registry(container
 }, {
     protect: false,
 });
-
-// Ensure the ACR is created before building images
-const acrCredentials = pulumi.all([marketingcr.name, ResourceGroup.name]).apply(
-    ([registryName, resourceGroupName]) => 
-        azure_native.containerregistry.listRegistryCredentials({
-            registryName: registryName,
-            resourceGroupName: resourceGroupName,
-        })
-);
-
-export const acrUsername = acrCredentials.apply(creds => creds.username || "");
-export const acrPassword = acrCredentials.apply(creds => (creds.passwords && creds.passwords[0].value) || "");
-export const registryUrl = marketingcr.loginServer;
