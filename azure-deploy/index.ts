@@ -65,7 +65,7 @@ async function main() {
   }
   return outputs;
 }
-export default await main().catch(err => {
+export default main().catch(err => {
   console.error(err);
   process.exit(1);
 });
