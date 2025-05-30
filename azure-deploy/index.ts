@@ -18,9 +18,6 @@ function parseEscEnv(escEnv: string | undefined): { project: string, env: string
 const escEnv = process.env.ENV_ESC;
 const { project, env } = parseEscEnv(escEnv);
 
-function getProjectName(): string {
-  return project;
-}
 
 // Run the stack code inside the Automation API program so ESC config is merged
 async function runStackWithEscEnv(stackName: string, projectName: string, stackModule: string) {
@@ -36,7 +33,7 @@ async function runStackWithEscEnv(stackName: string, projectName: string, stackM
     },
   };
   const stack = await automation.LocalWorkspace.createOrSelectStack(stackArgs);
-  await stack.addEnvironments(`${env}/${stackName}`);
+  await stack.addEnvironments(`${projectName}/${env}`);
   return await stack.up();
   
 }
@@ -44,21 +41,20 @@ async function runStackWithEscEnv(stackName: string, projectName: string, stackM
 // Entrypoint for modular Pulumi stacks
 async function main() {
   const job = process.env.GITHUB_JOB;
-  const projectName = getProjectName();
   let outputs: automation.OutputMap;
   switch (job) {
     case "setup-acr-infra":
       console.log("running:", "./acrStack");
-      outputs = await runStackWithEscEnv(job, projectName, "./acrStack").then(res => res.outputs);
+      outputs = await runStackWithEscEnv(job, project, "./acrStack").then(res => res.outputs);
       console.log("ACR Infra Outputs returned to index:", outputs);
       break;
     case "setup-infra":
       console.log("running:", "./infraStack");
-      outputs = await runStackWithEscEnv(job, projectName, "./infraStack").then(res => res.outputs);
+      outputs = await runStackWithEscEnv(job, project, "./infraStack").then(res => res.outputs);
       break;
     case "setup-apps":
       console.log("running:", "./appsStack");
-      outputs = await runStackWithEscEnv(job, projectName, "./appsStack").then(res => res.outputs);
+      outputs = await runStackWithEscEnv(job, project, "./appsStack").then(res => res.outputs);
       break;
     default:
       throw new Error(`Unknown job: ${job}`);
