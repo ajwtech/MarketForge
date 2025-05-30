@@ -14,6 +14,7 @@ const allowedOrigins = [`https://${cmsSubdomain}.${domain}`];
 const suiteCrmSiteUrl = `${crmSubdomain}.${domain}`;
 
 export const storageAccount = new azure_native.storage.StorageAccount(configStorageAccountName, {
+    location: config.require("location"),
     accessTier: azure_native.storage.AccessTier.Hot,
     accountName: configStorageAccountName,
     allowCrossTenantReplication: false,

@@ -105,12 +105,7 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
-          ORG=$(echo "$ENV_ESC" | awk -F'/' '{print $1}')
-          PROJECT=$(echo "$ENV_ESC" | awk -F'/' '{print $2}')
-          ENV=$(echo "$ENV_ESC" | awk -F'/' '{print $3}')
-          STACK_NAME="$ORG/$ENV/setup-infra"
-          echo "Using stack: $STACK_NAME"
-          npx ts-node index.ts --stack "$STACK_NAME"
+          npx ts-node index.ts
 
   build-images:
     runs-on: ubuntu-latest
