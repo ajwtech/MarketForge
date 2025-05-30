@@ -34,8 +34,8 @@ async function runStackWithEscEnv(stackName: string, projectName: string, stackM
   };
   console.log(`Using stack: ${stackName} for project: ${projectName}`);
   const stack = await automation.LocalWorkspace.createOrSelectStack(stackArgs);
-  console.log(`adding environment: ${env}/${projectName}`);
-  await stack.addEnvironments(`${env}/${projectName}`);
+  console.log(`adding environment: ${projectName}/${env}`);
+  await stack.addEnvironments(`${projectName}/${env}`);
   return await stack.up();
   
 }
