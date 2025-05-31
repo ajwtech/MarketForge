@@ -164,13 +164,13 @@ jobs:
           FULL_STACK="$ORG_PROJECT/$ACR_STACK_NAME"
           pulumi stack output acrPasswordOut -s "$FULL_STACK" | \
           docker login \
-            "$(pulumi stack output acrUrlOut -s "$FULL_STACK")" \
+            "$(pulumi stack output registryUrlOut -s "$FULL_STACK")" \
             -u "$(pulumi stack output acrUsernameOut -s "$FULL_STACK")" \
             --password-stdin
 
       - name: Tag and push Docker images
         run: |
-          acrUrlOut=$(pulumi stack output acrUrlOut -s setup-acr-infra)
+          acrUrlOut=$(pulumi stack output registryUrlOut -s setup-acr-infra)
           docker tag marketing-nginx:build $acrUrlOut/marketing-nginx:latest
           docker tag marketing-mautic-app:build $acrUrlOut/marketing-mautic-app:latest
           docker tag marketing-strapi-app:build $acrUrlOut/marketing-strapi-app:latest
