@@ -94,7 +94,7 @@ jobs:
 
   build-images:
     runs-on: ubuntu-latest
-    container: ghcr.io/ajwtech/marketforge-ci:latest 
+    container: docker:latest
     strategy:
       matrix:
         include:
