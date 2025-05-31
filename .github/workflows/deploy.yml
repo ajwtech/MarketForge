@@ -158,16 +158,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive      
+          submodules: recursive 
+      - name: Install Pulumi CLI
+        uses: pulumi/setup-pulumi@v2
+      - name: Enable Corepack (Yarn 4+)
+        run: corepack enable
+      
       - name: Login to Azure Container Registry
-        run: echo ${{ needs.setup-acr-infra.outputs.acrPasswordOut }} | docker login ${{ needs.setup-acr-infra.outputs.registryUrlOut }} -u ${{ needs.setup-acr-infra.outputs.acrUsernameOut }} --password-stdin
+        run: |
+          docker login \
+            "$(pulumi stack output acrUrlOut -s setup-acr-infra)" \
+            -u "$(pulumi stack output acrUsernameOut -s setup-acr-infra)" \
+            --password-stdin <<< "$(pulumi stack output acrPasswordOut -s setup-acr-infra)"
+
       - name: Tag and push Docker images
         run: |
-          docker tag marketing-nginx:build ${{ needs.setup-acr-infra.outputs.acrUrlOut }}/marketing-nginx:latest
-          docker tag marketing-mautic-app:build ${{ needs.setup-acr-infra.outputs.acrUrlOut }}/marketing-mautic-app:latest
-          docker tag marketing-strapi-app:build ${{ needs.setup-acr-infra.outputs.acrUrlOut }}/marketing-strapi-app:latest
-          docker tag marketing-suitecrm-app:build ${{ needs.setup-acr-infra.outputs.acrUrlOut }}/marketing-suitecrm-app:latest
-          docker push ${{ needs.setup-acr-infra.outputs.acrUrlOut }}/marketing-nginx:latest
-          docker push ${{ needs.setup-acr-infra.outputs.acrUrlOut }}/marketing-mautic-app:latest
-          docker push ${{ needs.setup-acr-infra.outputs.acrUrlOut }}/marketing-strapi-app:latest
-          docker push ${{ needs.setup-acr-infra.outputs.acrUrlOut }}/marketing-suitecrm-app:latest
+          acrUrlOut=$(pulumi stack output acrUrlOut -s setup-acr-infra)
+          docker tag marketing-nginx:build $acrUrlOut/marketing-nginx:latest
+          docker tag marketing-mautic-app:build $acrUrlOut/marketing-mautic-app:latest
+          docker tag marketing-strapi-app:build $acrUrlOut/marketing-strapi-app:latest
+          docker tag marketing-suitecrm-app:build $acrUrlOut/marketing-suitecrm-app:latest
+          docker push $acrUrlOut/marketing-nginx:latest
+          docker push $acrUrlOut/marketing-mautic-app:latest
+          docker push $acrUrlOut/marketing-strapi-app:latest
+          docker push $acrUrlOut/marketing-suitecrm-app:latest

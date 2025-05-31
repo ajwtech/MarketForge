@@ -3,7 +3,7 @@ description: dev stack for marketing and sales infrastructure
 runtime:
   name: nodejs
   options:
-    packagemanager: npm
+    packagemanager: yarn
     nodeargs: --max-old-space-size=4096
 stackConfigDir: ./config
 pulumi:tags:
