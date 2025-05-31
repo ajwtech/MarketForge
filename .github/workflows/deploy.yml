@@ -154,7 +154,7 @@ jobs:
 
       - name: Tag and push Docker images
         run: |
-          acrUrlOut=$(pulumi stack output registryUrlOut -s setup-acr-infra)
+          acrUrlOut=$(pulumi stack output registryUrlOut -s $FULL_STACK)
           docker tag marketing-nginx:build $acrUrlOut/marketing-nginx:latest
           docker tag marketing-mautic-app:build $acrUrlOut/marketing-mautic-app:latest
           docker tag marketing-strapi-app:build $acrUrlOut/marketing-strapi-app:latest
