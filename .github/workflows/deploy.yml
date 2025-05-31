@@ -94,7 +94,7 @@ jobs:
 
   build-images:
     runs-on: ubuntu-latest
-    container: docker:latest
+    container: ghcr.io/ajwtech/marketforge-ci:latest 
     strategy:
       matrix:
         include:
@@ -126,6 +126,15 @@ jobs:
             --cache-to=type=local,dest=/tmp/.buildx-cache \
             -t ${{ matrix.name }}:build \
             -f ${{ matrix.dockerfile }} .
+      - name: Save Docker image as artifact
+        run: |
+          docker save ${{ matrix.name }}:build -o ${{ matrix.name }}.tar
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}-image
+          path: ${{ matrix.name }}.tar
+
   push-images:
     needs: [build-images, setup-acr-infra]
     runs-on: ubuntu-latest
@@ -140,7 +149,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive 
-
+      - name: Download Docker image artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./images
+      - name: Load Docker images
+        run: |
+          for tar in ./images/*/*.tar; do
+            docker load -i "$tar"
+          done
       - name: Login to Azure Container Registry
         run: |
           # Parse org/project from ENV_ESC (format: org/project/stack)
@@ -152,18 +169,16 @@ jobs:
             "$(pulumi stack output registryUrlOut -s "$FULL_STACK")" \
             -u "$(pulumi stack output acrUsernameOut -s "$FULL_STACK")" \
             --password-stdin
-
       - name: Tag and push Docker images
         run: |
-          # Parse org/project from ENV_ESC (format: org/project/stack)
           ORG_PROJECT=$(echo "$ENV_ESC" | awk -F'/' '{print $1 "/" $2}')
           ACR_STACK_NAME="setup-acr-infra"
           FULL_STACK="$ORG_PROJECT/$ACR_STACK_NAME"
           acrUrlOut=$(pulumi stack output registryUrlOut -s "$FULL_STACK")
-          docker tag marketing-nginx $acrUrlOut/marketing-nginx:latest
-          docker tag marketing-mautic-app $acrUrlOut/marketing-mautic-app:latest
-          docker tag marketing-strapi-app $acrUrlOut/marketing-strapi-app:latest
-          docker tag marketing-suitecrm-app $acrUrlOut/marketing-suitecrm-app:latest
+          docker tag marketing-nginx:build $acrUrlOut/marketing-nginx:latest
+          docker tag marketing-mautic-app:build $acrUrlOut/marketing-mautic-app:latest
+          docker tag marketing-strapi-app:build $acrUrlOut/marketing-strapi-app:latest
+          docker tag marketing-suitecrm-app:build $acrUrlOut/marketing-suitecrm-app:latest
           docker push $acrUrlOut/marketing-nginx:latest
           docker push $acrUrlOut/marketing-mautic-app:latest
           docker push $acrUrlOut/marketing-strapi-app:latest
