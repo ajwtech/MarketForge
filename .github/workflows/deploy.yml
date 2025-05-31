@@ -166,10 +166,11 @@ jobs:
       
       - name: Login to Azure Container Registry
         run: |
+          pulumi stack output acrPasswordOut -s setup-acr-infra | \
           docker login \
             "$(pulumi stack output acrUrlOut -s setup-acr-infra)" \
             -u "$(pulumi stack output acrUsernameOut -s setup-acr-infra)" \
-            --password-stdin <<< "$(pulumi stack output acrPasswordOut -s setup-acr-infra)"
+            --password-stdin
 
       - name: Tag and push Docker images
         run: |
