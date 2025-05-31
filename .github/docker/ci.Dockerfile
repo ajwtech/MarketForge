@@ -4,9 +4,6 @@ FROM pulumi/pulumi-nodejs-22:latest
 # Enable Corepack (for Yarn 4+ support)
 RUN corepack enable
 
-# Install Yarn
-RUN npm install -g yarn
-
 # Install Azure CLI
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 

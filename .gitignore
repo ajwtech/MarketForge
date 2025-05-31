@@ -15,3 +15,4 @@ launchpad/strapi/.env.development
 */strapi-staging/*
 azure-deploy/scripts/migrate_pulumi_resources.sh
 azure-deploy/scripts/move_commands.sh
+.github/docker/*
