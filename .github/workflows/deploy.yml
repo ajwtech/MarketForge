@@ -162,7 +162,7 @@ jobs:
           ORG_PROJECT=$(echo "$ENV_ESC" | awk -F'/' '{print $1 "/" $2}')
           ACR_STACK_NAME="setup-acr-infra"
           FULL_STACK="$ORG_PROJECT/$ACR_STACK_NAME"
-          pulumi stack output acrPasswordOut -s "$FULL_STACK" | \
+          pulumi stack output acrPasswordOut --show-secrets -s "$FULL_STACK" | \
           docker login \
             "$(pulumi stack output registryUrlOut -s "$FULL_STACK")" \
             -u "$(pulumi stack output acrUsernameOut -s "$FULL_STACK")" \
