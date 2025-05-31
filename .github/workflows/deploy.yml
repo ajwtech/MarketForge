@@ -10,8 +10,6 @@ jobs:
   
   setup-acr-infra:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/catthehacker/ubuntu:js-22.04
     strategy:
       matrix:
         env_esc: ${{ fromJson(vars.ESC) }}
@@ -60,8 +58,6 @@ jobs:
   setup-infra:
     needs: setup-acr-infra
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/catthehacker/ubuntu:js-22.04
     strategy:
       matrix:
         env_esc: ${{ fromJson(vars.ESC) }}
@@ -109,8 +105,6 @@ jobs:
 
   build-images:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/catthehacker/ubuntu:act-22.04
     strategy:
       matrix:
         include:
@@ -147,8 +141,6 @@ jobs:
   push-images:
     needs: [build-images, setup-acr-infra]
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/catthehacker/ubuntu:js-22.04
     env:
       ENV_ESC: ${{ matrix.env_esc }}
       PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
@@ -166,10 +158,14 @@ jobs:
       
       - name: Login to Azure Container Registry
         run: |
-          pulumi stack output acrPasswordOut -s setup-acr-infra | \
+          # Parse org/project from ENV_ESC (format: org/project/stack)
+          ORG_PROJECT=$(echo "$ENV_ESC" | awk -F'/' '{print $1 "/" $2}')
+          ACR_STACK_NAME="setup-acr-infra"
+          FULL_STACK="$ORG_PROJECT/$ACR_STACK_NAME"
+          pulumi stack output acrPasswordOut -s "$FULL_STACK" | \
           docker login \
-            "$(pulumi stack output acrUrlOut -s setup-acr-infra)" \
-            -u "$(pulumi stack output acrUsernameOut -s setup-acr-infra)" \
+            "$(pulumi stack output acrUrlOut -s "$FULL_STACK")" \
+            -u "$(pulumi stack output acrUsernameOut -s "$FULL_STACK")" \
             --password-stdin
 
       - name: Tag and push Docker images
