@@ -1,5 +1,11 @@
 # Custom CI image for MarketForge workflows
+
+FROM docker/buildx-bin:latest AS buildx
 FROM pulumi/pulumi-nodejs-22:latest
+
+# Install Docker Buildx CLI plugin
+COPY --from=buildx /buildx /usr/libexec/docker/cli-plugins/docker-buildx
+
 
 # Enable Corepack (for Yarn 4+ support)
 RUN corepack enable
