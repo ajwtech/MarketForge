@@ -16,3 +16,4 @@ launchpad/strapi/.env.development
 azure-deploy/scripts/migrate_pulumi_resources.sh
 azure-deploy/scripts/move_commands.sh
 .github/docker/*
+pu.sh

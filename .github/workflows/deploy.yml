@@ -128,6 +128,17 @@ jobs:
           CONTEXT_DIR=$(dirname "$DOCKERFILE_PATH")
           HASH=$(find "$CONTEXT_DIR" -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}')
           echo "build_hash=$HASH" >> $GITHUB_OUTPUT
+      - name: Login to Azure CLI
+        run: |
+          az login --service-principal \
+            -u "$ARM_CLIENT_ID" \
+            -p "$ARM_CLIENT_SECRET" \
+            --tenant "$ARM_TENANT_ID"
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
       - name: Login to Azure Container Registry
         run: |
           ORG_PROJECT=$(echo "$ENV_ESC" | awk -F'/' '{print $1 "/" $2}')
@@ -138,6 +149,7 @@ jobs:
             "$(pulumi stack output registryUrlOut -s "$FULL_STACK")" \
             -u "$(pulumi stack output acrUsernameOut -s "$FULL_STACK")" \
             --password-stdin
+
       - name: Build and push Docker image (if not present)
         run: |
           BUILD_HASH=${{ steps.build_hash.outputs.build_hash }}
@@ -158,6 +170,9 @@ jobs:
               --cache-to=type=local,dest=/tmp/.buildx-cache \
               -t $repo:$BUILD_HASH \
               -f ${{ matrix.dockerfile }} .
+            # Tag and push as latest
+            docker tag $repo:$BUILD_HASH $repo:latest
+            docker push $repo:latest
           fi
   setup-apps:
     needs: [setup-infra, build-and-push-images]
