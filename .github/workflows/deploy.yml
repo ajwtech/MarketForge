@@ -95,7 +95,7 @@ jobs:
   build-and-push-images:
     needs: setup-acr-infra
     runs-on: ubuntu-latest
-    container: docker:latest
+    container: ghcr.io/ajwtech/marketforge-ci:latest
     strategy:
       matrix:
         env_esc: ${{ fromJson(vars.ESC) }}
