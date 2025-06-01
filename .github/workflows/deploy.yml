@@ -92,11 +92,13 @@ jobs:
         run: |
           npx ts-node index.ts
 
-  build-images:
+  build-and-push-images:
+    needs: setup-acr-infra
     runs-on: ubuntu-latest
     container: docker:latest
     strategy:
       matrix:
+        env_esc: ${{ fromJson(vars.ESC) }}
         include:
           - name: marketing-nginx
             dockerfile: mautic/marketing-nginx.dockerfile
@@ -106,6 +108,9 @@ jobs:
             dockerfile: launchpad/Dockerfile.prod
           - name: marketing-suitecrm-app
             dockerfile: suitecrm/marketing-suitecrm-app.dockerfile
+    env:
+      ENV_ESC: ${{ matrix.env_esc }}
+      PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -116,53 +121,13 @@ jobs:
           key: ${{ runner.os }}-buildx-${{ matrix.name }}-${{ hashFiles(matrix.dockerfile) }}
           restore-keys: |
             ${{ runner.os }}-buildx-
-      - name: Set image tag from commit SHA
-        run: echo "IMAGE_TAG=${GITHUB_SHA}" >> $GITHUB_ENV
-      - name: Build Docker image
+      - name: Compute build hash for image
+        id: build_hash
         run: |
-          docker buildx create --use
-          docker buildx build \
-            --load \
-            --cache-from=type=local,src=/tmp/.buildx-cache \
-            --cache-to=type=local,dest=/tmp/.buildx-cache \
-            -t ${{ matrix.name }}:${{ env.IMAGE_TAG }} \
-            -f ${{ matrix.dockerfile }} .
-        env:
-          IMAGE_TAG: ${{ github.sha }}
-      - name: Save Docker image as artifact
-        run: |
-          docker save ${{ matrix.name }}:${{ env.IMAGE_TAG }} -o ${{ matrix.name }}-${{ env.IMAGE_TAG }}.tar
-        env:
-          IMAGE_TAG: ${{ github.sha }}
-      - name: Upload Docker image artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.name }}-image-${{ github.sha }}
-          path: ${{ matrix.name }}-${{ github.sha }}.tar
-
-  push-images:
-    needs: [build-images, setup-acr-infra]
-    runs-on: ubuntu-latest
-    container: docker/docker:latest
-    env:
-      ENV_ESC: ${{ matrix.env_esc }}
-      PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-    strategy:
-      matrix:
-        env_esc: ${{ fromJson(vars.ESC) }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive 
-      - name: Download Docker image artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: ./images
-      - name: Load Docker images
-        run: |
-          for tar in ./images/*/*.tar; do
-            docker load -i "$tar"
-          done
+          DOCKERFILE_PATH="${{ matrix.dockerfile }}"
+          CONTEXT_DIR=$(dirname "$DOCKERFILE_PATH")
+          HASH=$(find "$CONTEXT_DIR" -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}')
+          echo "build_hash=$HASH" >> $GITHUB_OUTPUT
       - name: Login to Azure Container Registry
         run: |
           ORG_PROJECT=$(echo "$ENV_ESC" | awk -F'/' '{print $1 "/" $2}')
@@ -173,27 +138,29 @@ jobs:
             "$(pulumi stack output registryUrlOut -s "$FULL_STACK")" \
             -u "$(pulumi stack output acrUsernameOut -s "$FULL_STACK")" \
             --password-stdin
-      - name: Tag and push Docker images
+      - name: Build and push Docker image (if not present)
         run: |
-          IMAGE_TAG=${GITHUB_SHA}
+          BUILD_HASH=${{ steps.build_hash.outputs.build_hash }}
           ORG_PROJECT=$(echo "$ENV_ESC" | awk -F'/' '{print $1 "/" $2}')
           ACR_STACK_NAME="setup-acr-infra"
           FULL_STACK="$ORG_PROJECT/$ACR_STACK_NAME"
           acrUrlOut=$(pulumi stack output registryUrlOut -s "$FULL_STACK")
-          az acr login --name $(echo "$acrUrlOut" | awk -F'.' '{print $1}')
-
-          for image in marketing-nginx marketing-mautic-app marketing-strapi-app marketing-suitecrm-app; do
-            repo="$acrUrlOut/$image"
-            # Check if tag exists in ACR
-            if az acr repository show-tags --name $(echo "$acrUrlOut" | awk -F'.' '{print $1}') --repository $image --query "[?@=='$IMAGE_TAG']" -o tsv | grep -q "$IMAGE_TAG"; then
-              echo "$repo:$IMAGE_TAG already exists in ACR, skipping push."
-            else
-              docker tag $image:$IMAGE_TAG $repo:$IMAGE_TAG
-              docker push $repo:$IMAGE_TAG
-            fi
-          done
+          ACR_NAME=$(echo "$acrUrlOut" | awk -F'.' '{print $1}')
+          repo="$acrUrlOut/${{ matrix.name }}"
+          # Check if tag exists in ACR
+          if az acr repository show-tags --name "$ACR_NAME" --repository "${{ matrix.name }}" --query "[?@=='$BUILD_HASH']" -o tsv | grep -q "$BUILD_HASH"; then
+            echo "$repo:$BUILD_HASH already exists in ACR, skipping build and push."
+          else
+            docker buildx create --use
+            docker buildx build \
+              --push \
+              --cache-from=type=local,src=/tmp/.buildx-cache \
+              --cache-to=type=local,dest=/tmp/.buildx-cache \
+              -t $repo:$BUILD_HASH \
+              -f ${{ matrix.dockerfile }} .
+          fi
   setup-apps:
-    needs: [setup-infra, push-images]
+    needs: [setup-infra, build-and-push-images]
     runs-on: ubuntu-latest
     container: ghcr.io/ajwtech/marketforge-ci:latest
     strategy:
