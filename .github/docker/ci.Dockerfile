@@ -1,44 +1,45 @@
-# Custom CI image for MarketForge workflows
-
-FROM docker/buildx-bin:latest AS buildx
 FROM pulumi/pulumi-nodejs-22:latest
 
-# Install Docker Buildx CLI plugin
-COPY --from=buildx /buildx /usr/libexec/docker/cli-plugins/docker-buildx
-
-
-# Enable Corepack (for Yarn 4+ support)
+# Enable Corepack (Yarn 4+)
 RUN corepack enable
+
+# Install Docker CLI, curl, build essentials, Python, and Git
+RUN apt-get update && \
+    apt-get install -y \
+      docker.io \
+      curl \
+      build-essential \
+      python3 \
+      python3-pip \
+      git \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Explicitly install Docker Buildx
+RUN mkdir -p /usr/libexec/docker/cli-plugins && \
+    BUILDX_VERSION=v0.14.0 && \
+    curl -sSL https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-amd64 \
+    -o /usr/libexec/docker/cli-plugins/docker-buildx && \
+    chmod +x /usr/libexec/docker/cli-plugins/docker-buildx
+
+# Explicitly install Docker Compose Plugin (v2)
+RUN COMPOSE_VERSION=v2.27.1 && \
+    curl -SL "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-linux-x86_64" \
+    -o /usr/libexec/docker/cli-plugins/docker-compose && \
+    chmod +x /usr/libexec/docker/cli-plugins/docker-compose
 
 # Install Azure CLI
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
-# Install Docker CLI
-RUN apt-get update && apt-get install -y docker.io
-
-# Install build tools for native modules
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    python3 \
-    python3-pip \
-    python3-setuptools \
-    git \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Copy package manager files and Yarn cache from workspace root
+# Copy your package files
 COPY package.json yarn.lock .yarn/ ./
 COPY launchpad/package.json launchpad/yarn.lock launchpad/.yarn/ ./launchpad/
 COPY launchpad/next/package.json launchpad/next/yarn.lock launchpad/next/.yarn/ ./launchpad/next/
 COPY launchpad/strapi/package.json launchpad/strapi/yarn.lock launchpad/strapi/.yarn/ ./launchpad/strapi/
 COPY azure-deploy/package.json azure-deploy/yarn.lock azure-deploy/.yarn/ ./azure-deploy/
 
-# Pre-install dependencies
-RUN yarn install --immutable
-
-# Pre-install dependencies for azure-deploy
-RUN cd azure-deploy && yarn install --immutable && cd ..
-
-# Pre-install dependencies for launchpad, next, and strapi
-RUN cd launchpad && yarn install --immutable && cd ..
-RUN cd launchpad/next && yarn install --immutable && cd ../..
-RUN cd launchpad/strapi && yarn install --immutable && cd ../..
+# Pre-install yarn dependencies
+RUN yarn install --immutable && \
+    cd azure-deploy && yarn install --immutable && cd .. && \
+    cd launchpad && yarn install --immutable && cd .. && \
+    cd launchpad/next && yarn install --immutable && cd ../.. && \
+    cd launchpad/strapi && yarn install --immutable && cd ../..
