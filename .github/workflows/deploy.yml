@@ -183,3 +183,44 @@ jobs:
           docker push $acrUrlOut/marketing-mautic-app:latest
           docker push $acrUrlOut/marketing-strapi-app:latest
           docker push $acrUrlOut/marketing-suitecrm-app:latest
+  setup-apps:
+    needs: [setup-infra, push-images]
+    runs-on: ubuntu-latest
+    container: ghcr.io/ajwtech/marketforge-ci:latest
+    strategy:
+      matrix:
+        env_esc: ${{ fromJson(vars.ESC) }}
+    env:
+      ENV_ESC: ${{ matrix.env_esc }}
+      PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/cache@v3
+        id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
+        with:
+          path: |
+            .yarn/cache
+            .yarn/install-state.gz
+            .yarn/unplugged
+            .yarn/build-state.yml
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+      - name: Install Node.js dependencies
+        run: yarn install --immutable
+        working-directory: ./azure-deploy
+
+      - name: Run Pulumi Automation API for infra
+        working-directory: ./azure-deploy
+        env:
+          GITHUB_JOB: setup-apps
+          ENV_ESC: ${{ matrix.env_esc }}
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        run: |
+          npx ts-node index.ts
