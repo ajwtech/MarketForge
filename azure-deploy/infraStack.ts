@@ -1,7 +1,7 @@
 // Infrastructure stack (storage, managed env, DB, etc.)
 import { storageAccountKey, mauticAppFilesStorage, suiteCrmAppFilesStorage, strapiAppFilesStorage, jumpboxFilesStorage, storageAccountName, frontendFilesStorage } from "./infrastructure/storage/storageAccount";
 import { marketing_env } from "./infrastructure/managedEnvironment/managedEnvironment";
-import { marketing_mysql } from "./infrastructure/database/mysqlServer";
+export { marketing_mysql } from "./infrastructure/database/mysqlServer";
 import * as pulumi from "@pulumi/pulumi";
 import { getStackRefName } from "./utils/stackRef";
 import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
