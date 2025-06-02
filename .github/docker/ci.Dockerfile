@@ -12,6 +12,11 @@ RUN apt-get update && \
       python3 \
       python3-pip \
       git \
+      pkg-config \
+      libvips-dev \
+      libsqlite3-dev \
+      make \
+      g++ \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Explicitly install Docker Buildx
@@ -37,9 +42,10 @@ COPY launchpad/next/package.json launchpad/next/yarn.lock launchpad/next/.yarn/ 
 COPY launchpad/strapi/package.json launchpad/strapi/yarn.lock launchpad/strapi/.yarn/ ./launchpad/strapi/
 COPY azure-deploy/package.json azure-deploy/yarn.lock azure-deploy/.yarn/ ./azure-deploy/
 
-# Pre-install yarn dependencies
-RUN yarn install --immutable && \
-    cd azure-deploy && yarn install --immutable && cd .. && \
-    cd launchpad && yarn install --immutable && cd .. && \
-    cd launchpad/next && yarn install --immutable && cd ../.. && \
-    cd launchpad/strapi && yarn install --immutable && cd ../..
+
+
+RUN set -e && YARN_ENABLE_SCRIPTS=0 yarn install --inline-builds
+RUN set -e && cd azure-deploy && YARN_ENABLE_SCRIPTS=0 yarn install --inline-builds && cd ..
+RUN set -e && cd launchpad && YARN_ENABLE_SCRIPTS=0 yarn install --inline-builds && cd ..
+RUN set -e && cd launchpad/next && YARN_ENABLE_SCRIPTS=0 yarn install --inline-builds && cd ../..
+RUN set -e && cd launchpad/strapi && YARN_ENABLE_SCRIPTS=0 yarn install --inline-builds && cd ../..
