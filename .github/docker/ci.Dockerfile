@@ -2,7 +2,7 @@ FROM pulumi/pulumi-nodejs-22:latest
 
 # Enable Corepack (Yarn 4+)
 RUN corepack enable
-
+RUN corepack prepare --activate
 # Install Docker CLI, curl, build essentials, Python, and Git
 RUN apt-get update && \
     apt-get install -y \
