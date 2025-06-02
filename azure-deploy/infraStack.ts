@@ -78,4 +78,13 @@ export const frontendStorage = new azure_app.ManagedEnvironmentsStorage("fronten
     },
 }, { protect: false, dependsOn: [frontendFilesStorage, marketing_env] });
 
+// Exporting required values directly
+export const marketing_env_name = marketing_env.name;
+export const mauticStorage_name = mauticStorage.name;
+export const strapiStorage_name = strapiStorage.name;
+export const suitecrmStorage_name = suitecrmStorage.name;
+export const jumpboxStorage_name = jumpboxStorage.name;
+export const storageAccountName_value = storageAccountName;
+export const storageAccountKey_value = storageAccountKey;
+
 
