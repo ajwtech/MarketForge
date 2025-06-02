@@ -5,13 +5,12 @@ export { marketing_mysql } from "./infrastructure/database/mysqlServer";
 import * as pulumi from "@pulumi/pulumi";
 import { getStackRefName } from "./utils/stackRef";
 import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
+import { acr } from "./stackRefs";
 
 const config = new pulumi.Config();
 
 // Reference the resource group from the ACR infra stack
-const acrInfraStack = new pulumi.StackReference(getStackRefName(config, "setup-acr-infra"));
-
-export const resourceGroupName = acrInfraStack.getOutput("resourceGroupName");
+export const resourceGroupName = acr.getOutput("resourceGroupName");
 
 // ManagedEnvironmentsStorage resources for each file share
 export const mauticStorage = new azure_app.ManagedEnvironmentsStorage("mautic-app-files-storage", {

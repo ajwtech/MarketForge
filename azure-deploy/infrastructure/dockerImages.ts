@@ -4,13 +4,11 @@
 // See .github/workflows/deploy.yml for the build/push/deploy workflow.
 
 import * as pulumi from '@pulumi/pulumi';
-import { getStackRefName } from '../utils/stackRef';
+import { acr } from "../stackRefs";
 
 const config = new pulumi.Config();
 const imageTag = config.get('imageTag') || 'latest';
 
-// Use StackReference to get outputs from setup-acr-infra
-const acr = new pulumi.StackReference(getStackRefName(config, 'setup-acr-infra'));
 const registryUrl = acr.getOutput('registryUrl');
 
 const imageNames = [

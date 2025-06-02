@@ -6,13 +6,10 @@ import { suitecrmApp } from "./infrastructure/containerApps/suiteCrmApp";
 import { setupDns } from "./infrastructure/dns/customDomains";
 import { nginxCerts } from "./infrastructure/certificates/nginxCerts";
 import { jumpBox as jumpbox} from "./infrastructure/containerApps/jumpbox";
-import { getStackRefName } from "./utils/stackRef";
+import { acr, infra } from "./stackRefs";
 
 
 const config = new pulumi.Config();
-
-const infra = new pulumi.StackReference(getStackRefName(config, "setup-infra"));
-const acr = new pulumi.StackReference(getStackRefName(config, "setup-acr-infra"));
 
 const appEnv = config.get("appEnv") || "prod";
 const dbHost = infra.getOutput("marketing_mysql").apply((mysql: any) => mysql.fullyQualifiedDomainName);
