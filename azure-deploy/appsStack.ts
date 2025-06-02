@@ -42,6 +42,17 @@ const strapiAppFilesStorage = infra.getOutput("strapiAppFilesStorage");
 const jumpboxFilesStorage = infra.getOutput("jumpboxFilesStorage");
 const storageAccountKey = infra.getOutput("storageAccountKey");
 
+// Debug: Log StackReference outputs before using them
+acr.getOutput("resourceGroup").apply(rg => { console.log("acr.resourceGroup output:", rg); return rg; });
+acr.getOutput("registryUrl").apply(url => { console.log("acr.registryUrl output:", url); return url; });
+acr.getOutput("acrUsername").apply(u => { console.log("acr.acrUsername output:", u); return u; });
+acr.getOutput("acrPassword").apply(p => { console.log("acr.acrPassword output:", p); return p; });
+infra.getOutput("marketing_env").apply(env => { console.log("infra.marketing_env output:", env); return env; });
+infra.getOutput("mauticStorage").apply(s => { console.log("infra.mauticStorage output:", s); return s; });
+infra.getOutput("strapiStorage").apply(s => { console.log("infra.strapiStorage output:", s); return s; });
+infra.getOutput("suitecrmStorage").apply(s => { console.log("infra.suitecrmStorage output:", s); return s; });
+infra.getOutput("jumpboxStorage").apply(s => { console.log("infra.jumpboxStorage output:", s); return s; });
+
 // Ensure registryUrl is Output<string>
 const registryUrlString: pulumi.Output<string> = registryUrl.apply(url => String(url));
 
