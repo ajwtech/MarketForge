@@ -203,7 +203,8 @@ jobs:
         run: yarn install --immutable
         working-directory: ./azure-deploy
 
-      - name: Run Pulumi Automation API for infra
+      - name: Run Pulumi Automation API for apps
+        id: pulumi-apps
         working-directory: ./azure-deploy
         env:
           GITHUB_JOB: setup-apps

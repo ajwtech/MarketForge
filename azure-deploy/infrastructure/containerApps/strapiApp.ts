@@ -1,7 +1,6 @@
 // Import necessary modules and resources
 import * as pulumi from "@pulumi/pulumi";
 
-import {strapiAppFilesStorage, storageAccountKey, storageAccount } from "../storage/storageAccount";
 import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 
 import { imageBuilds } from "../dockerImages"; 
@@ -19,6 +18,8 @@ export function strapiApp(args: {
     registryPassword: pulumi.Input<string>;
     managedEnvironmentId: pulumi.Input<string>;
     storageName: pulumi.Input<string>;
+    storageAccountName: pulumi.Input<string>; 
+    storageAccountKey: pulumi.Input<string>; 
     dbHost: pulumi.Input<string>;
     dbPort: pulumi.Input<string>;
     dbName: pulumi.Input<string>;
@@ -95,11 +96,11 @@ export function strapiApp(args: {
                     },
                     {
                         name: "STORAGE_ACCOUNT_KEY",
-                        value: storageAccountKey,
+                        value: args.storageAccountKey,
                     },
                     {
                         name: "STORAGE_ACCOUNT_NAME",
-                        value: storageAccount.name,
+                        value: args.storageAccountName,
                     },
                     {
                         name: "DATABASE_HOST",
@@ -185,6 +186,5 @@ export function strapiApp(args: {
     },{
         
         protect: false,
-        dependsOn: [strapiAppFilesStorage, storageAccount], // Only Pulumi Resources
     });
 }
