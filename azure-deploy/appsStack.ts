@@ -125,6 +125,8 @@ const deployedStrapiApp = strapiApp({
     registryPassword: acrPassword,
     managedEnvironmentId: managedEnvironmentId,
     storageName: strapiStorageName,
+    storageAccountName, // <-- add this
+    storageAccountKey,  // <-- add this
     dbHost,
     dbPort,
     dbName: strapiDbName,
