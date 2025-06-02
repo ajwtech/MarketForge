@@ -1,7 +1,6 @@
 // Import necessary modules and resources
 import * as pulumi from "@pulumi/pulumi";
 
-import { mauticAppFilesStorage, storageAccountKey, storageAccountName, storageAccount } from "../storage/storageAccount";
 import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 
 import { imageBuilds } from "../dockerImages"; 
@@ -31,6 +30,8 @@ export function mauticNginx(args: {
     dbName: pulumi.Input<string>;
     resourceGroupName: pulumi.Input<string>;
     createSubdomains: pulumi.Input<boolean>;
+    storageAccountName: pulumi.Input<string>; // added
+    storageAccountKey: pulumi.Input<string>;  // added
     azureFunctionUrl?: pulumi.Input<string>; // Add Azure Function URL (optional)
 }) {
    
@@ -60,11 +61,11 @@ export function mauticNginx(args: {
         },
         {
             name: "STORAGE_ACCOUNT_NAME",
-            value: storageAccountName,
+            value: args.storageAccountName,
         },
         {
             name: "STORAGE_ACCOUNT_KEY",
-            value: storageAccountKey,
+            value: args.storageAccountKey,
         },
         {
             name: "DB_HOST",
@@ -234,6 +235,6 @@ export function mauticNginx(args: {
     },{
         replaceOnChanges: ["image", "createSubdomains" ],
         protect: false,
-        dependsOn: [mauticAppFilesStorage, storageAccount], // Only Pulumi Resources
+        // dependsOn: [mauticAppFilesStorage, storageAccount], // REMOVE
     });
 }

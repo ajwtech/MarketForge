@@ -89,6 +89,8 @@ const mauticNginxApp = mauticNginx({
     dbName,
     resourceGroupName,
     createSubdomains,
+    storageAccountName, 
+    storageAccountKey, 
 });
 const siteFQDN = mauticNginxApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost");
 const nginxCvid = mauticNginxApp.customDomainVerificationId.apply(cvid => cvid);
@@ -188,6 +190,8 @@ const jumpboxApp = jumpbox({
     env: appEnv,
     managedEnvironmentId: marketing_env.apply(env => env.id),
     storageName: jumpboxStorageName,
+    storageAccountName, // <-- add this
+    storageAccountKey,  // <-- add this
     dbHost,
     dbPort,
     resourceGroupName,

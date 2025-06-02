@@ -1,7 +1,6 @@
 import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 import * as pulumi from "@pulumi/pulumi";
 import { imageBuilds } from "../dockerImages";
-import { storageAccount} from "../storage/storageAccount";
 
 
 const config = new pulumi.Config();
@@ -162,6 +161,6 @@ export function suitecrmApp(args: suitecrmAppArgs) {
         ],
         },
     },{
-        dependsOn: [storageAccount], // Only Pulumi Resources
+        dependsOn: [], // No direct infra resource dependencies
     });
 }

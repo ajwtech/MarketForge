@@ -1,7 +1,6 @@
 // Import necessary modules and resources
 import * as pulumi from "@pulumi/pulumi";
 
-import { storageAccountKey, storageAccountName, storageAccount } from "../storage/storageAccount";
 import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 import { marketing_mysql } from "../database/mysqlServer";
 
@@ -14,6 +13,8 @@ export function jumpBox(args: {
     env: string;
     managedEnvironmentId: pulumi.Input<string>;
     storageName: pulumi.Input<string>;
+    storageAccountName: pulumi.Input<string>; // added
+    storageAccountKey: pulumi.Input<string>;  // added
     dbHost: pulumi.Input<string>;
     dbPort: pulumi.Input<string>;
     resourceGroupName: pulumi.Input<string>;
@@ -53,11 +54,11 @@ export function jumpBox(args: {
                 env: [
                     {
                         name: "STORAGE_ACCOUNT_NAME",
-                        value: storageAccountName,
+                        value: args.storageAccountName,
                     },
                     {
                         name: "STORAGE_ACCOUNT_KEY",
-                        value: storageAccountKey,
+                        value: args.storageAccountKey,
                     },
                     {
                         name: "DB_HOST",
@@ -121,6 +122,6 @@ export function jumpBox(args: {
         
     },{
         protect: false,
-        dependsOn: [marketing_mysql, storageAccount], // Reference centralized image build
+        // dependsOn: [marketing_mysql, storageAccount], // REMOVE
     });
 }
