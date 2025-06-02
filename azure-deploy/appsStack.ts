@@ -1,5 +1,4 @@
 import * as pulumi from "@pulumi/pulumi";
-import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 import { mauticWeb, mauticNginx } from "./infrastructure/containerApps/mauticApps";
 import { strapiApp } from "./infrastructure/containerApps/strapiApp";
 import { suitecrmApp } from "./infrastructure/containerApps/suiteCrmApp";
@@ -8,11 +7,11 @@ import { nginxCerts } from "./infrastructure/certificates/nginxCerts";
 import { jumpBox as jumpbox} from "./infrastructure/containerApps/jumpbox";
 import { acr, infra } from "./stackRefs";
 
-
 const config = new pulumi.Config();
 
 const appEnv = config.get("appEnv") || "prod";
-const dbHost = infra.getOutput("marketing_mysql").apply((mysql: any) => mysql.fullyQualifiedDomainName);
+
+const dbHost = infra.getOutput("marketing_mysql_fqdn");
 const dbPort = config.get("dbPort") || "3306";
 const dbName = config.get("dbName") || "mauticdb";
 const dbType = config.get("dbType") || "mysqli";
@@ -36,10 +35,6 @@ const registryUrl = acr.getOutput("registryUrl");
 const acrUsername = acr.getOutput("acrUsername");
 const acrPassword = acr.getOutput("acrPassword");
 const marketing_env = infra.getOutput("marketing_env");
-const mauticAppFilesStorage = infra.getOutput("mauticAppFilesStorage");
-const suiteCrmAppFilesStorage = infra.getOutput("suiteCrmAppFilesStorage");
-const strapiAppFilesStorage = infra.getOutput("strapiAppFilesStorage");
-const jumpboxFilesStorage = infra.getOutput("jumpboxFilesStorage");
 const storageAccountKey = infra.getOutput("storageAccountKey");
 
 // Debug: Log StackReference outputs before using them
@@ -55,10 +50,6 @@ infra.getOutput("jumpboxStorage").apply(s => { console.log("infra.jumpboxStorage
 
 // Ensure registryUrl is Output<string>
 const registryUrlString: pulumi.Output<string> = registryUrl.apply(url => String(url));
-
-// Helper to get .id from Output<any>
-const getId = (output: pulumi.Output<any>) => output.apply((x: any) => x.id);
-const getName = (output: pulumi.Output<any>) => output.apply((x: any) => x.name);
 
 function getImageName(registryUrl: pulumi.Output<string>, imageTag: string, imageName: string): pulumi.Output<string> {
     return registryUrl.apply(url => `${url}/${imageName}:${imageTag}`);
