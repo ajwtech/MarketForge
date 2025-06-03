@@ -44,8 +44,11 @@ COPY azure-deploy/package.json azure-deploy/yarn.lock azure-deploy/.yarn/ ./azur
 
 RUN corepack prepare --activate
 
-RUN set -e && YARN_ENABLE_SCRIPTS=0 yarn install --inline-builds
-RUN set -e && cd azure-deploy && YARN_ENABLE_SCRIPTS=0 yarn install --inline-builds && cd ..
-RUN set -e && cd launchpad && YARN_ENABLE_SCRIPTS=0 yarn install --inline-builds && cd ..
-RUN set -e && cd launchpad/next && YARN_ENABLE_SCRIPTS=0 yarn install --inline-builds && cd ../..
-RUN set -e && cd launchpad/strapi && YARN_ENABLE_SCRIPTS=0 yarn install --inline-builds && cd ../..
+RUN set -e && yarn install --inline-builds
+RUN set -e && cd azure-deploy && yarn install --inline-builds && cd ..
+RUN set -e && cd launchpad && yarn install --inline-builds && cd ..
+RUN set -e && cd launchpad/next && yarn install --inline-builds && cd ../..
+RUN set -e && cd launchpad/strapi && yarn install --inline-builds && cd ../..
+
+# Clean up 
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*

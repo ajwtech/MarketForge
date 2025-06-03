@@ -9,14 +9,13 @@ const resourceGroupName = config.require("resourceGroupName");
 const location = config.require("location");
 
 const { logAnalyticsWorkspace } = createLogAnalyticsWorkspace(resourceGroupName);
-const sharedKey = pulumi
-    .all([logAnalyticsWorkspace.name, resourceGroupName])
-    .apply(([workspaceName, resourceGroupName]) =>
-        azure_native.operationalinsights.getWorkspaceSharedKeys({
-            workspaceName: workspaceName,
-            resourceGroupName: resourceGroupName,
-        }).then(keys => keys.primarySharedKey ?? "")
-    );
+
+const sharedKey = logAnalyticsWorkspace.name.apply(workspaceName =>
+    azure_native.operationalinsights.getWorkspaceSharedKeys({
+        workspaceName,
+        resourceGroupName,
+    }).then(keys => keys.primarySharedKey ?? "")
+);
 
 export const marketing_env = new azure_app.ManagedEnvironment("marketing-env", {
     environmentName: "marketing-env",
