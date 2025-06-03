@@ -79,12 +79,44 @@ export const frontendStorage = new azure_app.ManagedEnvironmentsStorage("fronten
 }, { protect: false, dependsOn: [frontendFilesStorage, marketing_env] });
 
 // Exporting required values directly
-export const marketing_env_name = marketing_env.name;
-export const mauticStorage_name = mauticStorage.name;
-export const strapiStorage_name = strapiStorage.name;
-export const suitecrmStorage_name = suitecrmStorage.name;
-export const jumpboxStorage_name = jumpboxStorage.name;
-export const storageAccountName_value = storageAccountName;
-export const storageAccountKey_value = storageAccountKey;
+const marketing_env_name = marketing_env.name;
+const mauticStorage_name = mauticStorage.name;
+const strapiStorage_name = strapiStorage.name;
+const suitecrmStorage_name = suitecrmStorage.name;
+const jumpboxStorage_name = jumpboxStorage.name;
+const storageAccountName_value = storageAccountName;
+const storageAccountKey_value = storageAccountKey;
+
+// Async function to return plain string outputs for stack references
+export async function returnOutputs() {
+    // Await all outputs to resolve to plain values
+    const [
+        marketing_env_name_val,
+        mauticStorage_name_val,
+        strapiStorage_name_val,
+        suitecrmStorage_name_val,
+        jumpboxStorage_name_val,
+        storageAccountName_val,
+        storageAccountKey_val
+    ] = await Promise.all([
+        marketing_env_name,
+        mauticStorage_name,
+        strapiStorage_name,
+        suitecrmStorage_name,
+        jumpboxStorage_name,
+        storageAccountName_value,
+        storageAccountKey_value
+    ].map(async v => (typeof v === 'object' && 'apply' in v) ? await v : v));
+
+    return {
+        marketing_env_name: marketing_env_name_val,
+        mauticStorage_name: mauticStorage_name_val,
+        strapiStorage_name: strapiStorage_name_val,
+        suitecrmStorage_name: suitecrmStorage_name_val,
+        jumpboxStorage_name: jumpboxStorage_name_val,
+        storageAccountName: storageAccountName_val,
+        storageAccountKey: storageAccountKey_val
+    };
+}
 
 

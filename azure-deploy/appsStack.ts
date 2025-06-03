@@ -30,11 +30,15 @@ const BoolSubdomains = config.getBoolean("createSubdomains") || false;
 const imageTag = config.get("imageTag") || "latest";
 let createSubdomains: pulumi.Output<boolean> = pulumi.output(false).apply(unwrapped => unwrapped);
 const storageAccountName = infra.getOutput("storageAccountName");
-const resourceGroupName = acr.getOutput("resourceGroup").apply((rg: any) => rg.name || rg);
-const registryUrl = acr.getOutput("registryUrl");
-const acrUsername = acr.getOutput("acrUsername");
-const acrPassword = acr.getOutput("acrPassword");
-const marketing_env = infra.getOutput("marketing_env");
+const resourceGroupName = acr.getOutput("resourceGroupName");
+const registryUrl = acr.getOutput("registryUrlOut");
+const acrUsername = acr.getOutput("acrUsernameOut");
+const acrPassword = acr.getOutput("acrPasswordOut");
+const marketing_env = infra.getOutput("marketing_env_name");
+const mauticStorageName = infra.getOutput("mauticStorage_name");
+const strapiStorageName = infra.getOutput("strapiStorage_name");
+const suitecrmStorageName = infra.getOutput("suitecrmStorage_name");
+const jumpboxStorageName = infra.getOutput("jumpboxStorage_name");
 const storageAccountKey = infra.getOutput("storageAccountKey");
 
 // Debug: Log StackReference outputs before using them
@@ -57,14 +61,6 @@ function getImageName(registryUrl: pulumi.Output<string>, imageTag: string, imag
 
 const managedEnvironmentId = marketing_env.apply(env => env.id);
 
-// Remove direct import of storage resources from infraStack
-// import { mauticStorage, strapiStorage, suitecrmStorage, jumpboxStorage } from "./infraStack";
-
-// Use StackReference outputs for storage resources
-const mauticStorageName = infra.getOutput("mauticStorage").apply(s => s.name);
-const strapiStorageName = infra.getOutput("strapiStorage").apply(s => s.name);
-const suitecrmStorageName = infra.getOutput("suitecrmStorage").apply(s => s.name);
-const jumpboxStorageName = infra.getOutput("jumpboxStorage").apply(s => s.name);
 
 const mauticNginxApp = mauticNginx({
     env: appEnv,
