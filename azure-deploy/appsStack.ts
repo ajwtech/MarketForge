@@ -103,8 +103,8 @@ const deployedStrapiApp = strapiApp({
     registryPassword: acrPassword,
     managedEnvironmentId: managedEnvironmentId,
     storageName: strapiStorageName,
-    storageAccountName, // <-- add this
-    storageAccountKey,  // <-- add this
+    storageAccountName,
+    storageAccountKey,
     dbHost,
     dbPort,
     dbName: strapiDbName,
@@ -168,10 +168,10 @@ const customDomains = nginxCerts(
 
 const jumpboxApp = jumpbox({
     env: appEnv,
-    managedEnvironmentId: marketing_env.apply(env => env.id),
+    managedEnvironmentId: managedEnvironmentId,
     storageName: jumpboxStorageName,
-    storageAccountName, // <-- add this
-    storageAccountKey,  // <-- add this
+    storageAccountName,
+    storageAccountKey,
     dbHost,
     dbPort,
     resourceGroupName,
