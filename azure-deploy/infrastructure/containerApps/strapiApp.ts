@@ -43,11 +43,8 @@ export function strapiApp(args: {
             ingress: {
                 allowInsecure: false,
                 clientCertificateMode: "Ignore",
-                external: true,
-                additionalPortMappings: [{
-                    targetPort: 3000,
-                    external: true,
-                }],
+                external: true,  
+                targetPort: 3000,
                 traffic: [{
                     latestRevision: true, 
                     weight: 100,
