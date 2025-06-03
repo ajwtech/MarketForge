@@ -235,6 +235,5 @@ export function mauticNginx(args: {
     },{
         replaceOnChanges: ["image", "createSubdomains" ],
         protect: false,
-        // dependsOn: [mauticAppFilesStorage, storageAccount], // REMOVE
     });
 }
