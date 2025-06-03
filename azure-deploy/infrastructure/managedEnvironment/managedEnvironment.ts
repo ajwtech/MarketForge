@@ -1,21 +1,15 @@
 import * as pulumi from "@pulumi/pulumi";
 import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 import { subnet } from "../networking/subnet";
-import { createLogAnalyticsWorkspace } from "../analytics/logging";
-import * as azure_native from "@pulumi/azure-native";
 
 const config = new pulumi.Config();
 const resourceGroupName = config.require("resourceGroupName");
 const location = config.require("location");
 
-const { logAnalyticsWorkspace } = createLogAnalyticsWorkspace(resourceGroupName);
-
-const sharedKey = logAnalyticsWorkspace.name.apply(workspaceName =>
-    azure_native.operationalinsights.getWorkspaceSharedKeys({
-        workspaceName,
-        resourceGroupName,
-    }).then(keys => keys.primarySharedKey ?? "")
-);
+// Use StackReference to get Log Analytics outputs from acrStack
+const acrStack = new pulumi.StackReference("ajwtech/scouten/acrStack");
+const logAnalyticsCustomerId = acrStack.getOutput("logAnalyticsCustomerId");
+const logAnalyticsSharedKey = acrStack.getOutput("logAnalyticsSharedKey");
 
 export const marketing_env = new azure_app.ManagedEnvironment("marketing-env", {
     environmentName: "marketing-env",
@@ -29,8 +23,8 @@ export const marketing_env = new azure_app.ManagedEnvironment("marketing-env", {
     appLogsConfiguration: {
         destination: "log-analytics",
         logAnalyticsConfiguration: {
-            customerId: logAnalyticsWorkspace.customerId,
-            sharedKey: sharedKey,
+            customerId: logAnalyticsCustomerId,
+            sharedKey: logAnalyticsSharedKey,
             dynamicJsonColumns: true,
         },
     },

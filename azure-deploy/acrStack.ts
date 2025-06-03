@@ -2,6 +2,7 @@
 
 import { ResourceGroup } from "./infrastructure/resourceGroup";
 import { marketingcr } from "./infrastructure/registries/acrRegistry";
+import { createLogAnalyticsWorkspace } from "./infrastructure/analytics/logging";
 import * as pulumi from "@pulumi/pulumi";
 import * as azure_native from "@pulumi/azure-native";
 
@@ -34,10 +35,29 @@ export async function returnOutputs() {
     const registryUrlOut = marketingcr.loginServer;
     const resourceGroupName = ResourceGroup.name;
 
+    // Create Log Analytics Workspace here
+    const { logAnalyticsWorkspace } = createLogAnalyticsWorkspace(resourceGroupName);
+
+    // Fix: unwrap both workspaceName and resourceGroupName
+    const sharedKey = pulumi
+        .all([logAnalyticsWorkspace.name, resourceGroupName])
+        .apply(([workspaceName, rgName]) =>
+            azure_native.operationalinsights.getWorkspaceSharedKeys({
+                workspaceName,
+                resourceGroupName: rgName,
+            }).then(keys => keys.primarySharedKey ?? "")
+        );
+
+    // Export Log Analytics outputs for StackReference
+    const logAnalyticsCustomerId = logAnalyticsWorkspace.customerId;
+    const logAnalyticsSharedKey = sharedKey;
+
     return {
         acrUsernameOut,
         acrPasswordOut, // Now a string, not an object
         registryUrlOut,
         resourceGroupName,
+        logAnalyticsCustomerId,
+        logAnalyticsSharedKey,
     };
 }
