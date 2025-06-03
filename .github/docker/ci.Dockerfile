@@ -2,7 +2,7 @@ FROM pulumi/pulumi-nodejs-22:latest
 
 # Enable Corepack (Yarn 4+)
 RUN corepack enable
-RUN corepack prepare --activate
+
 # Install Docker CLI, curl, build essentials, Python, and Git
 RUN apt-get update && \
     apt-get install -y \
@@ -42,7 +42,7 @@ COPY launchpad/next/package.json launchpad/next/yarn.lock launchpad/next/.yarn/ 
 COPY launchpad/strapi/package.json launchpad/strapi/yarn.lock launchpad/strapi/.yarn/ ./launchpad/strapi/
 COPY azure-deploy/package.json azure-deploy/yarn.lock azure-deploy/.yarn/ ./azure-deploy/
 
-
+RUN corepack prepare --activate
 
 RUN set -e && YARN_ENABLE_SCRIPTS=0 yarn install --inline-builds
 RUN set -e && cd azure-deploy && YARN_ENABLE_SCRIPTS=0 yarn install --inline-builds && cd ..
