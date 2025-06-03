@@ -35,7 +35,7 @@ const registryUrl = acr.getOutput("registryUrlOut");
 const acrUsername = acr.getOutput("acrUsernameOut");
 const acrPassword = acr.getOutput("acrPasswordOut");
 const marketing_env = infra.getOutput("marketing_env_name");
-const marketing_env_id = infra.getOutput("marketing_env_id");
+const managedEnvironmentId  = infra.getOutput("marketing_env_id");
 const mauticStorageName = infra.getOutput("mauticStorage_name");
 const strapiStorageName = infra.getOutput("strapiStorage_name");
 const suitecrmStorageName = infra.getOutput("suitecrmStorage_name");
@@ -50,7 +50,7 @@ function getImageName(registryUrl: pulumi.Output<string>, imageTag: string, imag
     return registryUrl.apply(url => `${url}/${imageName}:${imageTag}`);
 }
 
-const managedEnvironmentId = marketing_env_id
+
 
 
 const mauticNginxApp = mauticNginx({
