@@ -12,8 +12,8 @@ export function jumpBox(args: {
     env: string;
     managedEnvironmentId: pulumi.Input<string>;
     storageName: pulumi.Input<string>;
-    storageAccountName: pulumi.Input<string>; // added
-    storageAccountKey: pulumi.Input<string>;  // added
+    storageAccountName: pulumi.Input<string>;
+    storageAccountKey: pulumi.Input<string>;
     dbHost: pulumi.Input<string>;
     dbPort: pulumi.Input<string>;
     resourceGroupName: pulumi.Input<string>;
