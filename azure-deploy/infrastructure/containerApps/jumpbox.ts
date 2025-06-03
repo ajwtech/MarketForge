@@ -2,7 +2,6 @@
 import * as pulumi from "@pulumi/pulumi";
 
 import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
-import { marketing_mysql } from "../database/mysqlServer";
 
 const config = new pulumi.Config(); 
 
@@ -122,6 +121,5 @@ export function jumpBox(args: {
         
     },{
         protect: false,
-        // dependsOn: [marketing_mysql, storageAccount], // REMOVE
     });
 }

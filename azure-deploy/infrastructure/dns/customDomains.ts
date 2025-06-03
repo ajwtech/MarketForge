@@ -1,8 +1,9 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as cloudflare from "@pulumi/cloudflare";
 import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
-import { marketing_env } from "../managedEnvironment/managedEnvironment"; 
+import { infra } from "../../stackRefs"; 
 
+const marketing_env = infra.getOutput("marketing_env_id");
 
 // Create the interface for the DNS entries
 export interface CloudflareDNSEntries {
