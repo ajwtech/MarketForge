@@ -80,6 +80,7 @@ export const frontendStorage = new azure_app.ManagedEnvironmentsStorage("fronten
 
 // Exporting required values directly
 const marketing_env_name = marketing_env.name;
+const marketing_env_id = marketing_env.id;
 const mauticStorage_name = mauticStorage.name;
 const strapiStorage_name = strapiStorage.name;
 const suitecrmStorage_name = suitecrmStorage.name;
@@ -92,6 +93,7 @@ export async function returnOutputs() {
     // Await all outputs to resolve to plain values
     const [
         marketing_env_name_val,
+        marketing_env_id_val,
         mauticStorage_name_val,
         strapiStorage_name_val,
         suitecrmStorage_name_val,
@@ -100,6 +102,7 @@ export async function returnOutputs() {
         storageAccountKey_val
     ] = await Promise.all([
         marketing_env_name,
+        marketing_env_id,
         mauticStorage_name,
         strapiStorage_name,
         suitecrmStorage_name,
@@ -109,6 +112,7 @@ export async function returnOutputs() {
     ].map(async v => (typeof v === 'object' && 'apply' in v) ? await v : v));
 
     return {
+        marketing_env_id: marketing_env_id_val,
         marketing_env_name: marketing_env_name_val,
         mauticStorage_name: mauticStorage_name_val,
         strapiStorage_name: strapiStorage_name_val,
@@ -118,5 +122,4 @@ export async function returnOutputs() {
         storageAccountKey: storageAccountKey_val
     };
 }
-
 
