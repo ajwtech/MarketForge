@@ -8,7 +8,7 @@ const location = config.require("location");
 
 // Use StackReference to get Log Analytics outputs from acrStack
 const resourceGroupName = acr.getOutput("resourceGroupName")
-const logAnalyticsCustomerId = acr.getOutput("logAnalyticsCustomerId");
+const logAnalyticsWorkspaceId = acr.getOutput("logAnalyticsWorkspaceId");
 const logAnalyticsSharedKey = acr.getOutput("logAnalyticsSharedKey");
 
 export const marketing_env = new azure_app.ManagedEnvironment("marketing-env", {
@@ -23,7 +23,7 @@ export const marketing_env = new azure_app.ManagedEnvironment("marketing-env", {
     appLogsConfiguration: {
         destination: "log-analytics",
         logAnalyticsConfiguration: {
-            customerId: logAnalyticsCustomerId,
+            customerId: logAnalyticsWorkspaceId,
             sharedKey: logAnalyticsSharedKey,
             dynamicJsonColumns: true,
         },
