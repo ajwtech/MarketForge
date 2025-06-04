@@ -49,8 +49,10 @@ export async function returnOutputs() {
         );
 
     // Export Log Analytics outputs for StackReference
-    const logAnalyticsWorkspaceId = logAnalyticsWorkspace.id;
+    const logAnalyticsWorkspaceId = logAnalyticsWorkspace.id
+    const logAnalyticsCustomerId = logAnalyticsWorkspace.customerId;
     const logAnalyticsSharedKey = sharedKey;
+    
 
     return {
         acrUsernameOut,
@@ -58,6 +60,7 @@ export async function returnOutputs() {
         registryUrlOut,
         resourceGroupName,
         logAnalyticsWorkspaceId,
+        logAnalyticsCustomerId,
         logAnalyticsSharedKey,
     };
 }
