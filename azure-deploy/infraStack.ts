@@ -39,7 +39,7 @@ export const strapiStorage = new azure_app.ManagedEnvironmentsStorage("strapi-ap
     },
 }, { protect: false, dependsOn: [strapiAppFilesStorage, marketing_env] });
 
-export const suitecrmStorage = new azure_app.ManagedEnvironmentsStorage("suitecrm-app-files-storage", {
+export const suitecrmStorage = new azure_app.ManagedEnvironmentsStorage("suitecrm-app-files", {
     environmentName: marketing_env.name,
     resourceGroupName: resourceGroupName,
     properties: {
@@ -52,7 +52,7 @@ export const suitecrmStorage = new azure_app.ManagedEnvironmentsStorage("suitecr
     },
 }, { protect: false, dependsOn: [suiteCrmAppFilesStorage, marketing_env] });
 
-export const jumpboxStorage = new azure_app.ManagedEnvironmentsStorage("jumpbox-files-storage", {
+export const jumpboxStorage = new azure_app.ManagedEnvironmentsStorage("jumpbox-files", {
     environmentName: marketing_env.name,
     resourceGroupName: resourceGroupName,
     properties: {
