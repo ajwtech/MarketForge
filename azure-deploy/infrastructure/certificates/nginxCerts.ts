@@ -3,6 +3,7 @@ import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 import * as command from "@pulumi/command";
 
 
+
 const config = new pulumi.Config();
 const resourceGroupName = config.require("resourceGroupName");
 const domain = config.require("domain");
