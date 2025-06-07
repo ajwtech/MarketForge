@@ -42,7 +42,7 @@ export function setupDns(props: CustomDomainProps) {
     // Add options to prevent errors if records exist
     const dnsOptions = {
         deleteBeforeCreate: true,
-        replaceOnChanges: ["content", "type", "ttl"],
+        replaceOnChanges: ["content", "type", "ttl", "name", "zoneId"],
         retainOnDelete: false
     };
 
