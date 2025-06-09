@@ -162,7 +162,7 @@ const cloudflareDNSentries = BoolSubdomains ? setupDns({
 const customDomains = nginxCerts(
     mauticNginxApp,
     deployedStrapiApp,
-    marketing_env.apply(env => env.name), // Pass environment name as Output<string>
+    marketing_env,
     cloudflareDNSentries
 );
 

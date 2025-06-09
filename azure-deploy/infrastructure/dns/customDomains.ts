@@ -128,7 +128,27 @@ export function setupDns(props: CustomDomainProps) {
     },{
         ...dnsOptions,
         dependsOn: [ props.mauticNginxApp,mapCNAME ]});
-    
+    // Create DNS records for root domain
+    const rootCNAME = new cloudflare.Record("root", {
+        zoneId: zone.then((z: cloudflare.GetZoneResult) => z.id),
+        name: "@",
+        type: "CNAME",
+        content: props.siteFQDN,
+        ttl: 3600,
+    },{
+        ...dnsOptions,
+        dependsOn: [ props.mauticNginxApp ]});
+
+    const rootTXT = new cloudflare.Record("asuid.root", {
+        zoneId: zone.then((z: cloudflare.GetZoneResult) => z.id),
+        name: `asuid`,
+        type: "TXT",
+        content: props.nginxCvid,
+        ttl: 3600,
+    },{
+        ...dnsOptions,
+        dependsOn: [ props.mauticNginxApp, rootCNAME ]
+    });    
     const dnsentries: CloudflareDNSEntries = {
         cmsCNAME: cmsCNAME,
         cmsTXT: cmsTXT,
@@ -138,8 +158,8 @@ export function setupDns(props: CustomDomainProps) {
         mapTXT: mapTXT,
         devCmsCNAME: devCmsCNAME,
         devCmsTXT: devCmsTXT,
-        rootCNAME: undefined as any, // root domain handled manually
-        rootTXT: undefined as any    // root domain handled manually
+        rootCNAME: rootCNAME,
+        rootTXT: rootTXT
     };
 
     return   dnsentries;
