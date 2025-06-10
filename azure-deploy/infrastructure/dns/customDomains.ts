@@ -151,21 +151,24 @@ export function setupDns(props: CustomDomainProps) {
     // Create DNS records for root domain
     // Check if root CNAME exists before creating (using Pulumi Cloudflare getDnsRecords)
     const rootCnameExists = zoneId.apply(async zid => {
-        const records = await cloudflare.getDnsRecords({
+        await cloudflare.getDnsRecords({
             zoneId: zid,
             name: { exact: props.domain }, // apex domain for '@'
             type: "CNAME"
+        }).then(records => {
+            if (records.results && records.results.length > 0) {
+                const recordId = records.results[0].id;
+                pulumi.log.warn(`Root CNAME already exists in Cloudflare. If you want to add it to this pulumi stack, you must import it with: pulumi import cloudflare:index/dnsRecord:DnsRecord root ${zid}/${recordId}`);
+            }
         });
-        if (records.results && records.results.length > 0) {
-            const recordId = records.results[0].id;
-            pulumi.log.warn(`Root CNAME already exists in Cloudflare. If you want to add it to this pulumi stack, you must import it with: pulumi import cloudflare:index/dnsRecord:DnsRecord root ${zid}/${recordId}`);
-        }
-        return;
     });
+    if (!rootCnameExists) {
+        pulumi.log.info(`Root CNAME does not exist, creating it.`);
+    }
     // Always create the root CNAME resource at the top level
     const rootCNAME = new cloudflare.DnsRecord("root", {
         zoneId: zoneId,
-        name: props.domain, // Use apex domain name
+        name: '@', // Use apex domain name
         type: "CNAME",
         content: props.siteFQDN,
         ttl: 3600,
