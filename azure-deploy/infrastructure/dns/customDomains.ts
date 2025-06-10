@@ -39,12 +39,11 @@ export interface CustomDomainProps {
 export function setupDns(props: CustomDomainProps) {
     // Look up the Cloudflare zone for the domain
     const zoneOutput = pulumi.output(cloudflare.getZone({ filter: { name: props.domain } }));
-
-    zoneOutput.apply(zone => {
-        pulumi.log.info(`Fetched Zone ID: ${zone.id}`);
-    });
     pulumi.log.info(`Looking up DNS zone for domain: ${props.domain}`);
-    const zoneId = zoneOutput.id;
+    const zoneId = zoneOutput.apply(zone => {
+        pulumi.log.info(`Fetched Zone ID: ${zone.id}`);
+        return zone.id;
+    });
     // Add options to prevent errors if records exist
     const dnsOptions = {
         deleteBeforeCreate: true,
