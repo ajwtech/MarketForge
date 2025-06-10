@@ -15,8 +15,6 @@ export interface CloudflareDNSEntries {
     mapTXT: pulumi.Output<cloudflare.DnsRecord>;
     devCmsCNAME: pulumi.Output<cloudflare.DnsRecord>;
     devCmsTXT: pulumi.Output<cloudflare.DnsRecord>;
-    rootCNAME?: pulumi.Output<cloudflare.DnsRecord | undefined>;
-    rootTXT: pulumi.Output<cloudflare.DnsRecord>;
 }
 
 
@@ -148,41 +146,28 @@ export function setupDns(props: CustomDomainProps) {
     },{
         ...dnsOptions,
         dependsOn: [ props.mauticNginxApp,mapCNAME ]});
-    // Create DNS records for root domain
-    // Check if root CNAME exists before creating (using Pulumi Cloudflare getDnsRecords)
-    const rootCnameExists = zoneId.apply(async zid => {
-        await cloudflare.getDnsRecords({
-            zoneId: zid,
-            name: { exact: props.domain }, 
-            type: "A"
-        }).then(records => {
-            if (records.results && records.results.length > 0) {
-                const recordId = records.results[0].id;
-                pulumi.log.warn(`Root CNAME already exists in Cloudflare. If you want to add it to this pulumi stack, you must import it with: pulumi import cloudflare:index/dnsRecord:DnsRecord root ${zid}/${recordId}`);
-            }
-        });
-    });
-    // Always create the root CNAME resource at the top level
-    const rootCNAME = new cloudflare.DnsRecord("root", {
-        zoneId: zoneId,
-        name: '@', // Use apex domain name
-        type: "A",
-        content: props.siteFQDN,
-        ttl: 3600,
-    },{
-        ...dnsOptions,
-        dependsOn: [ props.mauticNginxApp ]});
+    // Remove root domain DNS record creation for now
+    // const rootCNAME = new cloudflare.DnsRecord("root", {
+    //     zoneId: zoneId,
+    //     name: '@',
+    //     type: "A",
+    //     content: props.siteFQDN,
+    //     ttl: 3600,
+    // },{
+    //     ...dnsOptions,
+    //     dependsOn: [ props.mauticNginxApp ]});
 
-    const rootTXT = new cloudflare.DnsRecord("asuid.root", {
-        zoneId: zoneId,
-        name: `asuid`,
-        type: "TXT",
-        content: props.nginxCvid,
-        ttl: 3600,
-    },{
-        ...dnsOptions,
-        dependsOn: [ props.mauticNginxApp ]
-    });    
+    // const rootTXT = new cloudflare.DnsRecord("asuid.root", {
+    //     zoneId: zoneId,
+    //     name: `asuid`,
+    //     type: "TXT",
+    //     content: props.nginxCvid,
+    //     ttl: 3600,
+    // },{
+    //     ...dnsOptions,
+    //     dependsOn: [ props.mauticNginxApp ]
+    // });
+    // Remove rootCNAME and rootTXT from dnsentries
     const dnsentries: CloudflareDNSEntries = {
         cmsCNAME: pulumi.output(cmsCNAME),
         cmsTXT: pulumi.output(cmsTXT),
@@ -191,9 +176,7 @@ export function setupDns(props: CustomDomainProps) {
         mapCNAME: pulumi.output(mapCNAME),
         mapTXT: pulumi.output(mapTXT),
         devCmsCNAME: pulumi.output(devCmsCNAME),
-        devCmsTXT: pulumi.output(devCmsTXT),
-        rootCNAME: pulumi.output(rootCNAME),
-        rootTXT: pulumi.output(rootTXT)
+        devCmsTXT: pulumi.output(devCmsTXT)
     };
 
     return   dnsentries;

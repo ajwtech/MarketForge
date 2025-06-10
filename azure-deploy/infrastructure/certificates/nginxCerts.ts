@@ -56,7 +56,7 @@ export function nginxCerts(
     }, { dependsOn: [nginxApp, cloudflareDNSentries.mapCNAME, cloudflareDNSentries.mapTXT] });   
         // Use azure-native to bind custom domains with the managed certificates
     
-        const bindCmsCommand = new command.local.Command("bind-cms-custom-domain", {
+    const bindCmsCommand = new command.local.Command("bind-cms-custom-domain", {
         create: pulumi.interpolate `az containerapp hostname bind \
         --hostname ${cmsSubdomain}.${domain} \
         -g ${resourceGroupName} -n ${strapiApp.name} \
@@ -83,28 +83,9 @@ export function nginxCerts(
         triggers: [crmCert.systemData.lastModifiedAt, nginxApp.systemData.lastModifiedAt],
     }, { dependsOn: [crmCert, nginxApp, bindMapCommand, cloudflareDNSentries.crmCNAME, cloudflareDNSentries.crmTXT] });
        
-    // Add root domain (WEBSITE_URL) certificate
-    const rootCert = new azure_app.ManagedCertificate("rootCert", {
-        resourceGroupName: resourceGroupName,
-        environmentName: environmentName,
-        managedCertificateName: domain,
-        properties: {
-            domainControlValidation: "CNAME",
-            subjectName: domain,
-        },
-    }, { dependsOn: [nginxApp, cloudflareDNSentries.rootTXT] });
 
-    // Bind root domain to the environment (frontend)
-    const bindRootCommand = new command.local.Command("bind-root-custom-domain", {
-        create: pulumi.interpolate `az containerapp hostname bind \
-        --hostname ${domain} \
-        -g ${resourceGroupName} -n ${nginxApp.name} \
-        --environment ${environmentName} \
-        --validation-method CNAME`,
-        triggers: [rootCert.systemData.lastModifiedAt, nginxApp.systemData.lastModifiedAt],
-    }, { dependsOn: [rootCert, nginxApp, cloudflareDNSentries.rootTXT] });
 
-    return [crmCert, cmsCert, mapCert, rootCert ];
+    return [crmCert, cmsCert, mapCert,  ];
 
 
 
