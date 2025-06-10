@@ -154,7 +154,7 @@ export function setupDns(props: CustomDomainProps) {
         await cloudflare.getDnsRecords({
             zoneId: zid,
             name: { exact: '@' }, 
-            type: "CNAME"
+            type: "A"
         }).then(records => {
             if (records.results && records.results.length > 0) {
                 const recordId = records.results[0].id;
@@ -166,7 +166,7 @@ export function setupDns(props: CustomDomainProps) {
     const rootCNAME = new cloudflare.DnsRecord("root", {
         zoneId: zoneId,
         name: '@', // Use apex domain name
-        type: "CNAME",
+        type: "A",
         content: props.siteFQDN,
         ttl: 3600,
     },{
