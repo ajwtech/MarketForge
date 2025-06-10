@@ -158,26 +158,20 @@ export function setupDns(props: CustomDomainProps) {
         });
         if (records.results && records.results.length > 0) {
             const recordId = records.results[0].id;
-            pulumi.log.warn(`Root CNAME already exists in Cloudflare. To import into Pulumi, run: pulumi import cloudflare:index/dnsRecord:DnsRecord root ${zid}/${recordId}`);
-            return true;
+            pulumi.log.warn(`Root CNAME already exists in Cloudflare. If you want to add it to this pulumi stack, you must import it with: pulumi import cloudflare:index/dnsRecord:DnsRecord root ${zid}/${recordId}`);
         }
-        return false;
+        return;
     });
-
-    const rootCNAME = pulumi.all([zoneId, rootCnameExists]).apply(([zid, exists]) => {
-        if (exists) {
-            return undefined;
-        }
-        return new cloudflare.DnsRecord("root", {
-            zoneId: zid,
-            name: "@",
-            type: "CNAME",
-            content: props.siteFQDN,
-            ttl: 3600,
-        },{
-            ...dnsOptions,
-            dependsOn: [ props.mauticNginxApp ]});
-    });
+    // Always create the root CNAME resource at the top level
+    const rootCNAME = new cloudflare.DnsRecord("root", {
+        zoneId: zoneId,
+        name: props.domain, // Use apex domain name
+        type: "CNAME",
+        content: props.siteFQDN,
+        ttl: 3600,
+    },{
+        ...dnsOptions,
+        dependsOn: [ props.mauticNginxApp ]});
 
     const rootTXT = new cloudflare.DnsRecord("asuid.root", {
         zoneId: zoneId,
