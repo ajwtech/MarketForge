@@ -38,7 +38,7 @@ export interface CustomDomainProps {
 
 export function setupDns(props: CustomDomainProps) {
     // Look up the Cloudflare zone for the domain
-    const zone = cloudflare.getZone({ filter: { name: props.domain } });
+    const zoneId = pulumi.output(cloudflare.getZone({ filter: { name: props.domain } })).apply(z => z.id);
     // Add options to prevent errors if records exist
     const dnsOptions = {
         deleteBeforeCreate: true,
@@ -48,7 +48,7 @@ export function setupDns(props: CustomDomainProps) {
 
     // Create DNS records for CMS
     const cmsCNAME = new cloudflare.DnsRecord(props.cmsSubdomain, {
-        zoneId: zone.then((z: cloudflare.GetZoneResult) => z.id),
+        zoneId: zoneId,
         name: `${props.cmsSubdomain}`,
         type: "CNAME",
         content: props.strapiFQDN,
@@ -58,7 +58,7 @@ export function setupDns(props: CustomDomainProps) {
         dependsOn: [ props.mauticNginxApp ]});
 
     const cmsTXT = new cloudflare.DnsRecord(`asuid.${props.cmsSubdomain}`, {
-        zoneId: zone.then((z: cloudflare.GetZoneResult) => z.id),
+        zoneId: zoneId,
         name: `asuid.${props.cmsSubdomain}`,
         type: "TXT",
         content: props.nginxCvid,
@@ -68,7 +68,7 @@ export function setupDns(props: CustomDomainProps) {
         dependsOn: [ props.mauticNginxApp, cmsCNAME ]});
 
     const devCmsCNAME = new cloudflare.DnsRecord(`dev.${props.cmsSubdomain}`, {
-        zoneId: zone.then((z: cloudflare.GetZoneResult) => z.id),
+        zoneId: zoneId,
         name: `dev.${props.cmsSubdomain}`,
         type: "CNAME",
         content: props.siteFQDN,
@@ -78,7 +78,7 @@ export function setupDns(props: CustomDomainProps) {
         dependsOn: [ props.mauticNginxApp ]});
 
     const devCmsTXT = new cloudflare.DnsRecord(`asuid.dev.${props.cmsSubdomain}`, {
-        zoneId: zone.then((z: cloudflare.GetZoneResult) => z.id),
+        zoneId: zoneId,
         name: `asuid.dev.${props.cmsSubdomain}`,
         type: "TXT",
         content: props.nginxCvid,
@@ -89,7 +89,7 @@ export function setupDns(props: CustomDomainProps) {
     });
     // Create DNS records for CRM
     const crmCNAME = new cloudflare.DnsRecord(props.crmSubdomain, {
-        zoneId: zone.then((z: cloudflare.GetZoneResult) => z.id),
+        zoneId: zoneId,
         name: `${props.crmSubdomain}`,
         type: "CNAME",
         content: props.siteFQDN,
@@ -99,7 +99,7 @@ export function setupDns(props: CustomDomainProps) {
         dependsOn: [ props.mauticNginxApp,  ]});
 
     const crmTXT = new cloudflare.DnsRecord(`asuid.${props.crmSubdomain}`, {
-        zoneId: zone.then((z: cloudflare.GetZoneResult) => z.id),
+        zoneId: zoneId,
         name: `asuid.${props.crmSubdomain}`,
         type: "TXT",
         content: props.nginxCvid,
@@ -110,7 +110,7 @@ export function setupDns(props: CustomDomainProps) {
 
     // Create DNS records for MAP
     const mapCNAME = new cloudflare.DnsRecord(props.mapSubdomain, {
-        zoneId: zone.then((z: cloudflare.GetZoneResult) => z.id),
+        zoneId: zoneId,
         name: `${props.mapSubdomain}`,
         type: "CNAME",
         content: props.siteFQDN,
@@ -120,7 +120,7 @@ export function setupDns(props: CustomDomainProps) {
         dependsOn: [ props.mauticNginxApp ]});
 
     const mapTXT = new cloudflare.DnsRecord(`asuid.${props.mapSubdomain}`, {
-        zoneId: zone.then((z: cloudflare.GetZoneResult) => z.id),
+        zoneId: zoneId,
         name: `asuid.${props.mapSubdomain}`,
         type: "TXT",
         content: props.nginxCvid,
@@ -130,7 +130,7 @@ export function setupDns(props: CustomDomainProps) {
         dependsOn: [ props.mauticNginxApp,mapCNAME ]});
     // Create DNS records for root domain
     const rootCNAME = new cloudflare.DnsRecord("root", {
-        zoneId: zone.then((z: cloudflare.GetZoneResult) => z.id),
+        zoneId: zoneId,
         name: "@",
         type: "CNAME",
         content: props.siteFQDN,
@@ -140,7 +140,7 @@ export function setupDns(props: CustomDomainProps) {
         dependsOn: [ props.mauticNginxApp ]});
 
     const rootTXT = new cloudflare.DnsRecord("asuid.root", {
-        zoneId: zone.then((z: cloudflare.GetZoneResult) => z.id),
+        zoneId: zoneId,
         name: `asuid`,
         type: "TXT",
         content: props.nginxCvid,
