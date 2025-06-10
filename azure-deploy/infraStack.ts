@@ -1,5 +1,5 @@
 // Infrastructure stack (storage, managed env, DB, etc.)
-import { storageAccountKey, mauticAppFilesStorage, suiteCrmAppFilesStorage, strapiAppFilesStorage, jumpboxFilesStorage, storageAccountName, frontendFilesStorage } from "./infrastructure/storage/storageAccount";
+import { storageAccountKey, mauticAppFilesStorage, suiteCrmAppFilesStorage, strapiAppFilesStorage, jumpboxFilesStorage, storageAccountName, frontendFilesStorage, jumpboxFilesStorageName, jumpboxFilesStorageId } from "./infrastructure/storage/storageAccount";
 import { marketing_env } from "./infrastructure/managedEnvironment/managedEnvironment";
 import { marketing_mysql } from "./infrastructure/database/mysqlServer";
 import * as pulumi from "@pulumi/pulumi";
@@ -77,6 +77,10 @@ export const frontendStorage = new azure_app.ManagedEnvironmentsStorage("fronten
         },
     },
 }, { protect: false, dependsOn: [frontendFilesStorage, marketing_env] });
+
+// Diagnostic output for storage resource
+export const diagnostic_jumpboxFilesStorageName = jumpboxFilesStorageName;
+export const diagnostic_jumpboxFilesStorageId = jumpboxFilesStorageId;
 
 // Exporting required values directly
 const marketing_env_name = marketing_env.name;

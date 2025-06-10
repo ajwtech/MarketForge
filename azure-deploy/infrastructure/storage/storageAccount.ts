@@ -228,3 +228,7 @@ const suiteCrmOverrideFilePlaceholder = new command.local.Command("UploadSuiteCr
     dependsOn: [suiteCrmAppFilesStorage, createSuiteCrmConfigSubDirectory, suiteCrmOverrideFileExists],
 });
 
+// Export the FileShare name and id for diagnostics
+export const jumpboxFilesStorageName = jumpboxFilesStorage.name;
+export const jumpboxFilesStorageId = jumpboxFilesStorage.id;
+
