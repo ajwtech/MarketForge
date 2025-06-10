@@ -6,9 +6,32 @@ on:
   push:
     branches:
       - master
+  workflow_dispatch:
+    inputs:
+      skip_setup_acr_infra:
+        description: 'Skip setup-acr-infra job'
+        required: false
+        default: false
+        type: boolean
+      skip_setup_infra:
+        description: 'Skip setup-infra job'
+        required: false
+        default: false
+        type: boolean
+      skip_build_and_push_images:
+        description: 'Skip build-and-push-images job'
+        required: false
+        default: false
+        type: boolean
+      skip_setup_apps:
+        description: 'Skip setup-apps job'
+        required: false
+        default: false
+        type: boolean
+
 jobs:
-  
   setup-acr-infra:
+    if: ${{ !github.event.inputs.skip_setup_acr_infra }}
     runs-on: ubuntu-latest
     container: ghcr.io/ajwtech/marketforge-ci:latest
     strategy:
@@ -51,6 +74,7 @@ jobs:
           npx ts-node index.ts
           
   setup-infra:
+    if: ${{ !github.event.inputs.skip_setup_infra }}
     needs: setup-acr-infra
     runs-on: ubuntu-latest
     container: ghcr.io/ajwtech/marketforge-ci:latest
@@ -93,6 +117,7 @@ jobs:
           npx ts-node index.ts
 
   build-and-push-images:
+    if: ${{ !github.event.inputs.skip_build_and_push_images }}
     needs: setup-acr-infra
     runs-on: ubuntu-latest
     container: ghcr.io/ajwtech/marketforge-ci:latest
@@ -175,6 +200,7 @@ jobs:
             docker push $repo:latest
           fi
   setup-apps:
+    if: ${{ !github.event.inputs.skip_setup_apps }}
     needs: [setup-infra, build-and-push-images]
     runs-on: ubuntu-latest
     container: ghcr.io/ajwtech/marketforge-ci:latest

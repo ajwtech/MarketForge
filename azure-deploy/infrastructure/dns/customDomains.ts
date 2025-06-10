@@ -43,6 +43,7 @@ export function setupDns(props: CustomDomainProps) {
     zoneOutput.apply(zone => {
         pulumi.log.info(`Fetched Zone ID: ${zone.id}`);
     });
+    pulumi.log.info(`Looking up DNS zone for domain: ${props.domain}`);
     const zoneId = zoneOutput.id;
     // Add options to prevent errors if records exist
     const dnsOptions = {
