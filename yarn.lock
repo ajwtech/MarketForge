@@ -3774,7 +3774,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pulumi/azure-native@npm:^2.84.0":
+"@pulumi/azure-native@npm:^2.90.0":
   version: 2.90.0
   resolution: "@pulumi/azure-native@npm:2.90.0"
   dependencies:
@@ -3783,27 +3783,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pulumi/cloudflare@npm:^5.49.0":
-  version: 5.49.1
-  resolution: "@pulumi/cloudflare@npm:5.49.1"
+"@pulumi/cloudflare@npm:^6.2.1":
+  version: 6.2.1
+  resolution: "@pulumi/cloudflare@npm:6.2.1"
   dependencies:
     "@pulumi/pulumi": "npm:^3.142.0"
-  checksum: 10c0/46e8e8fd5d6fdbfea7d99d547f49d545a1d662e87d98d9888916b916f93e29449087c8b09d1b6e7cfb8a43f4198d42c89353468d507ba8854023cc6a76c0b66f
+  checksum: 10c0/2efbeb3af943602cf17674d034f8ca51e4d51585cc7ab1e8ffa546bf85db8ab67e1e4f42b4676552bb7223ec4e491d8505f283c037d003fbfd2402ade1ea0dca
   languageName: node
   linkType: hard
 
-"@pulumi/command@npm:^1.0.1":
-  version: 1.0.5
-  resolution: "@pulumi/command@npm:1.0.5"
+"@pulumi/command@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "@pulumi/command@npm:1.1.0"
   dependencies:
     "@pulumi/pulumi": "npm:^3.142.0"
-  checksum: 10c0/b960f2672d697d95e8edb0c2ed6fcc03f50ab8b74293f391a30988ec4d898860bc951976f160972b0dcf84b840ed85a0dc7c07343205ce4fff91f9ca65e64e50
+  checksum: 10c0/e2a2fc6ad03a5c109ba1bb46bf04cdfbd9c7b9aa18a92643583b24fa7cb1a22e77738a157cdb80a7a8f9d7d02c1aa0210726773fc8d9f294b2346d92481da73e
   languageName: node
   linkType: hard
 
-"@pulumi/pulumi@npm:^3.142.0, @pulumi/pulumi@npm:^3.147.0":
-  version: 3.171.0
-  resolution: "@pulumi/pulumi@npm:3.171.0"
+"@pulumi/pulumi@npm:^3.142.0, @pulumi/pulumi@npm:^3.175.0":
+  version: 3.175.0
+  resolution: "@pulumi/pulumi@npm:3.175.0"
   dependencies:
     "@grpc/grpc-js": "npm:^1.10.1"
     "@logdna/tail-file": "npm:^2.0.6"
@@ -3841,11 +3841,11 @@ __metadata:
       optional: true
     typescript:
       optional: true
-  checksum: 10c0/409a364fe3c6dbdb540e8fa3544393530f90b9aa713d924824517a0d582e617222cc5a8c42b8424d10e4deb521b08622a9a805cd00462cafe9036b8539c80727
+  checksum: 10c0/36c242ece18faa7237b4d1816aa6681e59ffd9052a5ec5e12c17a459acc9d824f8b02db21888364a736bb15b0d30232777e3c3a67d4c8328d7e69d36504abfaa
   languageName: node
   linkType: hard
 
-"@pulumi/random@npm:^4.17.0":
+"@pulumi/random@npm:^4.18.2":
   version: 4.18.2
   resolution: "@pulumi/random@npm:4.18.2"
   dependencies:
@@ -9004,11 +9004,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "azure-infrastructure@workspace:azure-deploy"
   dependencies:
-    "@pulumi/azure-native": "npm:^2.84.0"
-    "@pulumi/cloudflare": "npm:^5.49.0"
-    "@pulumi/command": "npm:^1.0.1"
-    "@pulumi/pulumi": "npm:^3.147.0"
-    "@pulumi/random": "npm:^4.17.0"
+    "@pulumi/azure-native": "npm:^2.90.0"
+    "@pulumi/cloudflare": "npm:^6.2.1"
+    "@pulumi/command": "npm:^1.1.0"
+    "@pulumi/pulumi": "npm:^3.175.0"
+    "@pulumi/random": "npm:^4.18.2"
   languageName: unknown
   linkType: soft
 

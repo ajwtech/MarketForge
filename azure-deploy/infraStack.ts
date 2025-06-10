@@ -81,7 +81,7 @@ export const frontendStorage = new azure_app.ManagedEnvironmentsStorage("fronten
 // Exporting required values directly
 const marketing_env_name = marketing_env.name;
 const marketing_env_id = marketing_env.id;
-const marketing_mysql_fqdn = marketing_mysql.fullyQualifiedDomainName; // <-- Add this line to export the MySQL FQDN
+const marketing_mysql_fqdn = marketing_mysql.fullyQualifiedDomainName;
 const mauticStorage_name = mauticStorage.name;
 const strapiStorage_name = strapiStorage.name;
 const suitecrmStorage_name = suitecrmStorage.name;
@@ -95,7 +95,7 @@ export async function returnOutputs() {
     const [
         marketing_env_name_val,
         marketing_env_id_val,
-        marketing_mysql_fqdn_val, // <-- Add this
+        marketing_mysql_fqdn_val,
         mauticStorage_name_val,
         strapiStorage_name_val,
         suitecrmStorage_name_val,
@@ -105,7 +105,7 @@ export async function returnOutputs() {
     ] = await Promise.all([
         marketing_env_name,
         marketing_env_id,
-        marketing_mysql_fqdn, // <-- Add this
+        marketing_mysql_fqdn,
         mauticStorage_name,
         strapiStorage_name,
         suitecrmStorage_name,
@@ -117,7 +117,7 @@ export async function returnOutputs() {
     return {
         marketing_env_id: marketing_env_id_val,
         marketing_env_name: marketing_env_name_val,
-        marketing_mysql_fqdn: marketing_mysql_fqdn_val, // <-- Add this
+        marketing_mysql_fqdn: marketing_mysql_fqdn_val,
         mauticStorage_name: mauticStorage_name_val,
         strapiStorage_name: strapiStorage_name_val,
         suitecrmStorage_name: suitecrmStorage_name_val,
