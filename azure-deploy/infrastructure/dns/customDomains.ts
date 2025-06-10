@@ -153,7 +153,7 @@ export function setupDns(props: CustomDomainProps) {
     const rootCnameExists = zoneId.apply(async zid => {
         await cloudflare.getDnsRecords({
             zoneId: zid,
-            name: { exact: '@' }, 
+            name: { exact: props.domain }, 
             type: "A"
         }).then(records => {
             if (records.results && records.results.length > 0) {
