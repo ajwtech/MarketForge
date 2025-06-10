@@ -7,16 +7,16 @@ const marketing_env = infra.getOutput("marketing_env_id");
 
 // Create the interface for the DNS entries
 export interface CloudflareDNSEntries {
-    cmsCNAME: cloudflare.DnsRecord;
-    cmsTXT: cloudflare.DnsRecord;
-    crmCNAME: cloudflare.DnsRecord;
-    crmTXT: cloudflare.DnsRecord;
-    mapCNAME: cloudflare.DnsRecord;
-    mapTXT: cloudflare.DnsRecord;
-    devCmsCNAME: cloudflare.DnsRecord;
-    devCmsTXT: cloudflare.DnsRecord;
-    rootCNAME: cloudflare.DnsRecord;
-    rootTXT: cloudflare.DnsRecord;
+    cmsCNAME: pulumi.Output<cloudflare.DnsRecord>;
+    cmsTXT: pulumi.Output<cloudflare.DnsRecord>;
+    crmCNAME: pulumi.Output<cloudflare.DnsRecord>;
+    crmTXT: pulumi.Output<cloudflare.DnsRecord>;
+    mapCNAME: pulumi.Output<cloudflare.DnsRecord>;
+    mapTXT: pulumi.Output<cloudflare.DnsRecord>;
+    devCmsCNAME: pulumi.Output<cloudflare.DnsRecord>;
+    devCmsTXT: pulumi.Output<cloudflare.DnsRecord>;
+    rootCNAME?: pulumi.Output<cloudflare.DnsRecord | undefined>;
+    rootTXT: pulumi.Output<cloudflare.DnsRecord>;
 }
 
 
@@ -149,15 +149,35 @@ export function setupDns(props: CustomDomainProps) {
         ...dnsOptions,
         dependsOn: [ props.mauticNginxApp,mapCNAME ]});
     // Create DNS records for root domain
-    const rootCNAME = new cloudflare.DnsRecord("root", {
-        zoneId: zoneId,
-        name: "@",
-        type: "CNAME",
-        content: props.siteFQDN,
-        ttl: 3600,
-    },{
-        ...dnsOptions,
-        dependsOn: [ props.mauticNginxApp ]});
+    // Check if root CNAME exists before creating (using Pulumi Cloudflare getDnsRecords)
+    const rootCnameExists = zoneId.apply(async zid => {
+        const records = await cloudflare.getDnsRecords({
+            zoneId: zid,
+            name: { exact: props.domain }, // apex domain for '@'
+            type: "CNAME"
+        });
+        if (records.results && records.results.length > 0) {
+            const recordId = records.results[0].id;
+            pulumi.log.warn(`Root CNAME already exists in Cloudflare. To import into Pulumi, run: pulumi import cloudflare:index/dnsRecord:DnsRecord root ${zid}/${recordId}`);
+            return true;
+        }
+        return false;
+    });
+
+    const rootCNAME = pulumi.all([zoneId, rootCnameExists]).apply(([zid, exists]) => {
+        if (exists) {
+            return undefined;
+        }
+        return new cloudflare.DnsRecord("root", {
+            zoneId: zid,
+            name: "@",
+            type: "CNAME",
+            content: props.siteFQDN,
+            ttl: 3600,
+        },{
+            ...dnsOptions,
+            dependsOn: [ props.mauticNginxApp ]});
+    });
 
     const rootTXT = new cloudflare.DnsRecord("asuid.root", {
         zoneId: zoneId,
@@ -167,19 +187,19 @@ export function setupDns(props: CustomDomainProps) {
         ttl: 3600,
     },{
         ...dnsOptions,
-        dependsOn: [ props.mauticNginxApp, rootCNAME ]
+        dependsOn: [ props.mauticNginxApp ]
     });    
     const dnsentries: CloudflareDNSEntries = {
-        cmsCNAME: cmsCNAME,
-        cmsTXT: cmsTXT,
-        crmCNAME: crmCNAME,
-        crmTXT: crmTXT,
-        mapCNAME: mapCNAME,
-        mapTXT: mapTXT,
-        devCmsCNAME: devCmsCNAME,
-        devCmsTXT: devCmsTXT,
-        rootCNAME: rootCNAME,
-        rootTXT: rootTXT
+        cmsCNAME: pulumi.output(cmsCNAME),
+        cmsTXT: pulumi.output(cmsTXT),
+        crmCNAME: pulumi.output(crmCNAME),
+        crmTXT: pulumi.output(crmTXT),
+        mapCNAME: pulumi.output(mapCNAME),
+        mapTXT: pulumi.output(mapTXT),
+        devCmsCNAME: pulumi.output(devCmsCNAME),
+        devCmsTXT: pulumi.output(devCmsTXT),
+        rootCNAME: pulumi.output(rootCNAME),
+        rootTXT: pulumi.output(rootTXT)
     };
 
     return   dnsentries;

@@ -92,7 +92,7 @@ export function nginxCerts(
             domainControlValidation: "CNAME",
             subjectName: domain,
         },
-    }, { dependsOn: [nginxApp, cloudflareDNSentries.rootCNAME, cloudflareDNSentries.rootTXT] });
+    }, { dependsOn: [nginxApp, cloudflareDNSentries.rootTXT] });
 
     // Bind root domain to the environment (frontend)
     const bindRootCommand = new command.local.Command("bind-root-custom-domain", {
@@ -102,7 +102,7 @@ export function nginxCerts(
         --environment ${environmentName} \
         --validation-method CNAME`,
         triggers: [rootCert.systemData.lastModifiedAt, nginxApp.systemData.lastModifiedAt],
-    }, { dependsOn: [rootCert, nginxApp, cloudflareDNSentries.rootCNAME, cloudflareDNSentries.rootTXT] });
+    }, { dependsOn: [rootCert, nginxApp, cloudflareDNSentries.rootTXT] });
 
     return [crmCert, cmsCert, mapCert, rootCert ];
 
