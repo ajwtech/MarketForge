@@ -153,7 +153,7 @@ export function setupDns(props: CustomDomainProps) {
     const rootCnameExists = zoneId.apply(async zid => {
         await cloudflare.getDnsRecords({
             zoneId: zid,
-            name: { exact: props.domain }, // apex domain for '@'
+            name: { exact: '@' }, 
             type: "CNAME"
         }).then(records => {
             if (records.results && records.results.length > 0) {
@@ -162,9 +162,6 @@ export function setupDns(props: CustomDomainProps) {
             }
         });
     });
-    if (!rootCnameExists) {
-        pulumi.log.info(`Root CNAME does not exist, creating it.`);
-    }
     // Always create the root CNAME resource at the top level
     const rootCNAME = new cloudflare.DnsRecord("root", {
         zoneId: zoneId,
