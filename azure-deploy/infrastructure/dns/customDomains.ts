@@ -75,9 +75,9 @@ export function setupDns(props: CustomDomainProps) {
         ...dnsOptions,
         dependsOn: [ props.mauticNginxApp ]});
 
-    const cmsTXT = new cloudflare.DnsRecord(`asuid.${props.cmsSubdomain}`, {
+    const cmsTXT = new cloudflare.DnsRecord(`asuid.${props.cmsSubdomain}.${props.domain}`, {
         zoneId: zoneId,
-        name: `asuid.${props.cmsSubdomain}`,
+        name: `asuid.${props.cmsSubdomain}.${props.domain}`,
         type: "TXT",
         content: props.nginxCvid,
         ttl: 3600,
@@ -95,9 +95,9 @@ export function setupDns(props: CustomDomainProps) {
         ...dnsOptions,
         dependsOn: [ props.mauticNginxApp ]});
 
-    const devCmsTXT = new cloudflare.DnsRecord(`asuid.dev.${props.cmsSubdomain}`, {
+    const devCmsTXT = new cloudflare.DnsRecord(`asuid.dev.${props.cmsSubdomain}.${props.domain}`, {
         zoneId: zoneId,
-        name: `asuid.dev.${props.cmsSubdomain}`,
+        name: `asuid.dev.${props.cmsSubdomain}.${props.domain}`,
         type: "TXT",
         content: props.nginxCvid,
         ttl: 3600,
@@ -116,9 +116,9 @@ export function setupDns(props: CustomDomainProps) {
         ...dnsOptions,
         dependsOn: [ props.mauticNginxApp,  ]});
 
-    const crmTXT = new cloudflare.DnsRecord(`asuid.${props.crmSubdomain}`, {
+    const crmTXT = new cloudflare.DnsRecord(`asuid.${props.crmSubdomain}.${props.domain}`, {
         zoneId: zoneId,
-        name: `asuid.${props.crmSubdomain}`,
+        name: `asuid.${props.crmSubdomain}.${props.domain}`,
         type: "TXT",
         content: props.nginxCvid,
         ttl: 3600,
@@ -137,9 +137,9 @@ export function setupDns(props: CustomDomainProps) {
         ...dnsOptions,
         dependsOn: [ props.mauticNginxApp ]});
 
-    const mapTXT = new cloudflare.DnsRecord(`asuid.${props.mapSubdomain}`, {
+    const mapTXT = new cloudflare.DnsRecord(`asuid.${props.mapSubdomain}.${props.domain}`, {
         zoneId: zoneId,
-        name: `asuid.${props.mapSubdomain}`,
+        name: `asuid.${props.mapSubdomain}.${props.domain}`,
         type: "TXT",
         content: props.nginxCvid,
         ttl: 3600,
