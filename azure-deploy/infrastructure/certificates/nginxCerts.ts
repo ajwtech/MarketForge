@@ -18,23 +18,42 @@ export function nginxCerts(
     strapiApp: azure_app.ContainerApp,
     environmentName: pulumi.Input<string>,
     cloudflareDNSentries: import("../dns/customDomains").CloudflareDNSEntries | undefined,
-): Array<azure_app.ManagedCertificate> {
+): Array<{ cert: azure_app.ManagedCertificate, bindCommand: command.local.Command }> {
     // Early return if no cloudflareDNSentries provided
     if (!cloudflareDNSentries) {
         console.log("No Cloudflare DNS entries provided, skipping certificate creation");
         return [];
     }
 
-    const crmCert = new azure_app.ManagedCertificate("crmCert", {
-        resourceGroupName: resourceGroupName,
-        environmentName: environmentName,
-        managedCertificateName: `${crmSubdomain}`,
-        properties: {
-            domainControlValidation: "CNAME",
-            subjectName: `${crmSubdomain}.${domain}`,
-        },
-    }, { dependsOn: [nginxApp, cloudflareDNSentries.crmCNAME, cloudflareDNSentries.crmTXT] });
-            
+    // 1. Bind custom domains first (before cert creation)
+    const bindCmsCommand = new command.local.Command("bind-cms-custom-domain", {
+        create: pulumi.interpolate`az containerapp hostname bind \
+        --hostname ${cmsSubdomain}.${domain} \
+        -g ${resourceGroupName} -n ${strapiApp.name} \
+        --environment ${environmentName} \
+        --validation-method CNAME`,
+        triggers: [strapiApp.systemData.lastModifiedAt, cloudflareDNSentries.cmsCNAME, cloudflareDNSentries.cmsTXT],
+    }, { dependsOn: [strapiApp, cloudflareDNSentries.cmsCNAME, cloudflareDNSentries.cmsTXT] });
+
+    const bindMapCommand = new command.local.Command("bind-map-custom-domain", {
+        create: pulumi.interpolate`az containerapp hostname bind \
+        --hostname ${mapSubdomain}.${domain} \
+        -g ${resourceGroupName} -n ${nginxApp.name} \
+        --environment ${environmentName} \
+        --validation-method CNAME`,
+        triggers: [nginxApp.systemData.lastModifiedAt, cloudflareDNSentries.mapCNAME, cloudflareDNSentries.mapTXT],
+    }, { dependsOn: [nginxApp, cloudflareDNSentries.mapCNAME, cloudflareDNSentries.mapTXT, bindCmsCommand] });
+
+    const bindCrmCommand = new command.local.Command("bind-crm-custom-domain", {
+        create: pulumi.interpolate`az containerapp hostname bind \
+        --hostname ${crmSubdomain}.${domain} \
+        -g ${resourceGroupName} -n ${nginxApp.name} \
+        --environment ${environmentName} \
+        --validation-method CNAME`,
+        triggers: [nginxApp.systemData.lastModifiedAt, cloudflareDNSentries.crmCNAME, cloudflareDNSentries.crmTXT],
+    }, { dependsOn: [nginxApp, cloudflareDNSentries.crmCNAME, cloudflareDNSentries.crmTXT, bindMapCommand] });
+
+    // 2. Create Managed Certificates after domain is mapped
     const cmsCert = new azure_app.ManagedCertificate("cmsCert", {
         resourceGroupName: resourceGroupName,
         environmentName: environmentName,
@@ -43,7 +62,7 @@ export function nginxCerts(
             domainControlValidation: "CNAME",
             subjectName: `${cmsSubdomain}.${domain}`,
         },
-    }, { dependsOn: [strapiApp, cloudflareDNSentries.cmsCNAME, cloudflareDNSentries.cmsTXT] });
+    }, { dependsOn: [bindCmsCommand] });
 
     const mapCert = new azure_app.ManagedCertificate("mapCert", {
         resourceGroupName: resourceGroupName,
@@ -53,40 +72,23 @@ export function nginxCerts(
             domainControlValidation: "CNAME",
             subjectName: `${mapSubdomain}.${domain}`,
         },
-    }, { dependsOn: [nginxApp, cloudflareDNSentries.mapCNAME, cloudflareDNSentries.mapTXT] });   
-        // Use azure-native to bind custom domains with the managed certificates
-    
-    const bindCmsCommand = new command.local.Command("bind-cms-custom-domain", {
-        create: pulumi.interpolate `az containerapp hostname bind \
-        --hostname ${cmsSubdomain}.${domain} \
-        -g ${resourceGroupName} -n ${strapiApp.name} \
-        --environment ${environmentName} \
-        --validation-method CNAME`,
-        triggers: [cmsCert.systemData.lastModifiedAt, strapiApp.systemData.lastModifiedAt],
-    }, { dependsOn: [cmsCert, strapiApp, cloudflareDNSentries.cmsCNAME, cloudflareDNSentries.cmsTXT] });
-    
-    const bindMapCommand = new command.local.Command("bind-map-custom-domain", {
-        create: pulumi.interpolate `az containerapp hostname bind \
-        --hostname ${mapSubdomain}.${domain} \
-        -g ${resourceGroupName} -n ${nginxApp.name} \
-        --environment ${environmentName} \
-        --validation-method CNAME`,
-        triggers: [mapCert.systemData.lastModifiedAt, nginxApp.systemData.lastModifiedAt],
-    }, { dependsOn: [mapCert, nginxApp, bindCmsCommand, cloudflareDNSentries.mapCNAME, cloudflareDNSentries.mapTXT] });
+    }, { dependsOn: [bindMapCommand] });
 
-    const bindCrmCommand = new command.local.Command("bind-crm-custom-domain", {
-        create: pulumi.interpolate `az containerapp hostname bind \
-        --hostname ${crmSubdomain}.${domain} \
-        -g ${resourceGroupName} -n ${nginxApp.name} \
-        --environment ${environmentName} \
-        --validation-method CNAME`,
-        triggers: [crmCert.systemData.lastModifiedAt, nginxApp.systemData.lastModifiedAt],
-    }, { dependsOn: [crmCert, nginxApp, bindMapCommand, cloudflareDNSentries.crmCNAME, cloudflareDNSentries.crmTXT] });
-       
+    const crmCert = new azure_app.ManagedCertificate("crmCert", {
+        resourceGroupName: resourceGroupName,
+        environmentName: environmentName,
+        managedCertificateName: `${crmSubdomain}`,
+        properties: {
+            domainControlValidation: "CNAME",
+            subjectName: `${crmSubdomain}.${domain}`,
+        },
+    }, { dependsOn: [bindCrmCommand] });
 
+    // Optionally, you may want to update the app to use the new cert after it's issued (not shown here)
 
-    return [crmCert, cmsCert, mapCert,  ];
-
-
-
+    return [
+        { cert: crmCert, bindCommand: bindCrmCommand },
+        { cert: cmsCert, bindCommand: bindCmsCommand },
+        { cert: mapCert, bindCommand: bindMapCommand },
+    ];
 }
