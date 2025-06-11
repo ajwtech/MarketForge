@@ -2,12 +2,11 @@
 import { storageAccountKey, mauticAppFilesStorage, suiteCrmAppFilesStorage, strapiAppFilesStorage, jumpboxFilesStorage, storageAccountName, frontendFilesStorage, jumpboxFilesStorageName, jumpboxFilesStorageId } from "./infrastructure/storage/storageAccount";
 import { marketing_env } from "./infrastructure/managedEnvironment/managedEnvironment";
 import { marketing_mysql } from "./infrastructure/database/mysqlServer";
-import * as pulumi from "@pulumi/pulumi";
 import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 import { acr } from "./stackRefs";
 
 
-const config = new pulumi.Config();
+
 
 // Reference the resource group from the ACR infra stack
 export const resourceGroupName = acr.getOutput("resourceGroupName");
@@ -47,7 +46,7 @@ export const suitecrmStorage = new azure_app.ManagedEnvironmentsStorage("suitecr
             accountName: storageAccountName,
             shareName: suiteCrmAppFilesStorage.name,
             accessMode: "ReadWrite",
-        accountKey: storageAccountKey,
+            accountKey: storageAccountKey,
         },
     },
 }, { protect: false, dependsOn: [suiteCrmAppFilesStorage, marketing_env] });
@@ -59,8 +58,8 @@ export const jumpboxStorage = new azure_app.ManagedEnvironmentsStorage("jumpbox-
         azureFile: {
             accountName: storageAccountName,
             shareName: jumpboxFilesStorage.name,
-        accessMode: "ReadWrite",
-        accountKey: storageAccountKey,
+            accessMode: "ReadWrite",
+            accountKey: storageAccountKey,
         },
     },
 }, { protect: false, dependsOn: [jumpboxFilesStorage, marketing_env] });
@@ -78,9 +77,6 @@ export const frontendStorage = new azure_app.ManagedEnvironmentsStorage("fronten
     },
 }, { protect: false, dependsOn: [frontendFilesStorage, marketing_env] });
 
-// Diagnostic output for storage resource
-export const diagnostic_jumpboxFilesStorageName = jumpboxFilesStorageName;
-export const diagnostic_jumpboxFilesStorageId = jumpboxFilesStorageId;
 
 // Exporting required values directly
 const marketing_env_name = marketing_env.name;
