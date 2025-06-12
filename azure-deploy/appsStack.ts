@@ -31,7 +31,7 @@ const imageTag = config.get("imageTag") || "latest";
 let createSubdomains: pulumi.Output<boolean> = pulumi.output(false).apply(unwrapped => unwrapped);
 const storageAccountName = infra.getOutput("storageAccountName");
 const resourceGroupName = acr.getOutput("resourceGroupName");
-const registryUrl = acr.getOutput("registryUrlOut");
+const registryUrl: pulumi.Output<string> = acr.getOutput("registryUrlOut").apply(url => String(url));
 const acrUsername = acr.getOutput("acrUsernameOut");
 const acrPassword = acr.getOutput("acrPasswordOut");
 const marketing_env = infra.getOutput("marketing_env_name");
@@ -43,8 +43,6 @@ const jumpboxStorageName = infra.getOutput("jumpboxStorage_name");
 const storageAccountKey = infra.getOutput("storageAccountKey");
 
 
-// Ensure registryUrl is Output<string>
-const registryUrlString: pulumi.Output<string> = registryUrl.apply(url => String(url));
 
 function getImageName(registryUrl: pulumi.Output<string>, imageTag: string, imageName: string): pulumi.Output<string> {
     return registryUrl.apply(url => `${url}/${imageName}:${imageTag}`);
@@ -55,7 +53,7 @@ function getImageName(registryUrl: pulumi.Output<string>, imageTag: string, imag
 
 const mauticNginxApp = mauticNginx({
     env: appEnv,
-    image: getImageName(registryUrlString, imageTag, "marketing-nginx"),
+    image: getImageName(registryUrl, imageTag, "marketing-nginx"),
     registryUrl,
     registryUsername: acrUsername,
     registryPassword: acrPassword,
@@ -75,7 +73,7 @@ const nginxCvid = mauticNginxApp.customDomainVerificationId.apply(cvid => cvid);
 
 const mauticWebApp = mauticWeb({
     env: appEnv,
-    image: getImageName(registryUrlString, imageTag, "marketing-mautic-app"),
+    image: getImageName(registryUrl, imageTag, "marketing-mautic-app"),
     registryUrl,
     registryUsername: acrUsername,
     registryPassword: acrPassword,
@@ -97,7 +95,7 @@ const mauticWebApp = mauticWeb({
 
 const deployedStrapiApp = strapiApp({
     env: appEnv,
-    image: getImageName(registryUrlString, imageTag, "marketing-strapi-app"),
+    image: getImageName(registryUrl, imageTag, "marketing-strapi-app"),
     registryUrl,
     registryUsername: acrUsername,
     registryPassword: acrPassword,
@@ -125,7 +123,7 @@ const deployedSuitecrmApp = suitecrmApp({
     env: appEnv,
     appSecret,
     siteFQDN,
-    image: getImageName(registryUrlString, imageTag, "marketing-suitecrm-app"),
+    image: getImageName(registryUrl, imageTag, "marketing-suitecrm-app"),
     registryUrl,
     registryUsername: acrUsername,
     registryPassword: acrPassword,
