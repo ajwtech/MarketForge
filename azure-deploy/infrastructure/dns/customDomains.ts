@@ -13,8 +13,6 @@ export interface CloudflareDNSEntries {
     crmTXT: pulumi.Output<cloudflare.DnsRecord>;
     mapCNAME: pulumi.Output<cloudflare.DnsRecord>;
     mapTXT: pulumi.Output<cloudflare.DnsRecord>;
-    devCmsCNAME: pulumi.Output<cloudflare.DnsRecord>;
-    devCmsTXT: pulumi.Output<cloudflare.DnsRecord>;
 }
 
 
@@ -30,8 +28,6 @@ export interface CustomDomainProps {
     strapiFQDN: pulumi.Output<string>;
     suiteCrmApp: azure_app.ContainerApp;
     suiteCrmFQDN: pulumi.Output<string>;
-    devStrapiApp?: azure_app.ContainerApp;
-    devStrapiFQDN?: pulumi.Output<string>;
 }
 
 export function setupDns(props: CustomDomainProps) {
@@ -79,32 +75,12 @@ export function setupDns(props: CustomDomainProps) {
         zoneId: zoneId,
         name: `asuid.${props.cmsSubdomain}.${props.domain}`,
         type: "TXT",
-        content: props.nginxCvid,
+        content: pulumi.interpolate`"${props.nginxCvid}"`,
         ttl: 3600,
     },{
         ...dnsOptions,
         dependsOn: [ props.mauticNginxApp, cmsCNAME ]});
 
-    const devCmsCNAME = new cloudflare.DnsRecord(`dev.${props.cmsSubdomain}`, {
-        zoneId: zoneId,
-        name: `dev.${props.cmsSubdomain}`,
-        type: "CNAME",
-        content: props.siteFQDN,
-        ttl: 3600,
-    },{
-        ...dnsOptions,
-        dependsOn: [ props.mauticNginxApp ]});
-
-    const devCmsTXT = new cloudflare.DnsRecord(`asuid.dev.${props.cmsSubdomain}.${props.domain}`, {
-        zoneId: zoneId,
-        name: `asuid.dev.${props.cmsSubdomain}.${props.domain}`,
-        type: "TXT",
-        content: props.nginxCvid,
-        ttl: 3600,
-    },{
-        ...dnsOptions,
-        dependsOn: [ props.mauticNginxApp, devCmsCNAME ]
-    });
     // Create DNS records for CRM
     const crmCNAME = new cloudflare.DnsRecord(props.crmSubdomain, {
         zoneId: zoneId,
@@ -120,7 +96,7 @@ export function setupDns(props: CustomDomainProps) {
         zoneId: zoneId,
         name: `asuid.${props.crmSubdomain}.${props.domain}`,
         type: "TXT",
-        content: props.nginxCvid,
+        content: pulumi.interpolate`"${props.nginxCvid}"`,
         ttl: 3600,
     },{
         ...dnsOptions,
@@ -141,7 +117,7 @@ export function setupDns(props: CustomDomainProps) {
         zoneId: zoneId,
         name: `asuid.${props.mapSubdomain}.${props.domain}`,
         type: "TXT",
-        content: props.nginxCvid,
+        content: pulumi.interpolate`"${props.nginxCvid}"`,
         ttl: 3600,
     },{
         ...dnsOptions,
@@ -174,9 +150,7 @@ export function setupDns(props: CustomDomainProps) {
         crmCNAME: pulumi.output(crmCNAME),
         crmTXT: pulumi.output(crmTXT),
         mapCNAME: pulumi.output(mapCNAME),
-        mapTXT: pulumi.output(mapTXT),
-        devCmsCNAME: pulumi.output(devCmsCNAME),
-        devCmsTXT: pulumi.output(devCmsTXT)
+        mapTXT: pulumi.output(mapTXT)
     };
 
     return   dnsentries;

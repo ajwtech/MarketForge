@@ -49,7 +49,7 @@ jobs:
         run: yarn install --immutable
         working-directory: .
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
         with:
           path: |
@@ -95,7 +95,7 @@ jobs:
         run: yarn install --immutable
         working-directory: ./azure-deploy
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
         with:
           path: |
@@ -223,7 +223,7 @@ jobs:
         run: yarn install --immutable
         working-directory: ./azure-deploy
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
         with:
           path: |
