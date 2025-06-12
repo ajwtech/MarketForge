@@ -46,7 +46,7 @@ const storageAccountKey = infra.getOutput("storageAccountKey");
 
 const mauticNginxApp = mauticNginx({
     env: appEnv,
-    image: `${registryUrl.apply(url => url)}/marketing-nginx:${imageTag}`,
+    image: registryUrl.apply(url => `${url}/marketing-nginx:${imageTag}`),
     registryUrl,
     registryUsername: acrUsername,
     registryPassword: acrPassword,
@@ -66,7 +66,7 @@ const nginxCvid = mauticNginxApp.customDomainVerificationId.apply(cvid => cvid);
 
 const mauticWebApp = mauticWeb({
     env: appEnv,
-    image: `${registryUrl.apply(url => url)}/marketing-mautic-app:${imageTag}`,
+    image: registryUrl.apply(url => `${url}/marketing-mautic-app:${imageTag}`),
     registryUrl,
     registryUsername: acrUsername,
     registryPassword: acrPassword,
@@ -88,7 +88,7 @@ const mauticWebApp = mauticWeb({
 
 const deployedStrapiApp = strapiApp({
     env: appEnv,
-    image: `${registryUrl.apply(url => url)}/marketing-strapi-app:${imageTag}`,
+    image: registryUrl.apply(url => `${url}/marketing-strapi-app:${imageTag}`),
     registryUrl,
     registryUsername: acrUsername,
     registryPassword: acrPassword,
@@ -116,7 +116,7 @@ const deployedSuitecrmApp = suitecrmApp({
     env: appEnv,
     appSecret,
     siteFQDN,
-    image: `${registryUrl.apply(url => url)}/marketing-suitecrm-app:${imageTag}`,
+    image: registryUrl.apply(url => `${url}/marketing-suitecrm-app:${imageTag}`),
     registryUrl,
     registryUsername: acrUsername,
     registryPassword: acrPassword,
