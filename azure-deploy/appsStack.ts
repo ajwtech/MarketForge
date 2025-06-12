@@ -42,7 +42,7 @@ const suitecrmStorageName = infra.getOutput("suitecrmStorage_name");
 const jumpboxStorageName = infra.getOutput("jumpboxStorage_name");
 const storageAccountKey = infra.getOutput("storageAccountKey");
 
-
+pulumi.log.info(`registryUrl resolved value:`, registryUrl);
 
 const mauticNginxApp = mauticNginx({
     env: appEnv,
