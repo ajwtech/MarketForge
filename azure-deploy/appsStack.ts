@@ -31,7 +31,7 @@ const imageTag = config.get("imageTag") || "latest";
 let createSubdomains: pulumi.Output<boolean> = pulumi.output(false).apply(unwrapped => unwrapped);
 const storageAccountName = infra.getOutput("storageAccountName");
 const resourceGroupName = acr.getOutput("resourceGroupName");
-const registryUrl: pulumi.Output<string> = acr.getOutput("registryUrlOut").apply(url => String(url));
+const registryUrl = acr.getOutput("registryUrlOut");
 const acrUsername = acr.getOutput("acrUsernameOut");
 const acrPassword = acr.getOutput("acrPasswordOut");
 const marketing_env = infra.getOutput("marketing_env_name");
@@ -46,7 +46,7 @@ const storageAccountKey = infra.getOutput("storageAccountKey");
 
 const mauticNginxApp = mauticNginx({
     env: appEnv,
-    image: `marketing-nginx:${imageTag}`,
+    image: `${registryUrl}/marketing-nginx:${imageTag}`,
     registryUrl,
     registryUsername: acrUsername,
     registryPassword: acrPassword,
@@ -66,7 +66,7 @@ const nginxCvid = mauticNginxApp.customDomainVerificationId.apply(cvid => cvid);
 
 const mauticWebApp = mauticWeb({
     env: appEnv,
-    image: `marketing-mautic-app:${imageTag}`,
+    image: `${registryUrl}/marketing-mautic-app:${imageTag}`,
     registryUrl,
     registryUsername: acrUsername,
     registryPassword: acrPassword,
@@ -88,7 +88,7 @@ const mauticWebApp = mauticWeb({
 
 const deployedStrapiApp = strapiApp({
     env: appEnv,
-    image: `marketing-strapi-app:${imageTag}`,
+    image: `${registryUrl}/marketing-strapi-app:${imageTag}`,
     registryUrl,
     registryUsername: acrUsername,
     registryPassword: acrPassword,
@@ -116,7 +116,7 @@ const deployedSuitecrmApp = suitecrmApp({
     env: appEnv,
     appSecret,
     siteFQDN,
-    image: `marketing-suitecrm-app:${imageTag}`,
+    image: `${registryUrl}/marketing-suitecrm-app:${imageTag}`,
     registryUrl,
     registryUsername: acrUsername,
     registryPassword: acrPassword,
