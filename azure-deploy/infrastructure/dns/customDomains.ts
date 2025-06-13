@@ -71,9 +71,9 @@ export function setupDns(props: CustomDomainProps) {
         ...dnsOptions,
         dependsOn: [ props.mauticNginxApp ]});
 
-    const cmsTXT = new cloudflare.DnsRecord(`asuid.${props.cmsSubdomain}.${props.domain}`, {
+    const cmsTXT = new cloudflare.DnsRecord(`asuid.${props.cmsSubdomain}`, {
         zoneId: zoneId,
-        name: `asuid.${props.cmsSubdomain}.${props.domain}`,
+        name: `asuid.${props.cmsSubdomain}`,
         type: "TXT",
         content: pulumi.interpolate`"${props.nginxCvid}"`,
         ttl: 3600,
@@ -92,9 +92,9 @@ export function setupDns(props: CustomDomainProps) {
         ...dnsOptions,
         dependsOn: [ props.mauticNginxApp,  ]});
 
-    const crmTXT = new cloudflare.DnsRecord(`asuid.${props.crmSubdomain}.${props.domain}`, {
+    const crmTXT = new cloudflare.DnsRecord(`asuid.${props.crmSubdomain}`, {
         zoneId: zoneId,
-        name: `asuid.${props.crmSubdomain}.${props.domain}`,
+        name: `asuid.${props.crmSubdomain}`,
         type: "TXT",
         content: pulumi.interpolate`"${props.nginxCvid}"`,
         ttl: 3600,
@@ -113,9 +113,9 @@ export function setupDns(props: CustomDomainProps) {
         ...dnsOptions,
         dependsOn: [ props.mauticNginxApp ]});
 
-    const mapTXT = new cloudflare.DnsRecord(`asuid.${props.mapSubdomain}.${props.domain}`, {
+    const mapTXT = new cloudflare.DnsRecord(`asuid.${props.mapSubdomain}`, {
         zoneId: zoneId,
-        name: `asuid.${props.mapSubdomain}.${props.domain}`,
+        name: `asuid.${props.mapSubdomain}`,
         type: "TXT",
         content: pulumi.interpolate`"${props.nginxCvid}"`,
         ttl: 3600,
