@@ -75,7 +75,7 @@ export function setupDns(props: CustomDomainProps) {
         zoneId: zoneId,
         name: `asuid.${props.cmsSubdomain}`,
         type: "TXT",
-        content: pulumi.interpolate`"${props.nginxCvid}"`,
+        content: pulumi.interpolate`${props.nginxCvid}`,
         ttl: 3600,
     },{
         ...dnsOptions,
@@ -96,7 +96,7 @@ export function setupDns(props: CustomDomainProps) {
         zoneId: zoneId,
         name: `asuid.${props.crmSubdomain}`,
         type: "TXT",
-        content: pulumi.interpolate`"${props.nginxCvid}"`,
+        content: pulumi.interpolate`${props.nginxCvid}`,
         ttl: 3600,
     },{
         ...dnsOptions,
@@ -117,7 +117,7 @@ export function setupDns(props: CustomDomainProps) {
         zoneId: zoneId,
         name: `asuid.${props.mapSubdomain}`,
         type: "TXT",
-        content: pulumi.interpolate`"${props.nginxCvid}"`,
+        content: pulumi.interpolate`${props.nginxCvid}`,
         ttl: 3600,
     },{
         ...dnsOptions,
