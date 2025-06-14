@@ -2,6 +2,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as cloudflare from "@pulumi/cloudflare";
 import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 import { infra } from "../../stackRefs"; 
+import * as command from "@pulumi/command";
 
 const marketing_env = infra.getOutput("marketing_env_id");
 
@@ -81,6 +82,11 @@ export function setupDns(props: CustomDomainProps) {
         ...dnsOptions,
         dependsOn: [ props.mauticNginxApp, cmsCNAME ]});
 
+    // Wait for CMS TXT record to propagate
+    const waitForCmsTxt = new command.local.Command(`wait-for-cms-txt`, {
+        create: pulumi.interpolate`until dig +short TXT asuid.${props.cmsSubdomain}.${props.domain} | grep -q ${props.nginxCvid}; do echo waiting for DNS...; sleep 5; done`,
+    }, { dependsOn: [cmsTXT] });
+
     // Create DNS records for CRM
     const crmCNAME = new cloudflare.DnsRecord(props.crmSubdomain, {
         zoneId: zoneId,
@@ -102,6 +108,11 @@ export function setupDns(props: CustomDomainProps) {
         ...dnsOptions,
         dependsOn: [ props.mauticNginxApp, crmCNAME ]});
 
+    // Wait for CRM TXT record to propagate
+    const waitForCrmTxt = new command.local.Command(`wait-for-crm-txt`, {
+        create: pulumi.interpolate`until dig +short TXT asuid.${props.crmSubdomain}.${props.domain} | grep -q ${props.nginxCvid}; do echo waiting for DNS...; sleep 5; done`,
+    }, { dependsOn: [crmTXT] });
+
     // Create DNS records for MAP
     const mapCNAME = new cloudflare.DnsRecord(props.mapSubdomain, {
         zoneId: zoneId,
@@ -122,6 +133,12 @@ export function setupDns(props: CustomDomainProps) {
     },{
         ...dnsOptions,
         dependsOn: [ props.mauticNginxApp,mapCNAME ]});
+
+    // Wait for MAP TXT record to propagate
+    const waitForMapTxt = new command.local.Command(`wait-for-map-txt`, {
+        create: pulumi.interpolate`until dig +short TXT asuid.${props.mapSubdomain}.${props.domain} | grep -q ${props.nginxCvid}; do echo waiting for DNS...; sleep 5; done`,
+    }, { dependsOn: [mapTXT] });
+
     // Remove root domain DNS record creation for now
     // const rootCNAME = new cloudflare.DnsRecord("root", {
     //     zoneId: zoneId,
@@ -153,7 +170,8 @@ export function setupDns(props: CustomDomainProps) {
         mapTXT: pulumi.output(mapTXT)
     };
 
-    return   dnsentries;
+    // Return wait commands as well for downstream dependsOn
+    return { ...dnsentries, waitForCmsTxt, waitForCrmTxt, waitForMapTxt };
 };
 
 
