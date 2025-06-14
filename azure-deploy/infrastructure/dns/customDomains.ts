@@ -35,25 +35,9 @@ export function setupDns(props: CustomDomainProps) {
     // Look up the Cloudflare zone for the domain
     const zonePromise = cloudflare.getZone({ filter: { name: props.domain } });
     const zoneOutput = pulumi.output(zonePromise);
-    pulumi.log.info(`Looking up DNS zone for domain: ${props.domain}`);
-    // Log the full zone lookup result for diagnostics
-    zoneOutput.apply(zone => {
-        pulumi.log.info(`Zone lookup result: ${JSON.stringify(zone)}`);
-        if (!zone || !zone.zoneId) {
-            throw new Error(`Cloudflare zone not found for domain: ${props.domain}. Check that the domain exists in your Cloudflare account and that your API token has permission.`);
-        }
-        pulumi.log.info(`Fetched Zone ID: ${zone.zoneId}`);
-        return zone.zoneId;
-    });
+    
     // Assign zoneId as Output<string> (never undefined)
-    const zoneId = zoneOutput.apply(zone => {
-        pulumi.log.info(`Zone lookup result: ${JSON.stringify(zone)}`);
-        if (!zone || !zone.zoneId) {
-            throw new Error(`Cloudflare zone not found for domain: ${props.domain}. Check that the domain exists in your Cloudflare account and that your API token has permission.`);
-        }
-        pulumi.log.info(`Fetched Zone ID: ${zone.zoneId}`);
-        return zone.zoneId;
-    });
+    const zoneId = zoneOutput.apply(zone => zone.zoneId || "");
     // Add options to prevent errors if records exist
     const dnsOptions = {
         deleteBeforeCreate: true,
