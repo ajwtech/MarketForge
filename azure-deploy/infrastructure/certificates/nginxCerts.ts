@@ -25,7 +25,7 @@ export function nginxCerts(
         return [];
     }
 
-    // 1. Bind custom domains first (before cert creation)
+
     const bindCmsCommand = new command.local.Command("bind-cms-custom-domain", {
         create: pulumi.interpolate`az containerapp hostname bind \
         --hostname ${cmsSubdomain}.${domain} \

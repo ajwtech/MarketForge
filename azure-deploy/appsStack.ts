@@ -26,7 +26,6 @@ const domain = config.require("domain");
 const cmsSubdomain = config.get("cmsSubdomain") || "cms";
 const crmSubdomain = config.get("crmSubdomain") || "crm";
 const mapSubdomain = config.get("mapSubdomain") || "map";
-const BoolSubdomains = config.getBoolean("createSubdomains") || false;
 const imageTag = config.get("imageTag") || "latest";
 let createSubdomains: pulumi.Output<boolean> = pulumi.output(false).apply(unwrapped => unwrapped);
 const storageAccountName = infra.getOutput("storageAccountName");
@@ -136,7 +135,7 @@ const deployedSuitecrmApp = suitecrmApp({
     domain,
 });
 
-const cloudflareDNSentries = BoolSubdomains ? setupDns({
+const cloudflareDNSentries = setupDns({
     domain,
     cmsSubdomain,
     crmSubdomain,
@@ -148,7 +147,7 @@ const cloudflareDNSentries = BoolSubdomains ? setupDns({
     strapiFQDN: deployedStrapiApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
     suiteCrmApp: deployedSuitecrmApp, // If setupDns expects the resource, this is correct
     suiteCrmFQDN: deployedSuitecrmApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
-}) : undefined;
+});
 
 const customDomains = nginxCerts(
     mauticNginxApp,

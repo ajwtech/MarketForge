@@ -1,4 +1,4 @@
-name: marketforge
+name: scouten
 description: dev stack for marketing and sales infrastructure
 runtime:
   name: nodejs
