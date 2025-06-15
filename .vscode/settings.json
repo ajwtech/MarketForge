@@ -25,6 +25,7 @@
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "typescript.preferences.importModuleSpecifier": "relative",
   "typescript.tsserver.maxTsServerMemory": 8192,
+  "typescript.workspaceSymbols.scope": "allOpenProjects",
   "search.exclude": {
     "**/.yarn": true,
     "**/.pnp.*": true
