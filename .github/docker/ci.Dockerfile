@@ -35,7 +35,7 @@ RUN COMPOSE_VERSION=v2.27.1 && \
 # Install Azure CLI
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 # Set workdir
-WORKDIR /app
+
 # Copy your package files
 COPY package.json .yarnrc.yml yarn.lock .nx/ .yarn/ ./
 
