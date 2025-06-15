@@ -8,12 +8,12 @@ const marketing_env = infra.getOutput("marketing_env_id");
 
 // Create the interface for the DNS entries
 export interface CloudflareDNSEntries {
-    cmsCNAME: pulumi.Output<cloudflare.DnsRecord>;
-    cmsTXT: pulumi.Output<cloudflare.DnsRecord>;
-    crmCNAME: pulumi.Output<cloudflare.DnsRecord>;
-    crmTXT: pulumi.Output<cloudflare.DnsRecord>;
-    mapCNAME: pulumi.Output<cloudflare.DnsRecord>;
-    mapTXT: pulumi.Output<cloudflare.DnsRecord>;
+    cmsCNAME: cloudflare.DnsRecord;
+    cmsTXT: cloudflare.DnsRecord;
+    crmCNAME: cloudflare.DnsRecord;
+    crmTXT: cloudflare.DnsRecord;
+    mapCNAME: cloudflare.DnsRecord;
+    mapTXT: cloudflare.DnsRecord;
 }
 
 
@@ -146,12 +146,12 @@ export function setupDns(props: CustomDomainProps) {
     // });
     // Remove rootCNAME and rootTXT from dnsentries
     const dnsentries: CloudflareDNSEntries = {
-        cmsCNAME: pulumi.output(cmsCNAME),
-        cmsTXT: pulumi.output(cmsTXT),
-        crmCNAME: pulumi.output(crmCNAME),
-        crmTXT: pulumi.output(crmTXT),
-        mapCNAME: pulumi.output(mapCNAME),
-        mapTXT: pulumi.output(mapTXT)
+        cmsCNAME: cmsCNAME,
+        cmsTXT: cmsTXT,
+        crmCNAME: crmCNAME,
+        crmTXT: crmTXT,
+        mapCNAME: mapCNAME,
+        mapTXT: mapTXT
     };
 
     // Return wait commands as well for downstream dependsOn
