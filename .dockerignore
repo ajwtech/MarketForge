@@ -1,0 +1,15 @@
+# .dockerignore for zero-install Yarn 4+ monorepo
+# Do NOT ignore .yarn/ or .yarn/cache!
+node_modules
+**/node_modules
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.yarn/cache/*.tmp
+# Ignore logs and OS files
+*.log
+.DS_Store
+.env.local
+.env.*.local
+# Ignore test output
+coverage
