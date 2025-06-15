@@ -57,7 +57,7 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
-          yarn exec ts-node index.ts
+          yarn dlx ts-node index.ts
 
   setup-infra:
     if: github.event_name == 'push' || github.event.inputs.run_setup_infra == true
@@ -86,7 +86,7 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
-          yarn exec ts-node index.ts
+          yarn dlx ts-node index.ts
 
   build-and-push-images:
     if: github.event_name == 'push' || github.event.inputs.run_build_and_push_images == true
@@ -209,5 +209,5 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
-          yarn exec ts-node index.ts
+          yarn dlx ts-node index.ts
 
