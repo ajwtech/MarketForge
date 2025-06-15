@@ -3,11 +3,11 @@
   "packageManager": "yarn@4.9.1",
   "private": true,
   "workspaces": [
-    "suitecrm",
-    "mautic",
+    "suitecrm/SuiteCRM-Core",
     "azure-deploy",
     "launchpad/strapi",
-    "launchpad/next"
+    "launchpad/next",
+    "launchpad"
   ],
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",

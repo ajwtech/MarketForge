@@ -34,13 +34,14 @@ RUN COMPOSE_VERSION=v2.27.1 && \
 
 # Install Azure CLI
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
-
+# Set workdir
+WORKDIR /app
 # Copy your package files
-COPY package.json yarn.lock .yarn/ ./
-COPY launchpad/package.json launchpad/yarn.lock launchpad/.yarn/ ./launchpad/
-COPY launchpad/next/package.json launchpad/next/yarn.lock launchpad/next/.yarn/ ./launchpad/next/
-COPY launchpad/strapi/package.json launchpad/strapi/yarn.lock launchpad/strapi/.yarn/ ./launchpad/strapi/
-COPY azure-deploy/package.json azure-deploy/yarn.lock azure-deploy/.yarn/ ./azure-deploy/
+COPY package.json yarn.lock .nx/ .yarn/ ./
+COPY launchpad/package.json  ./launchpad/
+COPY launchpad/next/package.json ./launchpad/next/
+COPY launchpad/strapi/package.json ./launchpad/strapi/
+COPY azure-deploy/package.json ./azure-deploy/
 
 RUN corepack prepare --activate
 
