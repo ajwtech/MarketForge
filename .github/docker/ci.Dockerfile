@@ -38,20 +38,13 @@ RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 WORKDIR /app
 # Copy your package files
 COPY package.json .yarnrc.yml yarn.lock .nx/ .yarn/ ./
-COPY launchpad/package.json  ./launchpad/
-COPY launchpad/next/package.json ./launchpad/next/
-COPY launchpad/strapi/package.json ./launchpad/strapi/
-COPY azure-deploy/package.json ./azure-deploy/
-COPY suitecrm/SuiteCRM-Core/package.json suitecrm/SuiteCRM-Core/ .yarnrc.yml ./suitecrm/SuiteCRM-Core/
 
+# Copy all files (except those excluded by .dockerignore)
+COPY . .
 RUN corepack prepare --activate
 
 RUN set -e && yarn install --immutable --immutable-cache
-RUN set -e && cd azure-deploy && yarn install --immutable --immutable-cache  
-RUN set -e && cd launchpad && yarn install --immutable --immutable-cache
-RUN set -e && cd launchpad/next && yarn install --immutable --immutable-cache
-RUN set -e && cd launchpad/strapi && yarn install --immutable --immutable-cache
-RUN set -e && cd suitecrm/SuiteCRM-Core && yarn install --immutable --immutable-cache
+
 
 # Clean up
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*

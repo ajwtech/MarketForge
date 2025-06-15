@@ -2,10 +2,6 @@
 # Do NOT ignore .yarn/ or .yarn/cache!
 node_modules
 **/node_modules
-.yarn/unplugged
-.yarn/build-state.yml
-.yarn/install-state.gz
-.yarn/cache/*.tmp
 # Ignore logs and OS files
 *.log
 .DS_Store
@@ -13,3 +9,23 @@ node_modules
 .env.*.local
 # Ignore test output
 coverage
+# .gitignore
+azure-deploy/infra/Pulumi.test.yaml
+**/node_modules/
+__azurite_db_table__.json
+azure-deploy/config/pulumi.marketing.yaml
+mautic/logs/*
+azure-deploy/infrastructure/storage/local.php
+azure-deploy/config/Pulumi.test.yaml
+azure-deploy/infrastructure/storage/config_override.php
+.vscode/settings.json
+azure-deploy/config/*
+.env
+.env.secrets
+.github/copilot-instructions.md
+launchpad/strapi/.env.development
+*/strapi-staging/*
+azure-deploy/scripts/migrate_pulumi_resources.sh
+azure-deploy/scripts/move_commands.sh
+pu.sh
+azure-deploy/Pulumi.yaml
