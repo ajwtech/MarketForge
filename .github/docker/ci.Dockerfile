@@ -37,19 +37,21 @@ RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 # Set workdir
 WORKDIR /app
 # Copy your package files
-COPY package.json yarn.lock .nx/ .yarn/ ./
+COPY package.json .yarnrc.yml yarn.lock .nx/ .yarn/ ./
 COPY launchpad/package.json  ./launchpad/
 COPY launchpad/next/package.json ./launchpad/next/
 COPY launchpad/strapi/package.json ./launchpad/strapi/
 COPY azure-deploy/package.json ./azure-deploy/
+COPY suitecrm/SuiteCRM-Core/package.json suitecrm/SuiteCRM-Core/ .yarnrc.yml ./suitecrm/SuiteCRM-Core/
 
 RUN corepack prepare --activate
 
-RUN set -e && yarn install --inline-builds
-RUN set -e && cd azure-deploy && yarn install --inline-builds && cd ..
-RUN set -e && cd launchpad && yarn install --inline-builds && cd ..
-RUN set -e && cd launchpad/next && yarn install --inline-builds && cd ../..
-RUN set -e && cd launchpad/strapi && yarn install --inline-builds && cd ../..
+RUN set -e && yarn install --immutable --immutable-cache
+RUN set -e && cd azure-deploy && yarn install --immutable --immutable-cache  
+RUN set -e && cd launchpad && yarn install --immutable --immutable-cache
+RUN set -e && cd launchpad/next && yarn install --immutable --immutable-cache
+RUN set -e && cd launchpad/strapi && yarn install --immutable --immutable-cache
+RUN set -e && cd suitecrm/SuiteCRM-Core && yarn install --immutable --immutable-cache
 
-# Clean up 
+# Clean up
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*

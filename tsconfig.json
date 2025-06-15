@@ -3,6 +3,7 @@
   "references": [
     { "path": "./azure-deploy" },
     { "path": "./launchpad/strapi" },
-    { "path": "./launchpad/next" }
+    { "path": "./launchpad/next" },
+    { "path": "./suitecrm/SuiteCRM-Core" }
   ]
 }
