@@ -57,8 +57,8 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
-          npx ts-node index.ts
-          
+          yarn ts-node index.ts
+
   setup-infra:
     if: github.event_name == 'push' || github.event.inputs.run_setup_infra == true
     needs: setup-acr-infra
@@ -86,7 +86,7 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
-          npx ts-node index.ts
+          yarn ts-node index.ts
 
   build-and-push-images:
     if: github.event_name == 'push' || github.event.inputs.run_build_and_push_images == true
@@ -209,4 +209,4 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
-          npx ts-node index.ts
+          yarn ts-node index.ts
