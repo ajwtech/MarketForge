@@ -11877,7 +11877,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:>=10.0.0":
+"@types/node@npm:>=10.0.0, @types/node@npm:^24.0.1":
   version: 24.0.1
   resolution: "@types/node@npm:24.0.1"
   dependencies:
@@ -11886,7 +11886,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^20, @types/node@npm:^20.5.1":
+"@types/node@npm:^20":
   version: 20.17.50
   resolution: "@types/node@npm:20.17.50"
   dependencies:
@@ -22834,7 +22834,7 @@ __metadata:
   resolution: "marketforge@workspace:."
   dependencies:
     "@types/fs-extra": "npm:^11.0.4"
-    "@types/node": "npm:^20.5.1"
+    "@types/node": "npm:^24.0.1"
     fs-extra: "npm:^11.3.0"
     node-gyp: "npm:^11.2.0"
     ts-node: "npm:^10.9.2"

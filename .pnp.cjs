@@ -54,7 +54,7 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./",\
         "packageDependencies": [\
           ["@types/fs-extra", "npm:11.0.4"],\
-          ["@types/node", "npm:20.17.50"],\
+          ["@types/node", "npm:24.0.1"],\
           ["fs-extra", "npm:11.3.0"],\
           ["marketforge", "workspace:."],\
           ["node-gyp", "npm:11.2.0"],\
@@ -30146,7 +30146,7 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./",\
         "packageDependencies": [\
           ["@types/fs-extra", "npm:11.0.4"],\
-          ["@types/node", "npm:20.17.50"],\
+          ["@types/node", "npm:24.0.1"],\
           ["fs-extra", "npm:11.3.0"],\
           ["marketforge", "workspace:."],\
           ["node-gyp", "npm:11.2.0"],\
@@ -38838,7 +38838,7 @@ const RAW_RUNTIME_STATE =
           ["@tsconfig/node12", "npm:1.0.11"],\
           ["@tsconfig/node14", "npm:1.0.3"],\
           ["@tsconfig/node16", "npm:1.0.4"],\
-          ["@types/node", "npm:20.17.50"],\
+          ["@types/node", "npm:24.0.1"],\
           ["@types/swc__core", null],\
           ["@types/swc__wasm", null],\
           ["@types/typescript", null],\
