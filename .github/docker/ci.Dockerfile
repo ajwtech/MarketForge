@@ -39,7 +39,7 @@ RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 # Copy package files for dependency resolution
 COPY package.json .yarnrc.yml yarn.lock ./
 COPY .yarn/ .yarn/
-COPY .nx/ .nx/
+
 
 # Copy workspace package.json files
 COPY azure-deploy/package.json azure-deploy/
