@@ -36,14 +36,24 @@ RUN COMPOSE_VERSION=v2.27.1 && \
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 # Set workdir
 
-# Copy your package files
-COPY package.json .yarnrc.yml yarn.lock .nx/ .yarn/ ./
+# Copy package files for dependency resolution
+COPY package.json .yarnrc.yml yarn.lock ./
+COPY .yarn/ .yarn/
+COPY .nx/ .nx/
+
+# Copy workspace package.json files
+COPY azure-deploy/package.json azure-deploy/
+COPY launchpad/package.json launchpad/
+COPY launchpad/strapi/package.json launchpad/strapi/
+COPY launchpad/next/package.json launchpad/next/
+COPY suitecrm/SuiteCRM-Core/package.json suitecrm/SuiteCRM-Core/
+
+# Install dependencies first (for better caching)
+RUN corepack prepare --activate
+RUN set -e && yarn install --immutable --immutable-cache
 
 # Copy all files (except those excluded by .dockerignore)
 COPY . .
-RUN corepack prepare --activate
-
-RUN set -e && yarn install --immutable --immutable-cache
 
 
 # Clean up

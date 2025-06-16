@@ -20,10 +20,7 @@
     "https://json.schemastore.org/pulumi.json": "file:///d%3A/Source/MarketForge/azure-deploy/config/Pulumi.test.yaml"
   },
   "git.ignoreLimitWarning": true,
-  "remote.autoForwardPortsFallback": 0,
-  "typescript.tsdk": ".yarn/sdks/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true,
-  "typescript.preferences.importModuleSpecifier": "relative",
+  "remote.autoForwardPortsFallback": 0,  "typescript.preferences.importModuleSpecifier": "relative",
   "typescript.tsserver.maxTsServerMemory": 8192,
   "typescript.workspaceSymbols.scope": "allOpenProjects",
   "search.exclude": {
