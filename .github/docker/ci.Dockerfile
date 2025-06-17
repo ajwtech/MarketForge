@@ -81,8 +81,7 @@ RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
 # Clone the repository to have the base structure
 ARG GITHUB_REPO=ajwtech/marketforge
-RUN git clone https://github.com/${GITHUB_REPO}.git . && \
-    rm -rf .git
+RUN git clone https://github.com/${GITHUB_REPO}.git . 
 
 # Copy only the built dependencies from builder stage
 # Everything else (source code, config files) comes from the git clone above
