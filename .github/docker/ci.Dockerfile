@@ -1,13 +1,12 @@
-FROM pulumi/pulumi-nodejs-22:latest
+# Build stage
+FROM pulumi/pulumi-nodejs-22:latest AS builder
 
 # Enable Corepack (Yarn 4+)
 RUN corepack enable
 
-# Install Docker CLI, curl, build essentials, Python, and Git
+# Install build dependencies
 RUN apt-get update && \
     apt-get install -y \
-      docker.io \
-      curl \
       build-essential \
       python3 \
       python3-pip \
@@ -18,23 +17,6 @@ RUN apt-get update && \
       make \
       g++ \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Explicitly install Docker Buildx
-RUN mkdir -p /usr/libexec/docker/cli-plugins && \
-    BUILDX_VERSION=v0.14.0 && \
-    curl -sSL https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-amd64 \
-    -o /usr/libexec/docker/cli-plugins/docker-buildx && \
-    chmod +x /usr/libexec/docker/cli-plugins/docker-buildx
-
-# Explicitly install Docker Compose Plugin (v2)
-RUN COMPOSE_VERSION=v2.27.1 && \
-    curl -SL "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-linux-x86_64" \
-    -o /usr/libexec/docker/cli-plugins/docker-compose && \
-    chmod +x /usr/libexec/docker/cli-plugins/docker-compose
-
-# Install Azure CLI
-RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
-# Set workdir
 
 # Copy package files and workspace structure
 COPY package.json .yarnrc.yml yarn.lock ./
@@ -53,13 +35,47 @@ COPY launchpad/strapi/tsconfig.json launchpad/strapi/tsconfig.json
 COPY launchpad/next/tsconfig.json launchpad/next/tsconfig.json
 COPY suitecrm/SuiteCRM-Core/tsconfig.json suitecrm/SuiteCRM-Core/tsconfig.json
 
-# Copy all files (except those excluded by .dockerignore)
-COPY . .
-
-# Install dependencies once with proper workspace structure in place
+# Install dependencies
 RUN corepack prepare --activate
-RUN set -e && yarn install --immutable --immutable-cache
+RUN yarn install --immutable --immutable-cache
 
+# Copy source code (only what's needed for build)
+COPY azure-deploy/ azure-deploy/
+COPY tsconfig.json ./
 
-# Clean up
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+# Production stage
+FROM pulumi/pulumi-nodejs-22:latest AS production
+
+# Enable Corepack (Yarn 4+)
+RUN corepack enable
+
+# Install runtime dependencies only
+RUN apt-get update && \
+    apt-get install -y \
+      docker.io \
+      curl \
+      git \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Explicitly install Docker Buildx
+RUN mkdir -p /usr/libexec/docker/cli-plugins && \
+    BUILDX_VERSION=v0.14.0 && \
+    curl -sSL https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-amd64 \
+    -o /usr/libexec/docker/cli-plugins/docker-buildx && \
+    chmod +x /usr/libexec/docker/cli-plugins/docker-buildx
+
+# Explicitly install Docker Compose Plugin (v2)
+RUN COMPOSE_VERSION=v2.27.1 && \
+    curl -SL "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-linux-x86_64" \
+    -o /usr/libexec/docker/cli-plugins/docker-compose && \
+    chmod +x /usr/libexec/docker/cli-plugins/docker-compose
+
+# Install Azure CLI
+RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+
+# Copy built application and dependencies from builder stage
+COPY --from=builder node_modules ./node_modules
+COPY --from=builder .yarn ./.yarn
+COPY --from=builder azure-deploy ./azure-deploy
+COPY --from=builder package.json .yarnrc.yml yarn.lock ./
+COPY --from=builder tsconfig.json ./

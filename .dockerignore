@@ -1,27 +1,97 @@
 # .dockerignore for zero-install Yarn 4+ monorepo
 # Do NOT ignore .yarn/ or .yarn/cache!
+
+# Node modules and dependencies
 node_modules
 **/node_modules
-# Ignore logs and OS files
+**/node_modules/
+
+# Development and build artifacts
+.next
+**/.next
+.nuxt
+**/.nuxt
+dist
+**/dist
+build
+**/build
+coverage
+**/coverage
+.turbo
+**/.turbo
+
+# Logs and temporary files
 *.log
+**/*.log
 .DS_Store
+**/.DS_Store
+.vscode
+**/.vscode
+.idea
+**/.idea
+*.tmp
+**/*.tmp
+*.temp
+**/*.temp
+
+# Environment and config files
+.env
+.env.*
+**/.env
+**/.env.*
 .env.local
 .env.*.local
-# Ignore test output
-coverage
-# .gitignore
+**/.env.local
+**/.env.*.local
+
+# Test and development files
+test
+**/test
+tests
+**/tests
+__tests__
+**/__tests__
+*.test.*
+**/*.test.*
+*.spec.*
+**/*.spec.*
+cypress
+**/cypress
+.jest
+**/.jest
+
+# Documentation and meta files
+README.md
+**/README.md
+CHANGELOG.md
+**/CHANGELOG.md
+LICENSE
+**/LICENSE
+*.md
+docs
+**/docs
+
+# Git and version control
+.git
+**/.git
+.gitignore
+**/.gitignore
+
+# IDE and editor files
+*.swp
+*.swo
+*~
+.vscode/settings.json
+
+# Project specific exclusions
 azure-deploy/infra/Pulumi.test.yaml
-**/node_modules/
 __azurite_db_table__.json
 azure-deploy/config/pulumi.marketing.yaml
 mautic/logs/*
 azure-deploy/infrastructure/storage/local.php
 azure-deploy/config/Pulumi.test.yaml
 azure-deploy/infrastructure/storage/config_override.php
-.vscode/settings.json
 azure-deploy/config/*
-.env
-.env.secrets
 .github/copilot-instructions.md
 launchpad/strapi/.env.development
 */strapi-staging/*
@@ -29,3 +99,9 @@ azure-deploy/scripts/migrate_pulumi_resources.sh
 azure-deploy/scripts/move_commands.sh
 pu.sh
 azure-deploy/Pulumi.yaml
+
+# Large unnecessary directories (if not needed for CI)
+# Uncomment these if they're not needed:
+# suitecrm/SuiteCRM-Core/vendor
+# launchpad/next/.next
+# launchpad/strapi/build
