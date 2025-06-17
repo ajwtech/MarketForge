@@ -53,7 +53,8 @@ jobs:
           fi
           # Fetch and checkout the latest code
           git fetch origin ${GITHUB_REF#refs/heads/}
-          git checkout ${GITHUB_REF#refs/heads/}          git pull origin ${GITHUB_REF#refs/heads/}
+          git checkout ${GITHUB_REF#refs/heads/}
+          git pull origin ${GITHUB_REF#refs/heads/}
       
       - name: Copy pre-built dependencies
         run: |
