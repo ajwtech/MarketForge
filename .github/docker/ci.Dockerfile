@@ -1,6 +1,9 @@
 # Build stage
 FROM pulumi/pulumi-nodejs-22:latest AS builder
 
+# Set working directory
+WORKDIR /app
+
 # Enable Corepack (Yarn 4+)
 RUN corepack enable
 
@@ -39,12 +42,15 @@ COPY suitecrm/SuiteCRM-Core/tsconfig.json suitecrm/SuiteCRM-Core/tsconfig.json
 RUN corepack prepare --activate
 RUN yarn install --immutable --immutable-cache
 
-# Copy source code (only what's needed for build)
+# Copy source code after dependencies are installed
 COPY azure-deploy/ azure-deploy/
 COPY tsconfig.json ./
 
 # Production stage
 FROM pulumi/pulumi-nodejs-22:latest AS production
+
+# Set working directory
+WORKDIR /app
 
 # Enable Corepack (Yarn 4+)
 RUN corepack enable
@@ -74,8 +80,8 @@ RUN COMPOSE_VERSION=v2.27.1 && \
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
 # Copy built application and dependencies from builder stage
-COPY --from=builder node_modules ./node_modules
-COPY --from=builder .yarn ./.yarn
-COPY --from=builder azure-deploy ./azure-deploy
-COPY --from=builder package.json .yarnrc.yml yarn.lock ./
-COPY --from=builder tsconfig.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.yarn ./.yarn
+COPY --from=builder /app/azure-deploy ./azure-deploy
+COPY --from=builder /app/package.json /app/.yarnrc.yml /app/yarn.lock ./
+COPY --from=builder /app/tsconfig.json ./
