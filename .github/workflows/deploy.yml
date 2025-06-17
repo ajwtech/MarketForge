@@ -203,10 +203,8 @@ jobs:
               --cache-from=type=local,src=/tmp/.buildx-cache \
               --cache-to=type=local,dest=/tmp/.buildx-cache \
               -t $repo:$BUILD_HASH \
+              -t $repo:latest \
               -f ${{ matrix.dockerfile }} .
-            # Tag and push as latest
-            docker tag $repo:$BUILD_HASH $repo:latest
-            docker push $repo:latest
           fi
   setup-apps:
     if: github.event_name == 'push' || github.event.inputs.run_setup_apps == true
