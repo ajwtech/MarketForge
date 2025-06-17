@@ -34,15 +34,19 @@ coverage
 *.temp
 **/*.temp
 
-# Environment and config files
+# Environment and config files (exclude most, but allow SuiteCRM's .env)
 .env
 .env.*
-**/.env
-**/.env.*
 .env.local
 .env.*.local
-**/.env.local
-**/.env.*.local
+# Azure deploy env files
+azure-deploy/.env*
+azure-deploy/**/.env*
+# Launchpad env files  
+launchpad/.env*
+launchpad/**/.env*
+# But keep SuiteCRM's required .env file
+!suitecrm/SuiteCRM-Core/.env
 
 # Test and development files
 test
