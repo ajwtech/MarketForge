@@ -53,8 +53,15 @@ jobs:
           fi
           # Fetch and checkout the latest code
           git fetch origin ${GITHUB_REF#refs/heads/}
-          git checkout ${GITHUB_REF#refs/heads/}
-          git pull origin ${GITHUB_REF#refs/heads/}
+          git checkout ${GITHUB_REF#refs/heads/}          git pull origin ${GITHUB_REF#refs/heads/}
+      
+      - name: Copy pre-built dependencies
+        run: |
+          # Copy pre-built node_modules from container to workspace
+          cp -r /ci-workspace/node_modules ./
+          # Copy yarn cache and config if they exist
+          cp -r /ci-workspace/.yarn ./ 2>/dev/null || true
+          ls -la node_modules/ | head -10  # Debug: show what was copied
       
       - name: Run Pulumi Automation API for ACR infra and export outputs
         id: pulumi-acr
