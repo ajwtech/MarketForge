@@ -49,8 +49,8 @@ COPY tsconfig.json ./
 # Production stage
 FROM pulumi/pulumi-nodejs-22:latest AS production
 
-# Set working directory
-WORKDIR /app
+# Set working directory to GitHub Actions workspace
+WORKDIR /github/workspace
 
 # Enable Corepack (Yarn 4+)
 RUN corepack enable
@@ -79,9 +79,11 @@ RUN COMPOSE_VERSION=v2.27.1 && \
 # Install Azure CLI
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
-# Copy built application and dependencies from builder stage
+# Clone the repository to have the base structure
+ARG GITHUB_REPO=ajwtech/marketforge
+RUN git clone https://github.com/${GITHUB_REPO}.git . && \
+    rm -rf .git
+
+# Copy only the built dependencies from builder stage
+# Everything else (source code, config files) comes from the git clone above
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/.yarn ./.yarn
-COPY --from=builder /app/azure-deploy ./azure-deploy
-COPY --from=builder /app/package.json /app/.yarnrc.yml /app/yarn.lock ./
-COPY --from=builder /app/tsconfig.json ./
