@@ -49,8 +49,8 @@ COPY tsconfig.json ./
 # Production stage
 FROM pulumi/pulumi-nodejs-22:latest AS production
 
-# Set working directory to GitHub Actions workspace
-WORKDIR /github/workspace
+# Set working directory to a location that won't be mounted over
+WORKDIR /ci-workspace
 
 # Enable Corepack (Yarn 4+)
 RUN corepack enable
