@@ -32,20 +32,31 @@ export interface CustomDomainProps {
 }
 
 export function setupDns(props: CustomDomainProps) {
+    // Add debugging output
+    pulumi.log.info(`Setting up DNS for domain: ${props.domain}`);
+    
     // Look up the Cloudflare zone for the domain
     const zonePromise = cloudflare.getZone({ filter: { name: props.domain } });
     const zoneOutput = pulumi.output(zonePromise);
     
-    // Assign zoneId as Output<string> (never undefined)
-    const zoneId = zoneOutput.apply(zone => zone.zoneId || "");
+    // Add debugging and error handling for zone lookup
+    const zoneId = zoneOutput.apply(zone => {
+        pulumi.log.info(`Zone lookup result: ${JSON.stringify(zone)}`);
+        if (!zone || !zone.zoneId) {
+            pulumi.log.error(`Failed to find Cloudflare zone for domain: ${props.domain}`);
+            throw new Error(`Cloudflare zone not found for domain: ${props.domain}`);
+        }
+        pulumi.log.info(`Found Cloudflare zone ID: ${zone.zoneId} for domain: ${props.domain}`);
+        return zone.zoneId;
+    });
+    
     // Add options to prevent errors if records exist
     const dnsOptions = {
         deleteBeforeCreate: true,
         replaceOnChanges: ["content", "type", "ttl", "name", "zoneId"],
         retainOnDelete: false
-    };
-
-    // Create DNS records for CMS
+    };// Create DNS records for CMS
+    pulumi.log.info(`Creating CMS CNAME record: ${props.cmsSubdomain}.${props.domain} -> ${props.strapiFQDN}`);
     const cmsCNAME = new cloudflare.DnsRecord(props.cmsSubdomain, {
         zoneId: zoneId,
         name: `${props.cmsSubdomain}`,
@@ -56,6 +67,7 @@ export function setupDns(props: CustomDomainProps) {
         ...dnsOptions,
         dependsOn: [ props.mauticNginxApp ]});
 
+    pulumi.log.info(`Creating CMS TXT record: asuid.${props.cmsSubdomain}.${props.domain} -> ${props.nginxCvid}`);
     const cmsTXT = new cloudflare.DnsRecord(`asuid.${props.cmsSubdomain}`, {
         zoneId: zoneId,
         name: `asuid.${props.cmsSubdomain}`,
