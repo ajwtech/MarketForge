@@ -90,9 +90,27 @@ jobs:
       ENV_ESC: ${{ matrix.env_esc }}
       PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+      - name: Update to latest code
+        run: |
+          # Add current workspace as safe directory
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+          git config --global --add safe.directory .
+          # Check if we have a git repository, if not, initialize it
+          if [ ! -d ".git" ]; then
+            git init
+            git remote add origin https://github.com/${GITHUB_REPOSITORY}.git
+          fi
+          # Fetch and checkout the latest code
+          git fetch origin ${GITHUB_REF#refs/heads/}
+          git checkout ${GITHUB_REF#refs/heads/}
+          git pull origin ${GITHUB_REF#refs/heads/}
+      
+      - name: Copy pre-built dependencies
+        run: |
+          # Copy pre-built node_modules from container to workspace
+          cp -r /ci-workspace/node_modules ./
+          # Copy yarn cache and config if they exist
+          cp -r /ci-workspace/.yarn ./ 2>/dev/null || true
       
       - name: Run Pulumi Automation API for infra
         working-directory: ./azure-deploy
