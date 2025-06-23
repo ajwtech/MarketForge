@@ -6,8 +6,6 @@ import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 import { acr } from "./stackRefs";
 
 
-
-
 // Reference the resource group from the ACR infra stack
 export const resourceGroupName = acr.getOutput("resourceGroupName");
 

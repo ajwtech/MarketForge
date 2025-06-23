@@ -1,173 +1,104 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as cloudflare from "@pulumi/cloudflare";
-import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
-import { infra } from "../../stackRefs"; 
-import * as command from "@pulumi/command";
 
-const marketing_env = infra.getOutput("marketing_env_id");
-
-// Create the interface for the DNS entries
-export interface CloudflareDNSEntries {
-    cmsCNAME: cloudflare.DnsRecord;
-    cmsTXT: cloudflare.DnsRecord;
-    crmCNAME: cloudflare.DnsRecord;
-    crmTXT: cloudflare.DnsRecord;
-    mapCNAME: cloudflare.DnsRecord;
-    mapTXT: cloudflare.DnsRecord;
-}
-
-
-export interface CustomDomainProps {
+export interface AsuidDnsProps {
     domain: string;
     cmsSubdomain: string;
     crmSubdomain: string;
     mapSubdomain: string;
     siteFQDN: pulumi.Output<string>;
-    nginxCvid: pulumi.Output<string>
-    mauticNginxApp: azure_app.ContainerApp;
-    strapiApp: azure_app.ContainerApp;
-    strapiFQDN: pulumi.Output<string>;
-    suiteCrmApp: azure_app.ContainerApp;
-    suiteCrmFQDN: pulumi.Output<string>;
+    nginxCvid: pulumi.Output<string>;
 }
 
-export function setupDns(props: CustomDomainProps) {
-    // Add debugging output
-    pulumi.log.info(`Setting up DNS for domain: ${props.domain}`);
-    
-    // Look up the Cloudflare zone for the domain
+export interface CnameDnsProps {
+    domain: string;
+    cmsSubdomain: string;
+    crmSubdomain: string;
+    mapSubdomain: string;
+    siteFQDN: pulumi.Output<string>;
+    suiteCrmFQDN: pulumi.Output<string>;
+    strapiFQDN: pulumi.Output<string>;
+    mauticNginxFQDN: pulumi.Output<string>;
+}
+
+export function setupAsuidDnsRecords(props: AsuidDnsProps) {
+    pulumi.log.info(`Setting up asuid TXT DNS records for domain: ${props.domain}`);
     const zonePromise = cloudflare.getZone({ filter: { name: props.domain } });
     const zoneOutput = pulumi.output(zonePromise);
-    
-    // Add debugging and error handling for zone lookup
     const zoneId = zoneOutput.apply(zone => {
-        pulumi.log.info(`Zone lookup result: ${JSON.stringify(zone)}`);
         if (!zone || !zone.zoneId) {
             pulumi.log.error(`Failed to find Cloudflare zone for domain: ${props.domain}`);
             throw new Error(`Cloudflare zone not found for domain: ${props.domain}`);
         }
-        pulumi.log.info(`Found Cloudflare zone ID: ${zone.zoneId} for domain: ${props.domain}`);
         return zone.zoneId;
     });
-    
-    // Add options to prevent errors if records exist
     const dnsOptions = {
         deleteBeforeCreate: true,
         replaceOnChanges: ["content", "type", "ttl", "name", "zoneId"],
         retainOnDelete: false
-    };// Create DNS records for CMS
-    pulumi.log.info(`Creating CMS CNAME record: ${props.cmsSubdomain}.${props.domain} -> ${props.strapiFQDN}`);
-    const cmsCNAME = new cloudflare.DnsRecord(props.cmsSubdomain, {
-        zoneId: zoneId,
-        name: `${props.cmsSubdomain}`,
-        type: "CNAME",
-        content: props.strapiFQDN,
-        ttl: 3600,
-    },{
-        ...dnsOptions,
-        dependsOn: [ props.mauticNginxApp ]});
-
-    pulumi.log.info(`Creating CMS TXT record: asuid.${props.cmsSubdomain}.${props.domain} -> ${props.nginxCvid}`);
+    };
     const cmsTXT = new cloudflare.DnsRecord(`asuid.${props.cmsSubdomain}`, {
         zoneId: zoneId,
         name: `asuid.${props.cmsSubdomain}`,
         type: "TXT",
-        content: pulumi.interpolate`${props.nginxCvid}`,
+        content: props.nginxCvid.apply(cvid => `"${cvid}"` || ""),
         ttl: 3600,
-    },{
-        ...dnsOptions,
-        dependsOn: [ props.mauticNginxApp, cmsCNAME ]});
-
-    // Wait for CMS TXT record to propagate
-    const waitForCmsTxt = new command.local.Command(`wait-for-cms-txt`, {
-        create: pulumi.interpolate`until dig +short TXT asuid.${props.cmsSubdomain}.${props.domain} | grep -q ${props.nginxCvid}; do echo waiting for DNS...; sleep 5; done`,
-    }, { dependsOn: [cmsTXT] });
-
-    // Create DNS records for CRM
-    const crmCNAME = new cloudflare.DnsRecord(props.crmSubdomain, {
-        zoneId: zoneId,
-        name: `${props.crmSubdomain}`,
-        type: "CNAME",
-        content: props.siteFQDN,
-        ttl: 3600,
-    },{
-        ...dnsOptions,
-        dependsOn: [ props.mauticNginxApp,  ]});
-
+    }, { ...dnsOptions });
     const crmTXT = new cloudflare.DnsRecord(`asuid.${props.crmSubdomain}`, {
         zoneId: zoneId,
         name: `asuid.${props.crmSubdomain}`,
         type: "TXT",
-        content: pulumi.interpolate`${props.nginxCvid}`,
+        content: props.nginxCvid.apply(cvid => `"${cvid}"` || ""),
         ttl: 3600,
-    },{
-        ...dnsOptions,
-        dependsOn: [ props.mauticNginxApp, crmCNAME ]});
-
-    // Wait for CRM TXT record to propagate
-    const waitForCrmTxt = new command.local.Command(`wait-for-crm-txt`, {
-        create: pulumi.interpolate`until dig +short TXT asuid.${props.crmSubdomain}.${props.domain} | grep -q ${props.nginxCvid}; do echo waiting for DNS...; sleep 5; done`,
-    }, { dependsOn: [crmTXT] });
-
-    // Create DNS records for MAP
-    const mapCNAME = new cloudflare.DnsRecord(props.mapSubdomain, {
-        zoneId: zoneId,
-        name: `${props.mapSubdomain}`,
-        type: "CNAME",
-        content: props.siteFQDN,
-        ttl: 3600,
-    },{
-        ...dnsOptions,
-        dependsOn: [ props.mauticNginxApp ]});
-
+    }, { ...dnsOptions });
     const mapTXT = new cloudflare.DnsRecord(`asuid.${props.mapSubdomain}`, {
         zoneId: zoneId,
         name: `asuid.${props.mapSubdomain}`,
         type: "TXT",
-        content: pulumi.interpolate`${props.nginxCvid}`,
+        content: props.nginxCvid.apply(cvid => `"${cvid}"` || ""),
         ttl: 3600,
-    },{
-        ...dnsOptions,
-        dependsOn: [ props.mauticNginxApp,mapCNAME ]});
+    }, { ...dnsOptions });
+    return { cmsTXT, crmTXT, mapTXT };
+}
 
-    // Wait for MAP TXT record to propagate
-    const waitForMapTxt = new command.local.Command(`wait-for-map-txt`, {
-        create: pulumi.interpolate`until dig +short TXT asuid.${props.mapSubdomain}.${props.domain} | grep -q ${props.nginxCvid}; do echo waiting for DNS...; sleep 5; done`,
-    }, { dependsOn: [mapTXT] });
-
-    // Remove root domain DNS record creation for now
-    // const rootCNAME = new cloudflare.DnsRecord("root", {
-    //     zoneId: zoneId,
-    //     name: '@',
-    //     type: "A",
-    //     content: props.siteFQDN,
-    //     ttl: 3600,
-    // },{
-    //     ...dnsOptions,
-    //     dependsOn: [ props.mauticNginxApp ]});
-
-    // const rootTXT = new cloudflare.DnsRecord("asuid.root", {
-    //     zoneId: zoneId,
-    //     name: `asuid`,
-    //     type: "TXT",
-    //     content: props.nginxCvid,
-    //     ttl: 3600,
-    // },{
-    //     ...dnsOptions,
-    //     dependsOn: [ props.mauticNginxApp ]
-    // });
-    // Remove rootCNAME and rootTXT from dnsentries
-    const dnsentries: CloudflareDNSEntries = {
-        cmsCNAME: cmsCNAME,
-        cmsTXT: cmsTXT,
-        crmCNAME: crmCNAME,
-        crmTXT: crmTXT,
-        mapCNAME: mapCNAME,
-        mapTXT: mapTXT
+export function setupCnameDnsRecords(props: CnameDnsProps) {
+    pulumi.log.info(`Setting up CNAME DNS records for domain: ${props.domain}`);
+    const zonePromise = cloudflare.getZone({ filter: { name: props.domain } });
+    const zoneOutput = pulumi.output(zonePromise);
+    const zoneId = zoneOutput.apply(zone => {
+        if (!zone || !zone.zoneId) {
+            pulumi.log.error(`Failed to find Cloudflare zone for domain: ${props.domain}`);
+            throw new Error(`Cloudflare zone not found for domain: ${props.domain}`);
+        }
+        return zone.zoneId;
+    });
+    const dnsOptions = {
+        deleteBeforeCreate: true,
+        replaceOnChanges: ["content", "type", "ttl", "name", "zoneId"],
+        retainOnDelete: false
     };
-
-    // Return wait commands as well for downstream dependsOn
-    return { ...dnsentries, waitForCmsTxt, waitForCrmTxt, waitForMapTxt };
-};
+    const cmsCNAME = new cloudflare.DnsRecord(props.cmsSubdomain, {
+        zoneId: zoneId,
+        name: props.cmsSubdomain,
+        type: "CNAME",
+        content: props.strapiFQDN,
+        ttl: 3600,
+    }, { ...dnsOptions });
+    const crmCNAME = new cloudflare.DnsRecord(props.crmSubdomain, {
+        zoneId: zoneId,
+        name: props.crmSubdomain,
+        type: "CNAME",
+        content: props.suiteCrmFQDN,
+        ttl: 3600,
+    }, { ...dnsOptions });
+    const mapCNAME = new cloudflare.DnsRecord(props.mapSubdomain, {
+        zoneId: zoneId,
+        name: props.mapSubdomain,
+        type: "CNAME",
+        content: props.mauticNginxFQDN.apply(fqdn => fqdn || ""),
+        ttl: 3600,
+    }, { ...dnsOptions });
+    return { cmsCNAME, crmCNAME, mapCNAME };
+}
 
 

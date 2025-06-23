@@ -1,9 +1,8 @@
 import * as pulumi from "@pulumi/pulumi";
-import { mauticWeb, mauticNginx } from "./infrastructure/containerApps/mauticApps";
+import { mauticNginx, mauticWeb } from "./infrastructure/containerApps/mauticApps";
 import { strapiApp } from "./infrastructure/containerApps/strapiApp";
 import { suitecrmApp } from "./infrastructure/containerApps/suiteCrmApp";
-import { setupDns } from "./infrastructure/dns/customDomains";
-import { nginxCerts } from "./infrastructure/certificates/nginxCerts";
+import * as dns from "./infrastructure/dns/customDomains";
 import { jumpBox as jumpbox} from "./infrastructure/containerApps/jumpbox";
 import { acr, infra } from "./stackRefs";
 
@@ -43,6 +42,7 @@ const storageAccountKey = infra.getOutput("storageAccountKey");
 
 registryUrl.apply(url => pulumi.log.info(`registryUrl resolved value: ${url}`));
 
+// 1. Import mauticNginx and create the app
 const mauticNginxApp = mauticNginx({
     env: appEnv,
     image: pulumi.interpolate`${registryUrl}/marketing-nginx:${imageTag}`,
@@ -60,31 +60,23 @@ const mauticNginxApp = mauticNginx({
     storageAccountName, 
     storageAccountKey, 
 });
-const siteFQDN = mauticNginxApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost");
-const nginxCvid = mauticNginxApp.customDomainVerificationId.apply(cvid => cvid);
 
-const mauticWebApp = mauticWeb({
-    env: appEnv,
-    image: pulumi.interpolate`${registryUrl}/marketing-mautic-app:${imageTag}`,
-    registryUrl,
-    registryUsername: acrUsername,
-    registryPassword: acrPassword,
-    managedEnvironmentId: managedEnvironmentId,
-    storageName: mauticStorageName,
-    dbHost,
-    dbPort,
-    dbName,
-    dbUser,
-    dbPassword,
-    appSecret,
-    resourceGroupName,
+// 2. Get the custom domain verification ID
+const nginxCvid = mauticNginxApp.customDomainVerificationId.apply(id => String(id));
+const siteFQDN = mauticNginxApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost");
+
+// 3. Create the DNS records using setupDns
+const asuidRecords = dns.setupAsuidDnsRecords({
+    domain,
+    cmsSubdomain,
+    crmSubdomain,
+    mapSubdomain,
     siteFQDN,
-    siteUrl: pulumi.interpolate`https://${mapSubdomain}.${domain}/`,
-    storageAccountName, // added for cross-stack reference
-    storageAccountKey,  // added for cross-stack reference
-    configFilePlaceholder: infra.getOutput("configFilePlaceholder"), // optional, if needed
+    nginxCvid
 });
 
+
+// 4. Import and create the other apps, with explicit dependencies on DNS records
 const deployedStrapiApp = strapiApp({
     env: appEnv,
     image: pulumi.interpolate`${registryUrl}/marketing-strapi-app:${imageTag}`,
@@ -135,26 +127,39 @@ const deployedSuitecrmApp = suitecrmApp({
     domain,
 });
 
-const cloudflareDNSentries = setupDns({
+const mauticWebApp = mauticWeb({
+    env: appEnv,
+    image: pulumi.interpolate`${registryUrl}/marketing-mautic-app:${imageTag}`,
+    registryUrl,
+    registryUsername: acrUsername,
+    registryPassword: acrPassword,
+    managedEnvironmentId: managedEnvironmentId,
+    storageName: mauticStorageName,
+    dbHost,
+    dbPort,
+    dbName,
+    dbUser,
+    dbPassword,
+    appSecret,
+    resourceGroupName,
+    siteFQDN: siteFQDN,
+    siteUrl: pulumi.interpolate`https://${mapSubdomain}.${domain}/`,
+    storageAccountName,
+    storageAccountKey,
+    configFilePlaceholder: infra.getOutput("configFilePlaceholder"), // optional, if needed
+});
+
+const CnameDnsRecords = dns.setupCnameDnsRecords({
     domain,
     cmsSubdomain,
     crmSubdomain,
     mapSubdomain,
-    siteFQDN: siteFQDN.apply(fqdn => String(fqdn)),
-    nginxCvid: nginxCvid.apply(id => String(id)),
-    mauticNginxApp, // If setupDns expects the resource, this is correct
-    strapiApp: deployedStrapiApp, // If setupDns expects the resource, this is correct
-    strapiFQDN: deployedStrapiApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
-    suiteCrmApp: deployedSuitecrmApp, // If setupDns expects the resource, this is correct
-    suiteCrmFQDN: deployedSuitecrmApp.configuration.apply(fqdn => fqdn?.ingress?.fqdn ?? "localhost"),
+    siteFQDN,
+    suiteCrmFQDN: deployedSuitecrmApp.configuration.apply(cfg => cfg?.ingress?.fqdn ?? "localhost"),
+    strapiFQDN: deployedStrapiApp.configuration.apply(cfg => cfg?.ingress?.fqdn ?? "localhost"),
+    mauticNginxFQDN: mauticNginxApp.configuration.apply(cfg => cfg?.ingress?.fqdn ?? "localhost"),
 });
 
-const customDomains = nginxCerts(
-    mauticNginxApp,
-    deployedStrapiApp,
-    marketing_env,
-    cloudflareDNSentries
-);
 
 const jumpboxApp = jumpbox({
     env: appEnv,
@@ -167,12 +172,18 @@ const jumpboxApp = jumpbox({
     resourceGroupName,
 });
 
-export {
-    mauticNginxApp,
-    mauticWebApp,
-    deployedStrapiApp,
-    deployedSuitecrmApp,
-    cloudflareDNSentries,
-    customDomains,
-    jumpboxApp,
-};
+
+
+export function returnOutputs() {
+    return {
+        mauticNginxApp,
+        deployedStrapiApp,
+        marketing_env,
+        asuidCmsRecords: asuidRecords.cmsTXT,
+        asuidCrmRecords: asuidRecords.crmTXT,
+        asuidMapRecords: asuidRecords.mapTXT,
+        cnameCmsEntries: CnameDnsRecords.cmsCNAME,
+        cnameCrmEntries: CnameDnsRecords.crmCNAME,
+        cnameMapEntries: CnameDnsRecords.mapCNAME,
+    };
+}

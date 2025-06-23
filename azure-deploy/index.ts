@@ -57,6 +57,10 @@ async function main() {
       console.log("running:", "./appsStack");
       outputs = await runStackWithEscEnv(job, project, "./appsStack").then(res => res.outputs);
       break;
+    case "setup-certs":
+      console.log("running:", "./certsStack");
+      outputs = await runStackWithEscEnv(job, project, "./certsStack").then(res => res.outputs);
+      break;
     default:
       throw new Error(`Unknown job: ${job}`);
   }

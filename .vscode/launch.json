@@ -4,27 +4,17 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        {
-            "command": "npm run dev",
-            "name": "Run npm dev",
-            "request": "launch",
-            "type": "node-terminal",
-            "cwd": "${workspaceFolder}/azure-deploy"
-        },
-
-        {
-            "type": "pulumi",
-            "request": "launch",
-            "name": "pulumi up",
-            "command": "up",
-            "workDir": "${workspaceFolder}/azure-deploy"
-        },
-        {
-            "type": "pulumi",
-            "request": "launch",
-            "name": "pulumi preview",
-            "command": "preview",
-            "workDir": "${workspaceFolder}/azure-deploy"
-        },
+    {
+            "name": "Launch Pulumi Program (debug)",
+            "type": "node",
+            "request": "attach",
+            "continueOnAttach": true,
+            "cwd": "${workspaceFolder}/azure-deploy",
+            "skipFiles": [
+                "${workspaceFolder}/azure-deploy/node_modules/**/*.js",
+                "${workspaceFolder}/azure-deploy/lib/**/*.js",
+                "<node_internals>/**/*.js"
+            ]
+        }
     ]
 }
