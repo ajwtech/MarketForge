@@ -179,7 +179,6 @@ export function mauticNginx(args: {
                 customDomains: [
                     { bindingType: 'Disabled', name: `${crmSubdomain}.${domain}` },
                     { bindingType: 'Disabled', name: `${mapSubdomain}.${domain}` },
-                    { bindingType: 'Disabled', name: `dev.${cmsSubdomain}.${domain}` }
                 ] ,
             },
             maxInactiveRevisions: 100,
