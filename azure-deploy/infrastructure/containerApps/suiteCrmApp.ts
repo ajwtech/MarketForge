@@ -71,7 +71,7 @@ export function suitecrmApp(args: suitecrmAppArgs) {
                 template: {
                     containers: [{
                         name: "suitecrm-app",
-                        image: imageTag,
+                        image: args.image,
                         env: [
                     { name: "APP_ENV", value: args.env },
                     { name: "DB_HOST", value: args.dbHost },
