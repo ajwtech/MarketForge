@@ -18,12 +18,12 @@ export interface BindCertsArgs {
     nginxApp: azure_app.ContainerApp;
     strapiApp: azure_app.ContainerApp;
     environmentName: pulumi.Input<string>;
-    asuidCmsRecords: pulumi.Output<cloudflare.DnsRecord>;
-    asuidCrmRecords: pulumi.Output<cloudflare.DnsRecord>;
-    asuidMapRecords: pulumi.Output<cloudflare.DnsRecord>;
-    cnameCmsEntries: pulumi.Output<cloudflare.DnsRecord>;
-    cnameCrmEntries: pulumi.Output<cloudflare.DnsRecord>;
-    cnameMapEntries: pulumi.Output<cloudflare.DnsRecord>;
+    asuidCmsRecords: cloudflare.DnsRecord;
+    asuidCrmRecords: cloudflare.DnsRecord;
+    asuidMapRecords: cloudflare.DnsRecord;
+    cnameCmsEntries: cloudflare.DnsRecord;
+    cnameCrmEntries: cloudflare.DnsRecord;
+    cnameMapEntries: cloudflare.DnsRecord;
 }
 
 export function BindCerts(args: BindCertsArgs) {

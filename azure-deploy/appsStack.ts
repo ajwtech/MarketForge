@@ -40,6 +40,7 @@ const suitecrmStorageName = infra.getOutput("suitecrmStorage_name");
 const jumpboxStorageName = infra.getOutput("jumpboxStorage_name");
 const storageAccountKey = infra.getOutput("storageAccountKey");
 
+
 registryUrl.apply(url => pulumi.log.info(`registryUrl resolved value: ${url}`));
 
 // 1. Import mauticNginx and create the app
@@ -149,6 +150,17 @@ const mauticWebApp = mauticWeb({
     configFilePlaceholder: infra.getOutput("configFilePlaceholder"), // optional, if needed
 });
 
+const jumpboxApp = jumpbox({
+    env: appEnv,
+    managedEnvironmentId: managedEnvironmentId,
+    storageName: jumpboxStorageName,
+    storageAccountName,
+    storageAccountKey,
+    dbHost,
+    dbPort,
+    resourceGroupName,
+});
+
 const CnameDnsRecords = dns.setupCnameDnsRecords({
     domain,
     cmsSubdomain,
@@ -160,17 +172,6 @@ const CnameDnsRecords = dns.setupCnameDnsRecords({
     mauticNginxFQDN: mauticNginxApp.configuration.apply(cfg => cfg?.ingress?.fqdn ?? "localhost"),
 });
 
-
-const jumpboxApp = jumpbox({
-    env: appEnv,
-    managedEnvironmentId: managedEnvironmentId,
-    storageName: jumpboxStorageName,
-    storageAccountName,
-    storageAccountKey,
-    dbHost,
-    dbPort,
-    resourceGroupName,
-});
 
 
 
