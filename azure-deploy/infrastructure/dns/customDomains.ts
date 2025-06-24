@@ -33,9 +33,7 @@ export function setupAsuidDnsRecords(props: AsuidDnsProps) {
         return zone.zoneId;
     });
     const dnsOptions = {
-        deleteBeforeCreate: true,
-        replaceOnChanges: ["content", "type", "ttl", "name", "zoneId"],
-        retainOnDelete: false
+        replaceOnChanges: ["content", "type", "ttl", "name", "zoneId"]
     };
     const cmsTXT = new cloudflare.DnsRecord(`asuid.${props.cmsSubdomain}`, {
         zoneId: zoneId,
@@ -73,9 +71,7 @@ export function setupCnameDnsRecords(props: CnameDnsProps) {
         return zone.zoneId;
     });
     const dnsOptions = {
-        deleteBeforeCreate: true,
         replaceOnChanges: ["content", "type", "ttl", "name", "zoneId"],
-        retainOnDelete: false
     };
     const cmsCNAME = new cloudflare.DnsRecord(props.cmsSubdomain, {
         zoneId: zoneId,

@@ -1,7 +1,6 @@
 import * as pulumi from "@pulumi/pulumi";
 import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
 import * as command from "@pulumi/command";
-import * as dns from "../dns/customDomains";
 import * as cloudflare from "@pulumi/cloudflare";
 
 
@@ -15,15 +14,15 @@ const crmSubdomain = config.get("crmSubdomain") || "crm";
 
 
 export interface BindCertsArgs {
-    nginxApp: azure_app.ContainerApp;
-    strapiApp: azure_app.ContainerApp;
+    nginxApp: pulumi.Output<azure_app.ContainerApp>;
+    strapiApp: pulumi.Output<azure_app.ContainerApp>;
     environmentName: pulumi.Input<string>;
-    asuidCmsRecords: cloudflare.DnsRecord;
-    asuidCrmRecords: cloudflare.DnsRecord;
-    asuidMapRecords: cloudflare.DnsRecord;
-    cnameCmsEntries: cloudflare.DnsRecord;
-    cnameCrmEntries: cloudflare.DnsRecord;
-    cnameMapEntries: cloudflare.DnsRecord;
+    asuidCmsRecords: pulumi.Output<cloudflare.DnsRecord>;
+    asuidCrmRecords: pulumi.Output<cloudflare.DnsRecord>;
+    asuidMapRecords: pulumi.Output<cloudflare.DnsRecord>;
+    cnameCmsEntries: pulumi.Output<cloudflare.DnsRecord>;
+    cnameCrmEntries: pulumi.Output<cloudflare.DnsRecord>;
+    cnameMapEntries: pulumi.Output<cloudflare.DnsRecord>;
 }
 
 export function BindCerts(args: BindCertsArgs) {
@@ -35,7 +34,7 @@ export function BindCerts(args: BindCertsArgs) {
         --environment ${args.environmentName} \
         --validation-method CNAME`,
         triggers: [args.strapiApp.systemData.lastModifiedAt, args.asuidCmsRecords.modifiedOn, args.cnameCmsEntries.modifiedOn],
-    }, { dependsOn: [args.strapiApp, args.asuidCmsRecords, args.cnameCmsEntries] });
+    });
 
     const bindMapCommand = new command.local.Command("bind-map-custom-domain", {
         create: pulumi.interpolate`az containerapp hostname bind \
@@ -44,7 +43,7 @@ export function BindCerts(args: BindCertsArgs) {
         --environment ${args.environmentName} \
         --validation-method CNAME`,
         triggers: [args.nginxApp.systemData.lastModifiedAt, args.asuidMapRecords.modifiedOn, args.cnameMapEntries.modifiedOn],
-    }, { dependsOn: [args.nginxApp, args.asuidMapRecords, args.cnameMapEntries, bindCmsCommand] });
+    }, { dependsOn: [bindCmsCommand] });
 
     const bindCrmCommand = new command.local.Command("bind-crm-custom-domain", {
         create: pulumi.interpolate`az containerapp hostname bind \
@@ -53,7 +52,7 @@ export function BindCerts(args: BindCertsArgs) {
         --environment ${args.environmentName} \
         --validation-method CNAME`,
         triggers: [args.nginxApp.systemData.lastModifiedAt, args.asuidCrmRecords.modifiedOn, args.cnameCrmEntries.modifiedOn],
-    }, { dependsOn: [args.nginxApp, args.asuidCrmRecords, args.cnameCrmEntries, bindMapCommand] });
+    }, { dependsOn: [bindMapCommand] });
 
     // 2. Create Managed Certificates after domain is mapped
     const cmsCert = new azure_app.ManagedCertificate("cmsCert", {
@@ -86,7 +85,6 @@ export function BindCerts(args: BindCertsArgs) {
         },
     }, { dependsOn: [bindCrmCommand] });
 
-    // Optionally, you may want to update the app to use the new cert after it's issued (not shown here)
 
     return [
         { cert: crmCert, bindCommand: bindCrmCommand },

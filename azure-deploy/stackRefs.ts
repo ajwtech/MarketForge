@@ -5,3 +5,4 @@ const config = new pulumi.Config();
 
 export const acr = new pulumi.StackReference(getStackRefName(config, "setup-acr-infra"));
 export const infra = new pulumi.StackReference(getStackRefName(config, "setup-infra"));
+export const apps = new pulumi.StackReference(getStackRefName(config, "setup-apps"));
