@@ -48,9 +48,7 @@ export function suitecrmApp(args: suitecrmAppArgs) {
                             weight: 100,
                         }],
                         transport: "tcp",
-                customDomains: [
-                    { bindingType: 'Disabled', name: `${args.crmSubdomain}.${args.domain}` },
-                ] ,
+
                     },
                     maxInactiveRevisions: 100,
                     registries: [{
