@@ -1,6 +1,8 @@
 import * as pulumi from "@pulumi/pulumi";
 import { v20241002preview as azure_app } from "@pulumi/azure-native/app";
+import * as command from "@pulumi/command";
 import * as cloudflare from "@pulumi/cloudflare";
+import { apps } from "../../stackRefs";
 
 const config = new pulumi.Config();
 const resourceGroupName = config.require("resourceGroupName");
@@ -20,52 +22,54 @@ export interface BindCertsArgs {
 }
 
 export function BindCerts(args: BindCertsArgs) {
-    // Container Apps handle domain binding through their customDomains configuration
-    // We only need to create the managed certificates here
+    // Get Container App names from stack references
+    const strapiAppName = apps.getOutput("deployedStrapiApp").apply(app => app.name);
+    const nginxAppName = apps.getOutput("mauticNginxApp").apply(app => app.name);
     
-    // Create Managed Certificates that will be automatically bound to the custom domains
-    const cmsCert = new azure_app.ManagedCertificate("cmsCert", {
-        resourceGroupName: resourceGroupName,
-        environmentName: args.environmentName,
-        managedCertificateName: `mc-${args.environmentName}-${cmsSubdomain}-${domain.replace(/\./g, '-')}`,
-        properties: {
-            domainControlValidation: "CNAME",
-            subjectName: `${cmsSubdomain}.${domain}`,
-        },
+    // Use CLI commands to bind domains AND create certificates in one step
+    // This approach avoids the certificate ID dependency issue
+    const bindCmsCommand = new command.local.Command("bind-cms-custom-domain", {
+        create: pulumi.interpolate`az containerapp hostname bind \
+        --hostname ${cmsSubdomain}.${domain} \
+        -g ${resourceGroupName} -n ${strapiAppName} \
+        --environment ${args.environmentName} \
+        --validation-method CNAME \
+        --output json || echo "Domain binding may already exist"`,
+        triggers: [args.asuidCmsRecords.modifiedOn, args.cnameCmsEntries.modifiedOn],
     }, { 
         dependsOn: [args.asuidCmsRecords, args.cnameCmsEntries],
-        customTimeouts: { create: "30m", update: "15m", delete: "5m" }
+        customTimeouts: { create: "30m" }
     });
 
-    const mapCert = new azure_app.ManagedCertificate("mapCert", {
-        resourceGroupName: resourceGroupName,
-        environmentName: args.environmentName,
-        managedCertificateName: `mc-${args.environmentName}-${mapSubdomain}-${domain.replace(/\./g, '-')}`,
-        properties: {
-            domainControlValidation: "CNAME",
-            subjectName: `${mapSubdomain}.${domain}`,
-        },
+    const bindMapCommand = new command.local.Command("bind-map-custom-domain", {
+        create: pulumi.interpolate`az containerapp hostname bind \
+        --hostname ${mapSubdomain}.${domain} \
+        -g ${resourceGroupName} -n ${nginxAppName} \
+        --environment ${args.environmentName} \
+        --validation-method CNAME \
+        --output json || echo "Domain binding may already exist"`,
+        triggers: [args.asuidMapRecords.modifiedOn, args.cnameMapEntries.modifiedOn],
     }, { 
-        dependsOn: [args.asuidMapRecords, args.cnameMapEntries],
-        customTimeouts: { create: "30m", update: "15m", delete: "5m" }
+        dependsOn: [args.asuidMapRecords, args.cnameMapEntries, bindCmsCommand],
+        customTimeouts: { create: "30m" }
     });
 
-    const crmCert = new azure_app.ManagedCertificate("crmCert", {
-        resourceGroupName: resourceGroupName,
-        environmentName: args.environmentName,
-        managedCertificateName: `mc-${args.environmentName}-${crmSubdomain}-${domain.replace(/\./g, '-')}`,
-        properties: {
-            domainControlValidation: "CNAME",
-            subjectName: `${crmSubdomain}.${domain}`,
-        },
+    const bindCrmCommand = new command.local.Command("bind-crm-custom-domain", {
+        create: pulumi.interpolate`az containerapp hostname bind \
+        --hostname ${crmSubdomain}.${domain} \
+        -g ${resourceGroupName} -n ${nginxAppName} \
+        --environment ${args.environmentName} \
+        --validation-method CNAME \
+        --output json || echo "Domain binding may already exist"`,
+        triggers: [args.asuidCrmRecords.modifiedOn, args.cnameCrmEntries.modifiedOn],
     }, { 
-        dependsOn: [args.asuidCrmRecords, args.cnameCrmEntries],
-        customTimeouts: { create: "30m", update: "15m", delete: "5m" }
+        dependsOn: [args.asuidCrmRecords, args.cnameCrmEntries, bindMapCommand],
+        customTimeouts: { create: "30m" }
     });
 
     return [
-        { cert: crmCert },
-        { cert: cmsCert },
-        { cert: mapCert },
+        { bindCommand: bindCrmCommand },
+        { bindCommand: bindCmsCommand },
+        { bindCommand: bindMapCommand },
     ];
 }

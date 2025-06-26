@@ -50,7 +50,11 @@ export function strapiApp(args: {
                     weight: 100,
                 }],
                 customDomains: [
-                    { bindingType: 'SniEnabled', name: `${cmsSubdomain}.${domain}` },
+                    { 
+                        bindingType: 'Disabled', 
+                        name: `${cmsSubdomain}.${domain}`,
+                        // Certificate will be bound after creation via certificate stack
+                    },
                 ],
                 transport: "Auto", 
                 

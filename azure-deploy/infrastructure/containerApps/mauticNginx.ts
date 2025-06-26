@@ -175,11 +175,18 @@ export function mauticNginx(args: {
                     latestRevision: true, 
                     weight: 100,
                 }],
-                transport: "Auto",
-                customDomains: [
-                    { bindingType: 'SniEnabled', name: `${mapSubdomain}.${domain}` },
-                    { bindingType: 'SniEnabled', name: `${crmSubdomain}.${domain}` },
-                ] ,
+                transport: "Auto",                customDomains: [
+                    { 
+                        bindingType: 'Disabled', 
+                        name: `${mapSubdomain}.${domain}`,
+                        // Certificate will be bound after creation via certificate stack
+                    },
+                    { 
+                        bindingType: 'Disabled', 
+                        name: `${crmSubdomain}.${domain}`,
+                        // Certificate will be bound after creation via certificate stack
+                    },
+                ],
             },
             maxInactiveRevisions: 100,
             registries: [{
