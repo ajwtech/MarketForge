@@ -177,8 +177,8 @@ export function mauticNginx(args: {
                 }],
                 transport: "Auto",
                 customDomains: [
-                    { bindingType: 'Disabled', name: `${mapSubdomain}.${domain}` },
-                    { bindingType: 'Disabled', name: `${crmSubdomain}.${domain}` },
+                    { bindingType: 'SniEnabled', name: `${mapSubdomain}.${domain}` },
+                    { bindingType: 'SniEnabled', name: `${crmSubdomain}.${domain}` },
                 ] ,
             },
             maxInactiveRevisions: 100,

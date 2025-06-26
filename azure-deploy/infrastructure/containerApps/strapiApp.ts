@@ -50,7 +50,7 @@ export function strapiApp(args: {
                     weight: 100,
                 }],
                 customDomains: [
-                    { bindingType: 'Disabled', name: `${cmsSubdomain}.${domain}` },
+                    { bindingType: 'SniEnabled', name: `${cmsSubdomain}.${domain}` },
                 ],
                 transport: "Auto", 
                 
