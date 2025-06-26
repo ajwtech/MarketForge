@@ -37,7 +37,6 @@ export function BindCerts(args: BindCertsArgs) {
         --output json || echo "Domain binding may already exist"`,
         triggers: [args.asuidCmsRecords.modifiedOn, args.cnameCmsEntries.modifiedOn],
     }, { 
-        dependsOn: [args.asuidCmsRecords, args.cnameCmsEntries],
         customTimeouts: { create: "30m" }
     });
 
@@ -50,7 +49,7 @@ export function BindCerts(args: BindCertsArgs) {
         --output json || echo "Domain binding may already exist"`,
         triggers: [args.asuidMapRecords.modifiedOn, args.cnameMapEntries.modifiedOn],
     }, { 
-        dependsOn: [args.asuidMapRecords, args.cnameMapEntries, bindCmsCommand],
+        dependsOn: [bindCmsCommand],
         customTimeouts: { create: "30m" }
     });
 
@@ -63,7 +62,7 @@ export function BindCerts(args: BindCertsArgs) {
         --output json || echo "Domain binding may already exist"`,
         triggers: [args.asuidCrmRecords.modifiedOn, args.cnameCrmEntries.modifiedOn],
     }, { 
-        dependsOn: [args.asuidCrmRecords, args.cnameCrmEntries, bindMapCommand],
+        dependsOn: [bindMapCommand],
         customTimeouts: { create: "30m" }
     });
 
