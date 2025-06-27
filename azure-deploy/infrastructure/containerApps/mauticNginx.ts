@@ -13,7 +13,6 @@ const suiteCrmAppUrl = config.get("suiteCrmAppUrl") || "suitecrm-app";
 const domain = config.require("domain");
 const crmSubdomain = config.get("crmSubdomain") || "crm";
 const mapSubdomain = config.get("mapSubdomain") || "map";
-const cmsSubdomain = config.get("cmsSubdomain") || "cms";
 const loggingEnabled = config.get("nginxLoggingEnabled") || "off"; // Default to false if not set
 
 export function mauticNginx(args: {

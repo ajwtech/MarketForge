@@ -9,6 +9,7 @@ const config = new pulumi.Config();
 const strapiAppUrl = config.get("strapiAppUrl") || "strapi-app";
 const domain = config.require("domain");
 const cmsSubdomain = config.get("cmsSubdomain") || "cms";
+const betaSubdomain = config.get("betaSubdomain") || "beta";
 
 export function strapiApp(args: {
     env: string;
@@ -57,7 +58,7 @@ export function strapiApp(args: {
                     },
                     {
                         bindingType: 'Disabled',
-                        name: `beta.${domain}`,
+                        name: `${betaSubdomain}.${domain}`,
                         // Certificate will be bound after creation via certificate stack
                     },
                 ],
