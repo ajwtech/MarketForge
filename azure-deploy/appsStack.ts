@@ -14,7 +14,7 @@ const appEnv = config.get("appEnv") || "prod";
 const jwtSecret = config.getSecret("jwtSecret") || config.require("jwtSecret");
 const adminJwtSecret = config.getSecret("adminJwtSecret") || config.require("adminJwtSecret"); 
 const appKeys = config.getSecret("appKeys") || config.require("appKeys");
-const apiTokenSalt = config.getSecret("apiTokenSalt") || config.require("apiTokenSalt");
+const apiTokenSalt = config.getSecret("apiToken") || config.require("apiToken");
 const transferTokenSalt = config.getSecret("transferTokenSalt") || config.require("transferTokenSalt");
 
 const dbHost = infra.getOutput("marketing_mysql_fqdn");
