@@ -55,9 +55,17 @@ export function strapiApp(args: {
                         name: `${cmsSubdomain}.${domain}`,
                         // Certificate will be bound after creation via certificate stack
                     },
+                    {
+                        bindingType: 'Disabled',
+                        name: `beta.${domain}`,
+                        // Certificate will be bound after creation via certificate stack
+                    },
                 ],
                 transport: "Auto", 
-                
+                additionalPortMappings: [{
+                    targetPort: 3000,
+                    external: true,
+                }],
             },
             maxInactiveRevisions: 50,
             registries: [{
@@ -142,6 +150,10 @@ export function strapiApp(args: {
                     {
                         name: "API_TOKEN_SALT",
                         value: args.apiToken, 
+                    },
+                    {
+                        name: "TRANSFER_TOKEN_SALT",
+                        value: args.transferTokenSalt, 
                     },
                     // Use a dummy variable to force revision updates when the image changes.
                     {

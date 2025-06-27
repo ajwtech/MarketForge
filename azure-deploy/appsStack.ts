@@ -10,10 +10,17 @@ const config = new pulumi.Config();
 
 const appEnv = config.get("appEnv") || "prod";
 
+// Generate secure random tokens for Strapi
+const jwtSecret = config.getSecret("jwtSecret") || config.require("jwtSecret");
+const adminJwtSecret = config.getSecret("adminJwtSecret") || config.require("adminJwtSecret"); 
+const appKeys = config.getSecret("appKeys") || config.require("appKeys");
+const apiTokenSalt = config.getSecret("apiTokenSalt") || config.require("apiTokenSalt");
+const transferTokenSalt = config.getSecret("transferTokenSalt") || config.require("transferTokenSalt");
+
 const dbHost = infra.getOutput("marketing_mysql_fqdn");
 const dbPort = config.get("dbPort") || "3306";
 const dbName = config.get("dbName") || "mauticdb";
-const dbType = config.get("dbType") || "mysqli";
+const dbType = config.get("dbType") || "mysql"; // mysql is the correct client name for Strapi MySQL connections
 const dbVersion = config.get("dbVersion") || "8.0";
 const dbCharset = config.get("dbCharset") || "utf8mb4";
 const strapiDbName = config.get("strapiDbName") || "strapi";
@@ -25,6 +32,7 @@ const domain = config.require("domain");
 const cmsSubdomain = config.get("cmsSubdomain") || "cms";
 const crmSubdomain = config.get("crmSubdomain") || "crm";
 const mapSubdomain = config.get("mapSubdomain") || "map";
+const betaSubdomain = config.get("betaSubdomain") || "beta";
 const imageTag = config.get("imageTag") || "latest";
 let createSubdomains: pulumi.Output<boolean> = pulumi.output(false).apply(unwrapped => unwrapped);
 const storageAccountName = infra.getOutput("storageAccountName");
@@ -72,6 +80,7 @@ const asuidRecords = dns.setupAsuidDnsRecords({
     cmsSubdomain,
     crmSubdomain,
     mapSubdomain,
+    betaSubdomain,
     siteFQDN,
     nginxCvid
 });
@@ -94,13 +103,13 @@ const deployedStrapiApp = strapiApp({
     dbUser,
     dbPassword,
     dbClient: dbType,
-    jwtSecret: pulumi.output("jwtSecret"),
-    adminJwtSecret: pulumi.output("adminJwtSecret"),
-    appKeys: pulumi.output("appKeys"),
+    jwtSecret: jwtSecret,
+    adminJwtSecret: adminJwtSecret,
+    appKeys: appKeys,
     nodeEnv: pulumi.output("production"),
     resourceGroupName,
-    apiToken: pulumi.output("apiToken"),
-    transferTokenSalt: pulumi.output("transferTokenSalt"),
+    apiToken: apiTokenSalt,
+    transferTokenSalt: transferTokenSalt,
     cmsUrl: pulumi.interpolate`https://${cmsSubdomain}.${domain}/`,
 });
 
@@ -166,6 +175,7 @@ const CnameDnsRecords = dns.setupCnameDnsRecords({
     cmsSubdomain,
     crmSubdomain,
     mapSubdomain,
+    betaSubdomain,
     siteFQDN,
     suiteCrmFQDN: deployedSuitecrmApp.configuration.apply(cfg => cfg?.ingress?.fqdn ?? "localhost"),
     strapiFQDN: deployedStrapiApp.configuration.apply(cfg => cfg?.ingress?.fqdn ?? "localhost"),
@@ -183,8 +193,10 @@ export function returnOutputs() {
         asuidCmsRecords: asuidRecords.cmsTXT,
         asuidCrmRecords: asuidRecords.crmTXT,
         asuidMapRecords: asuidRecords.mapTXT,
+        asuidBetaRecords: asuidRecords.betaTXT,
         cnameCmsEntries: CnameDnsRecords.cmsCNAME,
         cnameCrmEntries: CnameDnsRecords.crmCNAME,
         cnameMapEntries: CnameDnsRecords.mapCNAME,
+        cnameBetaEntries: CnameDnsRecords.betaCNAME,
     };
 }

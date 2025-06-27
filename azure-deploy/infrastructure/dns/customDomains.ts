@@ -6,6 +6,7 @@ export interface AsuidDnsProps {
     cmsSubdomain: string;
     crmSubdomain: string;
     mapSubdomain: string;
+    betaSubdomain: string;
     siteFQDN: pulumi.Output<string>;
     nginxCvid: pulumi.Output<string>;
 }
@@ -15,6 +16,7 @@ export interface CnameDnsProps {
     cmsSubdomain: string;
     crmSubdomain: string;
     mapSubdomain: string;
+    betaSubdomain: string;
     siteFQDN: pulumi.Output<string>;
     suiteCrmFQDN: pulumi.Output<string>;
     strapiFQDN: pulumi.Output<string>;
@@ -56,7 +58,16 @@ export function setupAsuidDnsRecords(props: AsuidDnsProps) {
         content: props.nginxCvid.apply(cvid => `"${cvid}"` || ""),
         ttl: 3600,
     }, { ...dnsOptions });
-    return { cmsTXT, crmTXT, mapTXT };
+    
+    const betaTXT = new cloudflare.DnsRecord(`asuid.${props.betaSubdomain}`, {
+        zoneId: zoneId,
+        name: `asuid.${props.betaSubdomain}`,
+        type: "TXT",
+        content: props.nginxCvid.apply(cvid => `"${cvid}"` || ""),
+        ttl: 3600,
+    }, { ...dnsOptions });
+    
+    return { cmsTXT, crmTXT, mapTXT, betaTXT };
 }
 
 export function setupCnameDnsRecords(props: CnameDnsProps) {
@@ -94,7 +105,16 @@ export function setupCnameDnsRecords(props: CnameDnsProps) {
         content: props.mauticNginxFQDN.apply(fqdn => fqdn || ""),
         ttl: 3600,
     }, { ...dnsOptions });
-    return { cmsCNAME, crmCNAME, mapCNAME };
+    
+    const betaCNAME = new cloudflare.DnsRecord(props.betaSubdomain, {
+        zoneId: zoneId,
+        name: props.betaSubdomain,
+        type: "CNAME",
+        content: props.strapiFQDN,
+        ttl: 3600,
+    }, { ...dnsOptions });
+    
+    return { cmsCNAME, crmCNAME, mapCNAME, betaCNAME };
 }
 
 

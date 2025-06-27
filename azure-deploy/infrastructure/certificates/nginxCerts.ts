@@ -10,15 +10,18 @@ const domain = config.require("domain");
 const mapSubdomain = config.get("mapSubdomain") || "map";
 const cmsSubdomain = config.get("cmsSubdomain") || "cms";
 const crmSubdomain = config.get("crmSubdomain") || "crm";
+const betaSubdomain = config.get("betaSubdomain") || "beta";
 
 export interface BindCertsArgs {
     environmentName: pulumi.Input<string>;
     asuidCmsRecords: pulumi.Output<cloudflare.DnsRecord>;
     asuidCrmRecords: pulumi.Output<cloudflare.DnsRecord>;
     asuidMapRecords: pulumi.Output<cloudflare.DnsRecord>;
+    asuidBetaRecords: pulumi.Output<cloudflare.DnsRecord>;
     cnameCmsEntries: pulumi.Output<cloudflare.DnsRecord>;
     cnameCrmEntries: pulumi.Output<cloudflare.DnsRecord>;
     cnameMapEntries: pulumi.Output<cloudflare.DnsRecord>;
+    cnameBetaEntries: pulumi.Output<cloudflare.DnsRecord>;
 }
 
 export function BindCerts(args: BindCertsArgs) {
@@ -66,7 +69,21 @@ export function BindCerts(args: BindCertsArgs) {
         customTimeouts: { create: "30m" }
     });
 
+    const bindBetaCommand = new command.local.Command("bind-beta-custom-domain", {
+        create: pulumi.interpolate`az containerapp hostname bind \
+        --hostname ${betaSubdomain}.${domain} \
+        -g ${resourceGroupName} -n ${strapiAppName} \
+        --environment ${args.environmentName} \
+        --validation-method CNAME \
+        --output json || echo "Domain binding may already exist"`,
+        triggers: [args.asuidBetaRecords.modifiedOn, args.cnameBetaEntries.modifiedOn],
+    }, { 
+        dependsOn: [bindCrmCommand],
+        customTimeouts: { create: "30m" }
+    });
+
     return [
+        { bindCommand: bindBetaCommand },
         { bindCommand: bindCrmCommand },
         { bindCommand: bindCmsCommand },
         { bindCommand: bindMapCommand },
