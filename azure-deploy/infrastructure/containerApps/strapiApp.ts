@@ -45,7 +45,7 @@ export function strapiApp(args: {
                 allowInsecure: false,
                 clientCertificateMode: "Ignore",
                 external: true,  
-                targetPort: 3000,
+                targetPort: 1337,
                 traffic: [{
                     latestRevision: true, 
                     weight: 100,
