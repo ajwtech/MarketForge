@@ -34,9 +34,12 @@ export function setupAsuidDnsRecords(props: AsuidDnsProps) {
         }
         return zone.zoneId;
     });
+    
+    // Use ignoreChanges for fields that don't actually need replacement
     const dnsOptions = {
-        replaceOnChanges: ["content", "type", "ttl", "name", "zoneId"]
+        ignoreChanges: ["createdOn", "modifiedOn", "meta", "proxiable", "proxied"],
     };
+    
     const cmsTXT = new cloudflare.DnsRecord(`asuid.${props.cmsSubdomain}`, {
         zoneId: zoneId,
         name: `asuid.${props.cmsSubdomain}`,
@@ -44,6 +47,7 @@ export function setupAsuidDnsRecords(props: AsuidDnsProps) {
         content: props.nginxCvid.apply(cvid => `"${cvid}"` || ""),
         ttl: 3600,
     }, { ...dnsOptions });
+    
     const crmTXT = new cloudflare.DnsRecord(`asuid.${props.crmSubdomain}`, {
         zoneId: zoneId,
         name: `asuid.${props.crmSubdomain}`,
@@ -51,6 +55,7 @@ export function setupAsuidDnsRecords(props: AsuidDnsProps) {
         content: props.nginxCvid.apply(cvid => `"${cvid}"` || ""),
         ttl: 3600,
     }, { ...dnsOptions });
+    
     const mapTXT = new cloudflare.DnsRecord(`asuid.${props.mapSubdomain}`, {
         zoneId: zoneId,
         name: `asuid.${props.mapSubdomain}`,
@@ -81,9 +86,12 @@ export function setupCnameDnsRecords(props: CnameDnsProps) {
         }
         return zone.zoneId;
     });
+    
+    // Use ignoreChanges for fields that don't actually need replacement
     const dnsOptions = {
-        replaceOnChanges: ["content", "type", "ttl", "name", "zoneId"],
+        ignoreChanges: ["createdOn", "modifiedOn", "meta", "proxiable", "proxied"],
     };
+    
     const cmsCNAME = new cloudflare.DnsRecord(props.cmsSubdomain, {
         zoneId: zoneId,
         name: props.cmsSubdomain,
@@ -91,6 +99,7 @@ export function setupCnameDnsRecords(props: CnameDnsProps) {
         content: props.strapiFQDN,
         ttl: 3600,
     }, { ...dnsOptions });
+    
     const crmCNAME = new cloudflare.DnsRecord(props.crmSubdomain, {
         zoneId: zoneId,
         name: props.crmSubdomain,
