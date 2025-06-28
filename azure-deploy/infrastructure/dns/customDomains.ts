@@ -91,12 +91,11 @@ export function setupCnameDnsRecords(props: CnameDnsProps) {
     const dnsOptions = {
         ignoreChanges: ["createdOn", "modifiedOn", "meta", "proxiable", "proxied"],
     };
-    
-    const cmsCNAME = new cloudflare.DnsRecord(props.cmsSubdomain, {
+      const cmsCNAME = new cloudflare.DnsRecord(props.cmsSubdomain, {
         zoneId: zoneId,
         name: props.cmsSubdomain,
         type: "CNAME",
-        content: props.strapiFQDN,
+        content: props.mauticNginxFQDN,  // Route to nginx proxy, not Strapi directly
         ttl: 3600,
     }, { ...dnsOptions });
     
@@ -114,12 +113,11 @@ export function setupCnameDnsRecords(props: CnameDnsProps) {
         content: props.mauticNginxFQDN.apply(fqdn => fqdn || ""),
         ttl: 3600,
     }, { ...dnsOptions });
-    
-    const betaCNAME = new cloudflare.DnsRecord(props.betaSubdomain, {
+      const betaCNAME = new cloudflare.DnsRecord(props.betaSubdomain, {
         zoneId: zoneId,
         name: props.betaSubdomain,
         type: "CNAME",
-        content: props.strapiFQDN,
+        content: props.mauticNginxFQDN,  // Route to nginx proxy, not Strapi directly
         ttl: 3600,
     }, { ...dnsOptions });
     

@@ -14,6 +14,8 @@ const domain = config.require("domain");
 const crmSubdomain = config.get("crmSubdomain") || "crm";
 const mapSubdomain = config.get("mapSubdomain") || "map";
 const loggingEnabled = config.get("nginxLoggingEnabled") || "off"; // Default to false if not set
+const cmsSubdomain = config.get("cmsSubdomain") || "cms";
+const betaSubdomain = config.get("betaSubdomain") || "beta";
 
 export function mauticNginx(args: {
     env: string;
@@ -183,6 +185,16 @@ export function mauticNginx(args: {
                     { 
                         bindingType: 'Disabled', 
                         name: `${crmSubdomain}.${domain}`,
+                        // Certificate will be bound after creation via certificate stack
+                    },
+                                        { 
+                        bindingType: 'Disabled', 
+                        name: `${cmsSubdomain}.${domain}`,
+                        // Certificate will be bound after creation via certificate stack
+                    },
+                    {
+                        bindingType: 'Disabled',
+                        name: `${betaSubdomain}.${domain}`,
                         // Certificate will be bound after creation via certificate stack
                     },
                 ],
