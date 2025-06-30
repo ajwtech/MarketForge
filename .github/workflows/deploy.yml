@@ -68,7 +68,7 @@ jobs:
         id: pulumi-acr
         working-directory: ./azure-deploy
         env:
-          GITHUB_JOB: setup-acr-infra
+          PULUMI_JOB: setup-acr-infra
           ENV_ESC: ${{ matrix.env_esc }}
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
@@ -80,7 +80,7 @@ jobs:
       - name: Run Pulumi Automation API for infra
         working-directory: ./azure-deploy
         env:
-          GITHUB_JOB: setup-infra
+          PULUMI_JOB: setup-infra
           ENV_ESC: ${{ matrix.env_esc }}
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
@@ -219,7 +219,7 @@ jobs:
         id: pulumi-apps
         working-directory: ./azure-deploy
         env:
-          GITHUB_JOB: setup-apps
+          PULUMI_JOB: setup-apps
           ENV_ESC: ${{ matrix.env_esc }}
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
@@ -232,7 +232,7 @@ jobs:
         id: pulumi-certs
         working-directory: ./azure-deploy
         env:
-          GITHUB_JOB: setup-certs
+          PULUMI_JOB: setup-certs
           ENV_ESC: ${{ matrix.env_esc }}
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}

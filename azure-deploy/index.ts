@@ -41,7 +41,7 @@ async function runStackWithEscEnv(stackName: string, projectName: string, stackM
 
 // Entrypoint for modular Pulumi stacks
 async function main() {
-  const job = process.env.GITHUB_JOB;
+  const job = process.env.PULUMI_JOB;
   let outputs: automation.OutputMap;
   switch (job) {
     case "setup-acr-infra":
