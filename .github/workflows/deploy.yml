@@ -157,9 +157,10 @@ jobs:
           acrUrlOut=$(pulumi stack output registryUrlOut -s "$FULL_STACK")
           ACR_NAME=$(echo "$acrUrlOut" | awk -F'.' '{print $1}')
           repo="$acrUrlOut/${{ matrix.name }}"
-          # Check if tag exists in ACR
-          if az acr repository show-tags --name "$ACR_NAME" --repository "${{ matrix.name }}" --query "[?@=='$BUILD_HASH']" -o tsv | grep -q "$BUILD_HASH"; then
-            echo "$repo:$BUILD_HASH already exists in ACR, skipping build and push."
+          DIGEST_FILE="azure-deploy/sha-${{ matrix.name }}.txt"
+          # Check if digest file exists and matches current build hash
+          if [ -f "$DIGEST_FILE" ] && grep -q "$BUILD_HASH" "$DIGEST_FILE"; then
+            echo "$repo:$BUILD_HASH already built and pushed (digest file matches), skipping build and push."
           else
             docker buildx create --use
             docker buildx build \
@@ -169,6 +170,8 @@ jobs:
               -t $repo:$BUILD_HASH \
               -t $repo:latest \
               -f ${{ matrix.dockerfile }} .
+            # Write the new digest/hash to the file for future runs
+            echo "$BUILD_HASH" > "$DIGEST_FILE"
           fi
   setup-apps:
     if: github.event_name == 'push' || github.event.inputs.run_setup_apps == true
