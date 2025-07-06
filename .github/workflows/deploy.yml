@@ -158,10 +158,16 @@ jobs:
           ACR_NAME=$(echo "$acrUrlOut" | awk -F'.' '{print $1}')
           repo="$acrUrlOut/${{ matrix.name }}"
           DIGEST_FILE="azure-deploy/sha-${{ matrix.name }}.txt"
+          IMAGE_EXISTS=0
+          # Check if image with this hash exists in ACR
+          if az acr repository show-manifests --name "$ACR_NAME" --repository "${{ matrix.name }}" --query "[?tags[?@=='$BUILD_HASH']].digest" -o tsv | grep -q .; then
+            IMAGE_EXISTS=1
+          fi
           # Check if digest file exists and matches current build hash
-          if [ -f "$DIGEST_FILE" ] && grep -q "$BUILD_HASH" "$DIGEST_FILE"; then
-            echo "$repo:$BUILD_HASH already built and pushed (digest file matches), skipping build and push."
+          if [ -f "$DIGEST_FILE" ] && grep -q "$BUILD_HASH" "$DIGEST_FILE" && [ "$IMAGE_EXISTS" = "1" ]; then
+            echo "$repo:$BUILD_HASH already built and pushed (digest file and ACR match), skipping build and push."
           else
+            echo "Building and pushing $repo:$BUILD_HASH (digest file or ACR missing or outdated)"
             docker buildx create --use
             docker buildx build \
               --push \
