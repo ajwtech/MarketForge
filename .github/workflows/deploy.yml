@@ -96,8 +96,17 @@ jobs:
     container: ghcr.io/ajwtech/marketforge-ci:latest
     strategy:
       matrix:
+        env_esc: ${{ fromJson(vars.ESC) }}
         name: [marketing-nginx, marketing-mautic-app, marketing-strapi-app, marketing-suitecrm-app]
-        dockerfile: [mautic/marketing-nginx.dockerfile, mautic/marketing-mautic-app.dockerfile, launchpad/Dockerfile.prod, suitecrm/marketing-suitecrm-app.dockerfile]
+        include:
+          - name: marketing-nginx
+            dockerfile: mautic/marketing-nginx.dockerfile
+          - name: marketing-mautic-app
+            dockerfile: mautic/marketing-mautic-app.dockerfile
+          - name: marketing-strapi-app
+            dockerfile: launchpad/Dockerfile.prod
+          - name: marketing-suitecrm-app
+            dockerfile: suitecrm/marketing-suitecrm-app.dockerfile
     env:
       ENV_ESC: ${{ vars.ESC }}
       PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
