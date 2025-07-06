@@ -108,7 +108,7 @@ jobs:
           - name: marketing-suitecrm-app
             dockerfile: suitecrm/marketing-suitecrm-app.dockerfile
     env:
-      ENV_ESC: ${{ vars.ESC }}
+      ENV_ESC: ${{ matrix.env_esc }}
       PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
     steps:
       - uses: actions/checkout@v4
