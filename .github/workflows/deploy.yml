@@ -96,18 +96,10 @@ jobs:
     container: ghcr.io/ajwtech/marketforge-ci:latest
     strategy:
       matrix:
-        env_esc: ${{ fromJson(vars.ESC) }}
-        include:
-          - name: marketing-nginx
-            dockerfile: mautic/marketing-nginx.dockerfile
-          - name: marketing-mautic-app
-            dockerfile: mautic/marketing-mautic-app.dockerfile
-          - name: marketing-strapi-app
-            dockerfile: launchpad/Dockerfile.prod
-          - name: marketing-suitecrm-app
-            dockerfile: suitecrm/marketing-suitecrm-app.dockerfile
+        name: [marketing-nginx, marketing-mautic-app, marketing-strapi-app, marketing-suitecrm-app]
+        dockerfile: [mautic/marketing-nginx.dockerfile, mautic/marketing-mautic-app.dockerfile, launchpad/Dockerfile.prod, suitecrm/marketing-suitecrm-app.dockerfile]
     env:
-      ENV_ESC: ${{ matrix.env_esc }}
+      ENV_ESC: ${{ vars.ESC }}
       PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
     steps:
       - uses: actions/checkout@v4
@@ -159,8 +151,8 @@ jobs:
           repo="$acrUrlOut/${{ matrix.name }}"
           DIGEST_FILE="azure-deploy/sha-${{ matrix.name }}.txt"
           IMAGE_EXISTS=0
-          # Check if image with this hash exists in ACR
-          if az acr repository show-manifests --name "$ACR_NAME" --repository "${{ matrix.name }}" --query "[?tags[?@=='$BUILD_HASH']].digest" -o tsv | grep -q .; then
+          # Use az acr manifest list-metadata to check if the image with this hash exists in ACR (replace deprecated show-manifests)
+          if az acr manifest list-metadata --name "$ACR_NAME" --repository "${{ matrix.name }}" --query "[?tags[?@=='$BUILD_HASH']].digest" -o tsv | grep -q .; then
             IMAGE_EXISTS=1
           fi
           # Check if digest file exists and matches current build hash
