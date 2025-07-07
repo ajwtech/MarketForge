@@ -33,7 +33,6 @@ RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
 # Set environment variables for CI
 ENV NODE_ENV=production
-ENV CI=true
 
 # Validate the CI environment is properly set up
 RUN yarn --version && \
