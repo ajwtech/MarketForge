@@ -33,6 +33,9 @@ RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
 # Set environment variables for CI
 ENV NODE_ENV=production
+ENV PULUMI_SKIP_UPDATE_CHECK=true \
+    PULUMI_DISABLE_TELEMETRY=true \
+    YARN_ENABLE_IMMUTABLE_INSTALLS=false
 
 # Validate the CI environment is properly set up
 RUN yarn --version && \
