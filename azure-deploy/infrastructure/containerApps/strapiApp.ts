@@ -41,9 +41,7 @@ export function strapiApp(args: {
         configuration: {
             activeRevisionsMode: azure_app.ActiveRevisionsMode.Single,
             ingress: {
-                allowInsecure: false,
-                clientCertificateMode: "Ignore",
-                external: true,  
+                external: false,  
                 targetPort: 1337,
                 traffic: [{
                     latestRevision: true, 
@@ -51,10 +49,10 @@ export function strapiApp(args: {
                 }],
                 customDomains: [
                 ],
-                transport: "Auto", 
+                transport: azure_app.IngressTransportMethod.Tcp, 
                 additionalPortMappings: [{
                     targetPort: 3000,
-                    external: true,
+                    external: false,
                 }],
             },
             maxInactiveRevisions: 50,
@@ -166,8 +164,8 @@ export function strapiApp(args: {
                 image: args.image,
                 name: strapiAppUrl,
                 resources: {
-                    cpu: 0.75,
-                    memory: "1.5Gi",
+                    cpu: 0.25,
+                    memory: "0.5Gi",
                 },
                 volumeMounts: [
                     {
