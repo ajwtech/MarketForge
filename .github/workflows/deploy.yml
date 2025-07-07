@@ -58,13 +58,12 @@ jobs:
       
       - name: Install dependencies fresh
         run: |
-          # Install dependencies for the specific workspace we need
+          # Install dependencies for the entire monorepo from root
           corepack enable
           corepack prepare yarn@4.9.1 --activate
-          cd azure-deploy
+          # Install from root to resolve all workspace dependencies
           yarn install --inline-builds
-          cd ..
-          ls -la azure-deploy/node_modules/ | head -10  # Debug: show what was installed
+
       
       - name: Run Pulumi Automation API for ACR infra and export outputs
         id: pulumi-acr
@@ -211,10 +210,10 @@ jobs:
       
       - name: Install dependencies fresh
         run: |
-          # Install dependencies for the specific workspace we need
+          # Install dependencies for the entire monorepo from root
           corepack enable
           corepack prepare yarn@4.9.1 --activate
-          cd azure-deploy
+          # Install from root to resolve all workspace dependencies
           yarn install --inline-builds
       
       - name: Login to Azure CLI
