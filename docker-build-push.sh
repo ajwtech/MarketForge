@@ -12,10 +12,6 @@ TAG="${5:-latest}"
 
 echo "Building Docker image: $REPO_URL:$TAG from $DOCKERFILE_PATH ..."
 docker build -t "$REPO_URL:$TAG" -f "$DOCKERFILE_PATH" .
-# (REMOTE_DIGEST is not used, so no echo)
-# Build the Docker image locally
-echo "Building Docker image: $REPO_URL:$TAG from $DOCKERFILE_PATH ..."
-docker build -t "$REPO_URL:$TAG" -f "$DOCKERFILE_PATH" .
 
 # Get local image digest
 echo "Getting local image digest..."
