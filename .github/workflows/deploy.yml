@@ -214,7 +214,7 @@ jobs:
           corepack enable
           corepack prepare yarn@4.9.1 --activate
           # Install from root to resolve all workspace dependencies
-          yarn install --inline-builds
+          yarn install --no-immutable --inline-builds
       
       - name: Login to Azure CLI
         run: |
