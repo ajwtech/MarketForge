@@ -56,13 +56,15 @@ jobs:
           git checkout ${GITHUB_REF#refs/heads/}
           git pull origin ${GITHUB_REF#refs/heads/}
       
-      - name: Copy pre-built dependencies
+      - name: Install dependencies fresh
         run: |
-          # Copy pre-built node_modules from container to workspace
-          cp -r /ci-workspace/node_modules ./
-          # Copy yarn cache and config if they exist
-          cp -r /ci-workspace/.yarn ./ 2>/dev/null || true
-          ls -la node_modules/ | head -10  # Debug: show what was copied
+          # Install dependencies for the specific workspace we need
+          corepack enable
+          corepack prepare yarn@4.9.1 --activate
+          cd azure-deploy
+          yarn install --immutable --inline-builds
+          cd ..
+          ls -la azure-deploy/node_modules/ | head -10  # Debug: show what was installed
       
       - name: Run Pulumi Automation API for ACR infra and export outputs
         id: pulumi-acr
@@ -207,12 +209,13 @@ jobs:
           git checkout ${GITHUB_REF#refs/heads/}
           git pull origin ${GITHUB_REF#refs/heads/}
       
-      - name: Copy pre-built dependencies
+      - name: Install dependencies fresh
         run: |
-          # Copy pre-built node_modules from container to workspace
-          cp -r /ci-workspace/node_modules ./
-          # Copy yarn cache and config if they exist
-          cp -r /ci-workspace/.yarn ./ 2>/dev/null || true
+          # Install dependencies for the specific workspace we need
+          corepack enable
+          corepack prepare yarn@4.9.1 --activate
+          cd azure-deploy
+          yarn install --immutable --inline-builds
       
       - name: Login to Azure CLI
         run: |
