@@ -62,7 +62,7 @@ jobs:
           corepack enable
           corepack prepare yarn@4.9.1 --activate
           cd azure-deploy
-          yarn install --immutable --inline-builds
+          yarn install --inline-builds
           cd ..
           ls -la azure-deploy/node_modules/ | head -10  # Debug: show what was installed
       
@@ -215,7 +215,7 @@ jobs:
           corepack enable
           corepack prepare yarn@4.9.1 --activate
           cd azure-deploy
-          yarn install --immutable --inline-builds
+          yarn install --inline-builds
       
       - name: Login to Azure CLI
         run: |
