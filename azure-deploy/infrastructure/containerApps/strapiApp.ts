@@ -145,6 +145,18 @@ export function strapiApp(args: {
                         name: "TRANSFER_TOKEN_SALT",
                         value: args.transferTokenSalt, 
                     },
+                    {
+                        name: "CLIENT_URL", 
+                        value: pulumi.interpolate`https://beta.${domain}`,
+                    },
+                    {
+                        name: "PREVIEW_SECRET",
+                        value: args.jwtSecret, // Reuse JWT secret for preview functionality
+                    },
+                    {
+                        name: "NEXT_PUBLIC_API_URL",
+                        value: pulumi.interpolate`https://${cmsSubdomain}.${domain}`,
+                    },
                     // Use a dummy variable to force revision updates when the image changes.
                     {
                         name: "DEPLOY_TRIGGER",
