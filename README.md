@@ -4,9 +4,12 @@ This repo is used to produce production environments. This readme likely still h
 
 This repository contains the infrastructure code for deploying MarketForge using Pulumi and Azure.
 
-MarketForge is meant to be a turnkey marketing and sales platform comprised of OSS's. Currently we use Hubspot features as the target so that we don't require any significant market research. Being turnkey and low complexity requires opinions, and this stack has a lot of them. If you don't like them, feel free to submit issues to change it. If we decide not to accept the change, then fork this repo and build something better.
+MarketForge is meant to be a turn-key webapp, marketing and sales platform comprised of OSS's. Currently we use Hubspot features as the target so that we don't require any significant market research. Being turn-key and low complexity requires opinions, and this stack has a lot of them. If you don't like them, feel free to submit issues to change it, we don't see them as hardened at this time. If we decide not to accept the change, then fork this repo and build something better.
+
+The systems implemented in this are Strapi CMS, Mautic marketing automation platform, SuiteCRM, Launchpad Next.js template. All of these have commercial offerings and are scalable to accomodate any buisiness model.
 
 WIP
+Launchpad (strapi + next.js) template implemented. 
 
 ## Architecture
 
