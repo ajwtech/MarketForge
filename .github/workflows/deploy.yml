@@ -60,7 +60,7 @@ jobs:
         run: |
           # Install dependencies for the entire monorepo from root
           corepack enable
-          corepack prepare yarn@4.9.1 --activate
+          corepack prepare yarn@4.9.2 --activate
           # Install from root to resolve all workspace dependencies
           yarn install --no-immutable --inline-builds
 
@@ -212,7 +212,7 @@ jobs:
         run: |
           # Install dependencies for the entire monorepo from root
           corepack enable
-          corepack prepare yarn@4.9.1 --activate
+          corepack prepare yarn@4.9.2 --activate
           # Install from root to resolve all workspace dependencies
           yarn install --no-immutable --inline-builds
       

@@ -1,6 +1,6 @@
 {
   "name": "marketforge",
-  "packageManager": "yarn@4.9.1",
+  "packageManager": "yarn@4.9.2",
   "private": true,
   "workspaces": [
     "suitecrm/SuiteCRM-Core",
