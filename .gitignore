@@ -19,3 +19,12 @@ azure-deploy/scripts/move_commands.sh
 pu.sh
 azure-deploy/Pulumi.yaml
 .yarn/cache/
+tmp/
+__*/*
+__*
+.vim/*
+.yarn/*
+.vscode/*
+.nx/*
+AzuriteConfig
+suitecrm/SuiteCRM-Core/.nx/
