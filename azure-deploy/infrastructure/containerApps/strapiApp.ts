@@ -100,6 +100,10 @@ export function strapiApp(args: {
                         value: args.storageAccountName,
                     },
                     {
+                        name: "STORAGE_URL",
+                        value: pulumi.interpolate`https://${args.storageAccountName}.blob.core.windows.net`,
+                    },
+                    {
                         name: "DATABASE_HOST",
                         value: args.dbHost, 
                     },
