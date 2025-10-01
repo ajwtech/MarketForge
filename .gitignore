@@ -28,3 +28,4 @@ __*
 .nx/*
 AzuriteConfig
 suitecrm/SuiteCRM-Core/.nx/
+.mcp/strapi-mcp-server.config.json
